@@ -4,9 +4,6 @@ from display import Display, GraphDisplay
 sim = Simulation(grid_size=10, days=365)
 display = Display(sim)
 graph_display = GraphDisplay(sim)
-
-# יצירת סימולציה
-sim = Simulation(grid_size=10, days=365)
 # הרצת הסימולציה
 sim.run()
 
