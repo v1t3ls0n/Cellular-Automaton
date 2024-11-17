@@ -8,19 +8,18 @@ class State:
         self.initialize_grid()
 
     def initialize_grid(self):
-        for x in range(self.grid_size): 
+        max_sea_level = 1  # Maximum layer for sea level
+        for x in range(self.grid_size):
             for y in range(self.grid_size):
                 for z in range(self.grid_size):
-                    if z <= 2:  # שכבות קרקע
-                        cell_type = np.random.choice([0, 1, 3, 4, 5], p=[0.3, 0.3, 0.1, 0.2, 0.1])
-                    elif 3 <= z <= 6:  # שכבות אמצע
-                        cell_type = 6  # אוויר
-                    elif z >= 7:  # שכבות עליונות
-                        cell_type = np.random.choice([2, 6], p=[0.3, 0.7])  # עננים או אוויר
-                    else:
-                        cell_type = 6  # ברירת מחדל: אוויר
+                    if z <= max_sea_level:  # Below or at maximum sea level
+                        cell_type = np.random.choice([0, 1, 3], p=[0.7, 0.2, 0.1])  # Sea, land, icebergs
+                    elif z <= 2:  # Above sea level but close to ground
+                        cell_type = np.random.choice([1, 4, 5], p=[0.5, 0.3, 0.2])  # Land, forests, cities
+                    else:  # Higher layers
+                        cell_type = np.random.choice([2, 6], p=[0.3, 0.7])  # Clouds, air
 
-                    # ערכים אחרים (טמפרטורה, רוח, זיהום וכו')
+                    # Assign environmental properties
                     temperature = np.random.randint(-10, 40)
                     wind_strength = np.random.uniform(0, 10)
                     wind_direction = (np.random.choice([-1, 0, 1]), 
@@ -29,14 +28,14 @@ class State:
                     pollution_level = 0
                     water_level = 0
 
-                    # הגדרות ייחודיות לסוגי תאים
-                    if cell_type == 0:  # ים
+                    # Special handling for certain cell types
+                    if cell_type == 0:  # Sea
                         water_level = np.random.randint(5, 20)
-                    elif cell_type == 3:  # קרחונים
+                    elif cell_type == 3:  # Icebergs
                         water_level = np.random.randint(5, 20)
-                    elif cell_type == 5:  # ערים
+                    elif cell_type == 5:  # Cities
                         pollution_level = np.random.randint(10, 50)
-                    elif cell_type == 2:  # עננים
+                    elif cell_type == 2:  # Clouds
                         water_level = np.random.randint(5, 15)
 
                     self.grid[x, y, z] = Cell(cell_type, temperature, wind_strength, wind_direction, pollution_level, water_level)
