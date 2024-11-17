@@ -1,6 +1,6 @@
-from Simulation import Simulation
-from Display import Display
-from GraphDisplay import GraphDisplay
+import Simulation
+import Display
+import GraphDisplay
 
 # יצירת סימולציה
 sim = Simulation(grid_size=10, days=365)
