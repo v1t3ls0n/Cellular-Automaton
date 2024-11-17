@@ -1,5 +1,5 @@
 import numpy as np
-import Cell
+from .Cell import Cell
 
 class State:
     def __init__(self, grid_size):

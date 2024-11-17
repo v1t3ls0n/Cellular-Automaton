@@ -1,4 +1,5 @@
-import State
+from .State import State
+
 import numpy as np
 class Simulation:
     def __init__(self, grid_size, days=365):
