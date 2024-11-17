@@ -7,14 +7,14 @@ class MatplotlibDisplay:
         self.grid_size = simulation.grid_size
 
     def plot_3d(self):
-        # יצירת חלון תלת-ממדי
+        # Create 3D plot
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        # רשימות לאחסון מיקומי תאים וצבעים
+        # Lists to store cell positions and colors
         x, y, z, colors = [], [], [], []
 
-        # מעבר על הרשת התלת-ממדית
+        # Iterate over the 3D grid
         for xi in range(self.grid_size):
             for yi in range(self.grid_size):
                 for zi in range(self.grid_size):
@@ -23,32 +23,30 @@ class MatplotlibDisplay:
                     y.append(yi)
                     z.append(zi)
 
-                    # הגדרת צבעים לפי סוג התא
-                    if cell.cell_type == 0:  # ים
-                        colors.append('blue')
-                    elif cell.cell_type == 1:  # יבשה
-                        colors.append('green')
-                    elif cell.cell_type == 2:  # עננים
-                        colors.append('gray')
-                    elif cell.cell_type == 3:  # קרחונים
-                        colors.append('white')
-                    elif cell.cell_type == 4:  # יערות
-                        colors.append('darkgreen')
-                    elif cell.cell_type == 5:  # ערים
-                        colors.append('red')
-                    elif cell.cell_type == 6:  # אוויר
-                        colors.append('skyblue')
-                    else:
-                        colors.append('black')  # עבור תאים לא ידועים
+                    # Define colors based on cell type
+                    if cell.cell_type == 0:  # Sea
+                        colors.append((0.0, 0.0, 1.0, 1.0))  # Blue (opaque)
+                    elif cell.cell_type == 1:  # Land
+                        colors.append((0.0, 1.0, 0.0, 1.0))  # Green (opaque)
+                    elif cell.cell_type == 2:  # Clouds
+                        colors.append((0.5, 0.5, 0.5, 0.8))  # Gray (semi-transparent)
+                    elif cell.cell_type == 3:  # Icebergs
+                        colors.append((0.5, 0.8, 1.0, 1.0))  # Sky blue (opaque)
+                    elif cell.cell_type == 4:  # Forests
+                        colors.append((0.0, 0.5, 0.0, 1.0))  # Dark green (opaque)
+                    elif cell.cell_type == 5:  # Cities
+                        colors.append((1.0, 0.0, 0.0, 1.0))  # Red (opaque)
+                    else:  # Air, light blue with transparency
+                        colors.append((0.7, 0.9, 1.0, 0.3))  # Light blue (transparent)
 
-        # ציור נקודות בתלת-ממד
-        ax.scatter(x, y, z, c=colors, s=50)
+        # Plot points in 3D
+        scatter = ax.scatter(x, y, z, c=colors, s=50)
 
-        # הגדרת צירים
+        # Set axis labels
         ax.set_xlabel('X-axis')
         ax.set_ylabel('Y-axis')
         ax.set_zlabel('Z-axis')
         ax.set_title('3D Simulation Visualization')
 
-        # הצגת הגרף
+        # Show the plot
         plt.show()
