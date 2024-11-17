@@ -1,14 +1,13 @@
-import Simulation
-import Display
-import GraphDisplay
+from Simulation import Simulation
+from Display import Display
+from GraphDisplay import GraphDisplay
+
 # יצירת סימולציה
 sim = Simulation(grid_size=10, days=365)
-display = Display(sim)
-graph_display = GraphDisplay(sim)
 
 # הרצת הסימולציה
 sim.run()
+
 # הצגת התוצאות
+display = Display(sim)
 display.run()
-# יצירת גרף של זיהום אוויר
-graph_display.plot_average_pollution()

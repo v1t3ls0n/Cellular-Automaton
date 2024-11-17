@@ -22,16 +22,19 @@ class Display:
         state = self.simulation.get_state(self.day)
         for x in range(self.grid_size):
             for y in range(self.grid_size):
-                cell = state.grid[x, y, 0]  # מציגים חתך ב-z=0
-                if mode == "pollution":
-                    value = cell.pollution_level
-                    color = f"#{int(min(value * 2.55, 255)):02x}0000"  # אדום לפי זיהום
-                elif mode == "water":
-                    value = cell.water_level
-                    color = f"#0000{int(min(value * 2.55, 255)):02x}"  # כחול לפי מים
-                else:
-                    value = cell.temperature
-                    color = f"#{int(min((value + 10) * 12.75, 255)):02x}FFFF"  # גוונים חמים לפי טמפרטורה
+                cell = state.grid[x, y, 0]
+                if cell.cell_type == 0:  # ים
+                    color = "#0000FF"  # כחול
+                elif cell.cell_type == 1:  # יבשה
+                    color = "#00FF00"  # ירוק
+                elif cell.cell_type == 2:  # עננים
+                    color = "#AAAAAA"  # אפור
+                elif cell.cell_type == 3:  # קרחונים
+                    color = "#FFFFFF"  # לבן
+                elif cell.cell_type == 4:  # יערות
+                    color = "#228B22"  # ירוק כהה
+                elif cell.cell_type == 5:  # ערים
+                    color = "#FF0000"  # אדום
                 self.canvas.create_rectangle(
                     y * 20, x * 20, (y + 1) * 20, (x + 1) * 20, fill=color
                 )
