@@ -1,7 +1,7 @@
 import tkinter as tk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
+from .MatplotlibDisplay import MatplotlibDisplay
 class Display:
     def __init__(self, simulation):
         self.simulation = simulation
@@ -148,4 +148,10 @@ class Display:
         self.update_canvas("water")
 
     def run(self):
+        # כפתור להפעלת תצוגה תלת-ממדית
+        button = tk.Button(self.root, text="Show 3D View", command=self.show_3d_view)
+        button.pack()
         self.root.mainloop()
+    def show_3d_view(self):
+        matplotlib_display = MatplotlibDisplay(self.simulation)
+        matplotlib_display.plot_3d()
