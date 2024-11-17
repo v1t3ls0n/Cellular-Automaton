@@ -8,19 +8,39 @@ class State:
         self.initialize_grid()
 
     def initialize_grid(self):
-        for x in range(self.grid_size):
+        for x in range(self.grid_size): 
             for y in range(self.grid_size):
                 for z in range(self.grid_size):
-                    # חלוקה לסוגי תאים
-                    cell_type = np.random.choice([0, 1, 2, 3, 4, 5], p=[0.3, 0.3, 0.1, 0.1, 0.1, 0.1])
+                    if z <= 2:  # שכבות קרקע
+                        cell_type = np.random.choice([0, 1, 3, 4, 5], p=[0.3, 0.3, 0.1, 0.2, 0.1])
+                    elif 3 <= z <= 6:  # שכבות אמצע
+                        cell_type = 6  # אוויר
+                    elif z >= 7:  # שכבות עליונות
+                        cell_type = np.random.choice([2, 6], p=[0.3, 0.7])  # עננים או אוויר
+                    else:
+                        cell_type = 6  # ברירת מחדל: אוויר
+
+                    # ערכים אחרים (טמפרטורה, רוח, זיהום וכו')
                     temperature = np.random.randint(-10, 40)
                     wind_strength = np.random.uniform(0, 10)
                     wind_direction = (np.random.choice([-1, 0, 1]), 
                                     np.random.choice([-1, 0, 1]), 
                                     np.random.choice([-1, 0, 1]))
-                    pollution_level = 0 if cell_type not in [4, 5] else np.random.randint(10, 50)
-                    water_level = 0 if cell_type not in [0, 3, 2] else np.random.randint(5, 20)
+                    pollution_level = 0
+                    water_level = 0
+
+                    # הגדרות ייחודיות לסוגי תאים
+                    if cell_type == 0:  # ים
+                        water_level = np.random.randint(5, 20)
+                    elif cell_type == 3:  # קרחונים
+                        water_level = np.random.randint(5, 20)
+                    elif cell_type == 5:  # ערים
+                        pollution_level = np.random.randint(10, 50)
+                    elif cell_type == 2:  # עננים
+                        water_level = np.random.randint(5, 15)
+
                     self.grid[x, y, z] = Cell(cell_type, temperature, wind_strength, wind_direction, pollution_level, water_level)
+
 
     def update(self):
         new_grid = np.copy(self.grid)
