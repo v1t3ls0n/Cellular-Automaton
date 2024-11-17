@@ -1,13 +1,17 @@
-from core import Simulation
-from display import MatplotlibDisplay, GraphDisplay
+import sys
+import subprocess
 
-# יצירת סימולציה
-sim = Simulation(grid_size=10, days=365)
-sim.run()
+if "--compile" in sys.argv:
+    print("Compiling Cython files...")
+    subprocess.run(["python", "setup.py", "build_ext", "--inplace"], cwd="core", check=True)
+    print("Compilation complete.")
 
-# תצוגת Matplotlib (תלת-ממדית)
-matplotlib_display = MatplotlibDisplay(sim)
-matplotlib_display.plot_3d()
+# Import and run the main simulation code
+from core.Simulation import Simulation
+from display.MatplotlibDisplay import MatplotlibDisplay
 
-metrics = GraphDisplay(sim)
-metrics.plot_average_pollution()
+simulation = Simulation(grid_size=10, days=365)
+simulation.run()
+
+display = MatplotlibDisplay(simulation)
+display.plot_3d()

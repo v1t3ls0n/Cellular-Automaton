@@ -2,43 +2,78 @@ import numpy as np
 from .Cell import Cell
 
 class State:
-    def __init__(self, grid_size):
+    def __init__(self, grid_size, day=0):
         self.grid_size = grid_size
         self.grid = np.empty((grid_size, grid_size, grid_size), dtype=object)
+        self.day = day
         self.initialize_grid()
 
     def initialize_grid(self):
-        max_sea_level = 1  # Maximum layer for sea level
+        """Initialize the grid with forests and cities placed at the same levels as land."""
         for x in range(self.grid_size):
             for y in range(self.grid_size):
                 for z in range(self.grid_size):
-                    if z <= max_sea_level:  # Below or at maximum sea level
-                        cell_type = np.random.choice([0, 1, 3], p=[0.7, 0.2, 0.1])  # Sea, land, icebergs
-                    elif z <= 2:  # Above sea level but close to ground
-                        cell_type = np.random.choice([1, 4, 5], p=[0.5, 0.3, 0.2])  # Land, forests, cities
-                    else:  # Higher layers
-                        cell_type = np.random.choice([2, 6], p=[0.3, 0.7])  # Clouds, air
+                    if z <= np.random.randint(0, 2):  # Lowest levels mostly water
+                        cell_type = 0  # Sea
+                    elif z <= np.random.randint(2, 4):  # Slightly above water
+                        cell_type = 1  # Land
+                    elif z <= np.random.randint(4, 6):  # Moderate heights
+                        base_cell_type = 1  # Ensure land is the base
+                        # Randomly place forests and cities on top of land
+                        cell_type = np.random.choice([1, 4, 5], p=[0.15, 0.35, 0.5])
+                    elif z <= np.random.randint(6, 8):  # Higher levels
+                        cell_type = 4  # Forests dominate at higher altitudes
+                    else:
+                        cell_type = 2  # Clouds at the highest altitudes
 
-                    # Assign environmental properties
-                    temperature = np.random.randint(-10, 40)
-                    wind_strength = np.random.uniform(0, 10)
-                    wind_direction = (np.random.choice([-1, 0, 1]), 
-                                    np.random.choice([-1, 0, 1]), 
-                                    np.random.choice([-1, 0, 1]))
-                    pollution_level = 0
-                    water_level = 0
-
-                    # Special handling for certain cell types
+                    # Adjust water levels and pollution based on cell type
                     if cell_type == 0:  # Sea
-                        water_level = np.random.randint(5, 20)
+                        water_level = np.random.uniform(1, 3)  # Varying water levels
+                        pollution_level = np.random.uniform(0, 5)  # Slight pollution
                     elif cell_type == 3:  # Icebergs
-                        water_level = np.random.randint(5, 20)
+                        water_level = np.random.uniform(2, 5)  # Pronounced icebergs
+                        pollution_level = 0
                     elif cell_type == 5:  # Cities
-                        pollution_level = np.random.randint(10, 50)
+                        water_level = 0.5
+                        pollution_level = np.random.uniform(10, 50)  # Initial pollution
+                    elif cell_type == 4:  # Forests
+                        water_level = np.random.uniform(0, 2)  # Forests can have damp soil
+                        pollution_level = 0
+                    elif cell_type == 1:  # Land
+                        water_level = 0
+                        pollution_level = np.random.uniform(0, 10)  # Some pollution from nearby cities
                     elif cell_type == 2:  # Clouds
-                        water_level = np.random.randint(5, 15)
+                        water_level = np.random.uniform(1, 3)  # Initial rain content
+                        pollution_level = 0
+                    else:
+                        water_level = 0
+                        pollution_level = 0
 
-                    self.grid[x, y, z] = Cell(cell_type, temperature, wind_strength, wind_direction, pollution_level, water_level)
+                    # Assign other environmental properties
+                    temperature = np.random.uniform(-10, 35)  # Wider temperature range
+                    wind_strength = np.random.uniform(0, 10)
+                    wind_direction = (
+                        np.random.choice([-1, 0, 1]),
+                        np.random.choice([-1, 0, 1]),
+                        np.random.choice([-1, 0, 1]),
+                    )
+
+                    # Create the cell
+                    self.grid[x][y][z] = Cell(
+                        cell_type, temperature, wind_strength, wind_direction, pollution_level, water_level
+                    )
+
+        # Enforce forests and cities at the same level as land
+        for x in range(self.grid_size):
+            for y in range(self.grid_size):
+                for z in range(self.grid_size):
+                    if self.grid[x][y][z].cell_type in [4, 5]:  # Forests or Cities
+                        # Check levels below for land (1)
+                        if any(
+                            self.grid[x][y][z_].cell_type == 1 for z_ in range(z)
+                        ):
+                            self.grid[x][y][z].cell_type = 1.1  # Reset to land if no land below
+
 
 
     def update(self):

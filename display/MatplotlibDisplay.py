@@ -1,122 +1,132 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.table import Table
-from matplotlib.widgets import Button
+from matplotlib.colors import to_rgba
+
 
 class MatplotlibDisplay:
     def __init__(self, simulation):
         self.simulation = simulation
-        self.grid_size = simulation.grid_size
         self.current_day = 0
+        self.fig, self.ax_3d, self.ax_graph = None, None, None
+        self.precomputed_data = []  # Cache for precomputed 3D scatter data
+        self.current_elev = 20  # Default elevation
+        self.current_azim = 45  # Default azimuth
 
     def plot_3d(self):
-        # Create 3D plot
-        self.fig = plt.figure(figsize=(10, 7))
-        self.ax = self.fig.add_subplot(121, projection='3d')  # 3D plot
-        self.legend_ax = self.fig.add_subplot(122)  # Legend table
+        # Create the figure and subplots
+        self.fig = plt.figure(figsize=(10, 5))
+        self.ax_3d = self.fig.add_subplot(121, projection='3d')
+        self.ax_graph = self.fig.add_subplot(122)
 
-        # Initial rendering
+        # Precompute 3D visualizations
+        self.precompute_visualizations()
+
+        # Render pollution graph (static)
+        self.render_pollution_graph()
+
+        # Add keyboard navigation
+        self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
+
+        # Render the initial day
         self.render_day(self.current_day)
-
-        # Add "Next" and "Previous" buttons
-        self.add_navigation_buttons()
 
         # Show the plot
         plt.show()
 
+    def precompute_visualizations(self):
+        """Precompute 3D scatter data for all days."""
+        print("Precomputing 3D visualizations for all days...")
+        for state in self.simulation.states:
+            points = []
+            colors = []
+            sizes = []  # Add a list for point sizes
+            for x in range(state.grid.shape[0]):
+                for y in range(state.grid.shape[1]):
+                    for z in range(state.grid.shape[2]):
+                        cell = state.grid[x][y][z]
+                        # Check for forests or cities dominance over land
+                        if cell.cell_type in [4, 5]:  # Forests or Cities
+                            points.append((x, y, z))
+                            colors.append(cell.get_color())  # Dominant color
+                            sizes.append(20)  # Default size for forests/cities
+                        elif cell.cell_type == 1:  # Land
+                            # Add land only if no forests/cities are dominant
+                            if all(
+                                state.grid[x][y][z_].cell_type != 4 and
+                                state.grid[x][y][z_].cell_type != 5
+                                for z_ in range(z, state.grid.shape[2])
+                            ):
+                                points.append((x, y, z))
+                                colors.append(cell.get_color())  # Land color
+                                sizes.append(10)  # Default size for land
+                        else:
+                            points.append((x, y, z))
+                            colors.append(cell.get_color())
+                            sizes.append(10)  # Default size for other cells
+
+            self.precomputed_data.append((points, colors, sizes))
+
+        print("Precomputation complete.")
+
+
     def render_day(self, day):
-        # Clear the current plot
-        self.ax.cla()
-        self.legend_ax.cla()
+        """Render the cached 3D visualization for a specific day."""
+        # Save the current viewing angles
+        self.current_elev = self.ax_3d.elev
+        self.current_azim = self.ax_3d.azim
 
-        # Set axis labels and title
-        self.ax.set_xlabel('X-axis')
-        self.ax.set_ylabel('Y-axis')
-        self.ax.set_zlabel('Z-axis')
-        self.ax.set_title(f'3D Simulation - Day {day}')
+        # Clear the existing plot
+        self.ax_3d.cla()
+        self.ax_3d.set_title(f"Day {day}")
+        self.ax_3d.set_xlabel("X-axis")
+        self.ax_3d.set_ylabel("Y-axis")
+        self.ax_3d.set_zlabel("Z-axis")
 
-        # Lists to store cell positions and colors
-        x, y, z, colors = [], [], [], []
+        points, colors, sizes = self.precomputed_data[day]
+        xs, ys, zs = zip(*points) if points else ([], [], [])
+        self.ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)  # Include sizes in scatter plot
 
-        # Iterate over the 3D grid for the current day
-        for xi in range(self.grid_size):
-            for yi in range(self.grid_size):
-                for zi in range(self.grid_size):
-                    cell = self.simulation.states[day].grid[xi, yi, zi]
-                    x.append(xi)
-                    y.append(yi)
-                    z.append(zi)
+        # Restore the saved viewing angles
+        self.ax_3d.view_init(elev=self.current_elev, azim=self.current_azim)
 
-                    # Define colors based on cell type
-                    if cell.cell_type == 0:  # Sea
-                        colors.append((0.0, 0.0, 1.0, 1.0))  # Blue (opaque)
-                    elif cell.cell_type == 1:  # Land
-                        colors.append((0.0, 1.0, 0.0, 1.0))  # Green (opaque)
-                    elif cell.cell_type == 2:  # Clouds
-                        colors.append((0.5, 0.5, 0.5, 0.5))  # Gray (semi-transparent)
-                    elif cell.cell_type == 3:  # Icebergs
-                        colors.append((0.5, 0.8, 1.0, 1.0))  # Sky blue (opaque)
-                    elif cell.cell_type == 4:  # Forests
-                        colors.append((0.0, 0.5, 0.0, 1.0))  # Dark green (opaque)
-                    elif cell.cell_type == 5:  # Cities
-                        colors.append((1.0, 0.0, 0.0, 1.0))  # Red (opaque)
-                    else:  # Air
-                        colors.append((0.7, 0.9, 1.0, 0.3))  # Light blue (transparent)
+        self.fig.canvas.draw_idle()
 
-        # Plot points in 3D
-        self.ax.scatter(x, y, z, c=colors, s=50)
+    def render_pollution_graph(self):
+        """Render the pollution graph over time."""
+        self.ax_graph.cla()
+        self.ax_graph.set_title("Pollution Over Time")
+        self.ax_graph.set_xlabel("Day")
+        self.ax_graph.set_ylabel("Average Pollution")
 
-        # Add the legend table
-        self.render_legend()
+        avg_pollution = []
+        for state in self.simulation.states:
+            total_pollution = sum(
+                cell.pollution_level for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2])
+                for cell in [state.grid[x, y, z]]
+            )
+            total_cells = state.grid.shape[0] * state.grid.shape[1] * state.grid.shape[2]
+            avg_pollution.append(total_pollution / total_cells)
 
-    def render_legend(self):
-        self.legend_ax.axis('tight')
-        self.legend_ax.axis('off')
-        table = Table(self.legend_ax, bbox=[0, 0, 1, 1])
+        self.ax_graph.plot(range(len(avg_pollution)), avg_pollution, color="red", label="Average Pollution")
+        self.ax_graph.legend()
+        self.fig.canvas.draw_idle()
 
-        # Define legend entries
-        legend_data = [
-            ('Blue', 'Sea'),
-            ('Green', 'Land'),
-            ('Gray', 'Clouds'),
-            ('Sky Blue', 'Icebergs'),
-            ('Dark Green', 'Forests'),
-            ('Red', 'Cities'),
-            ('Light Blue (Transparent)', 'Air'),
-        ]
 
-        # Add rows to the table
-        for i, (color, label) in enumerate(legend_data):
-            table.add_cell(i, 0, 0.5, 0.2, text=color, loc='center', facecolor='white')
-            table.add_cell(i, 1, 1.0, 0.2, text=label, loc='center', facecolor=color.lower() if 'Transparent' not in color else 'lightblue')
 
-        # Add table header
-        table.auto_set_font_size(False)
-        table.set_fontsize(10)
-        table.scale(1, 2)
-        self.legend_ax.add_table(table)
+    def handle_key_press(self, event):
+        if event.key == "right":
+            self.next_day()
+        elif event.key == "left":
+            self.previous_day()
 
-    def add_navigation_buttons(self):
-        # Add a "Next Day" button
-        ax_next = plt.axes([0.8, 0.05, 0.1, 0.075])  # Position of the button
-        btn_next = Button(ax_next, 'Next Day')
-
-        # Add a "Previous Day" button
-        ax_prev = plt.axes([0.7, 0.05, 0.1, 0.075])
-        btn_prev = Button(ax_prev, 'Previous Day')
-
-        # Bind button actions
-        btn_next.on_clicked(self.next_day)
-        btn_prev.on_clicked(self.previous_day)
-
-    def next_day(self, event):
+    def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:
             self.current_day += 1
             self.render_day(self.current_day)
-            self.fig.canvas.draw_idle()
 
-    def previous_day(self, event):
+    def previous_day(self):
         if self.current_day > 0:
             self.current_day -= 1
             self.render_day(self.current_day)
-            self.fig.canvas.draw_idle()
