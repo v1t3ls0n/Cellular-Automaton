@@ -15,19 +15,19 @@ class Cell:
         if self.cell_type == 0:  # Sea
             return "blue"
         elif self.cell_type == 1:  # Land
-            return "yellow"  # Base yellow for land
+            return "yellow"
         elif self.cell_type == 2:  # Clouds
             intensity = min(1.0, self.pollution_level / 50.0)  # Normalize pollution
-            return (0.7, 0.7, 0.7, intensity)  # Gray with transparency based on pollution
+            return (0.7, 0.7, 0.7, intensity)  # Gray with transparency
         elif self.cell_type == 3:  # Icebergs
-            return (0.5, 1.0, 1.0) if self.water_level > 0 else "cyan"  # Cyan for submerged, light cyan otherwise
+            return (0.5, 1.0, 1.0) if self.water_level > 0 else "cyan"
         elif self.cell_type == 4:  # Forests
-            return "darkgreen"  # Constant dark green for forests
+            return "darkgreen"
         elif self.cell_type == 5:  # Cities
-            intensity = min(1.0, self.pollution_level / 50.0)  # Normalize pollution
-            return (1.0, 1.0 - intensity, 1.0 - intensity)  # Red with increasing intensity
+            intensity = min(1.0, self.pollution_level / 50.0)
+            return (1.0, 1.0 - intensity, 1.0 - intensity)  # Red with intensity
         else:
-            return (1.0, 1.0, 1.0)  # Default to white
+            return "white"  # Default to white
 
     def update(self, neighbors):
         """
