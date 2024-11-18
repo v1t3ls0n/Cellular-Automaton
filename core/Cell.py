@@ -154,21 +154,28 @@ class Cell:
                 self.pollution_level += 0.5  # Absorb more pollution if forests are fewer
                 if self.pollution_level > 50:
                     self.cell_type = 1  # Forest turns into land
+
         elif self.cell_type == 5:  # Cities
             # Increase pollution
-            pollution_increase = 1 / \
-                (1 + 0.05 * self.pollution_level)  # Moderate growth
-            self.pollution_level = min(
-                self.pollution_level + pollution_increase, 100)
+            pollution_increase = 1 / (1 + 0.05 * self.pollution_level)  # Moderate growth
+            self.pollution_level = min(self.pollution_level + pollution_increase, 100)
 
             # Increase temperature due to pollution
             self.temperature += 0.01 * self.pollution_level
 
+            # קשר עם יערות סמוכים
+            forests_nearby = sum(1 for neighbor in neighbors if neighbor.cell_type == 4)
+            if forests_nearby == 0:
+                # סיכון מוגבר להכחדת עיר אם אין יערות סמוכים
+                extinction_chance = 0.1 + (1 / global_forest_count if global_forest_count > 0 else 1)
+                if np.random.random() < extinction_chance:
+                    self.cell_type = 1  # עיר הופכת לאדמה
+                    global_city_count -= 1
+
             for neighbor in neighbors:
                 # Spread pollution to neighbors
                 pollution_spread = 0.01 * self.pollution_level / len(neighbors)
-                neighbor.pollution_level = min(
-                    neighbor.pollution_level + pollution_spread, 100)
+                neighbor.pollution_level = min(neighbor.pollution_level + pollution_spread, 100)
 
                 # Deforestation effect
                 if neighbor.cell_type == 4 and np.random.random() < 0.02:
