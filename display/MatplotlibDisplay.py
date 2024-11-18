@@ -60,6 +60,7 @@ class MatplotlibDisplay:
 
             self.precomputed_data.append((points, colors, sizes))
         print("3D Precomputation complete.")
+
     def render_day(self, day):
         """Render the cached 3D visualization for a specific day."""
         # Save the current viewing angles
@@ -94,14 +95,16 @@ class MatplotlibDisplay:
                 for x in range(state.grid.shape[0])
                 for y in range(state.grid.shape[1])
                 for z in range(state.grid.shape[2])
-                if state.grid[x][y][z].cell_type == 5  # City cell type
+                if (cell := state.grid[x][y][z]).cell_type == 5  # City cell type
             )
             for state in self.simulation.states
         ]
 
+        max_count = max(city_counts) if city_counts else 1
         self.ax_population.plot(days, city_counts, color="purple", label="Cities")
-        self.ax_population.set_ylim(0, max(city_counts) * 1.1)  # Dynamic scaling
+        self.ax_population.set_ylim(0, max_count * 1.1)
         self.ax_population.legend()
+
 
     def render_forests_graph(self):
         """Render the forest count graph over time."""
@@ -117,14 +120,16 @@ class MatplotlibDisplay:
                 for x in range(state.grid.shape[0])
                 for y in range(state.grid.shape[1])
                 for z in range(state.grid.shape[2])
-                if state.grid[x][y][z].cell_type == 4  # Forest cell type
+                if (cell := state.grid[x][y][z]).cell_type == 4  # Forest cell type
             )
             for state in self.simulation.states
         ]
 
+        max_count = max(forest_counts) if forest_counts else 1
         self.ax_forests.plot(days, forest_counts, color="green", label="Forests")
-        self.ax_forests.set_ylim(0, max(forest_counts) * 1.1)  # Dynamic scaling
+        self.ax_forests.set_ylim(0, max_count * 1.1)
         self.ax_forests.legend()
+
 
     def render_temperature_graph(self):
         """Render the temperature graph over time."""
@@ -135,15 +140,26 @@ class MatplotlibDisplay:
 
         days = range(len(self.simulation.states))
         avg_temperatures = [
-            np.mean([cell.temperature for x in range(state.grid.shape[0])
-                     for y in range(state.grid.shape[1])
-                     for z in range(state.grid.shape[2])
-                     for cell in [state.grid[x][y][z]]])
+            np.mean([
+                cell.temperature for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2])
+                if (cell := state.grid[x][y][z]).cell_type != "air"  # Exclude air cells
+            ])
+            if any(state.grid[x][y][z].cell_type != "air"
+                for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2]))
+            else 0  # Default to 0 if only air cells are present
             for state in self.simulation.states
         ]
 
+        max_temp = max(avg_temperatures) if avg_temperatures else 1
+        min_temp = min(avg_temperatures) if avg_temperatures else 0
         self.ax_temperature.plot(days, avg_temperatures, color="blue", label="Temperature")
+        self.ax_temperature.set_ylim(min_temp * 0.9, max_temp * 1.1)
         self.ax_temperature.legend()
+
 
     def render_pollution_graph(self):
         """Render the pollution graph over time."""
@@ -154,14 +170,23 @@ class MatplotlibDisplay:
 
         days = range(len(self.simulation.states))
         avg_pollution = [
-            np.mean([cell.pollution_level for x in range(state.grid.shape[0])
-                     for y in range(state.grid.shape[1])
-                     for z in range(state.grid.shape[2])
-                     for cell in [state.grid[x, y, z]]])
+            np.mean([
+                cell.pollution_level for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2])
+                if (cell := state.grid[x][y][z]).cell_type not in ["air", 0]  # Exclude air and sea cells
+            ])
+            if any(state.grid[x][y][z].cell_type not in ["air", 0]
+                for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2]))
+            else 0  # Default to 0 if only air or sea cells are present
             for state in self.simulation.states
         ]
 
+        max_pollution = max(avg_pollution) if avg_pollution else 1
         self.ax_pollution.plot(days, avg_pollution, color="red", label="Pollution")
+        self.ax_pollution.set_ylim(0, max_pollution * 1.1)
         self.ax_pollution.legend()
 
     def handle_key_press(self, event):

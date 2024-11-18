@@ -42,7 +42,7 @@ class Simulation:
         print("Precomputing all states...")
         current_state = deepcopy(self.states[0])  # Start from the initial state
         for day in range(1, self.days + 1):
-            print(f"Precomputing day {day}...")
+            # print(f"Precomputing day {day}...")
             next_state = deepcopy(current_state)  # Create a new state from the current one
             next_state.update()  # Update the state
             next_state.day = day  # Set the day for the new state
