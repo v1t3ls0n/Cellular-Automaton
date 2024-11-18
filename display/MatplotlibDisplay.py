@@ -144,9 +144,9 @@ class MatplotlibDisplay:
                 cell.temperature for x in range(state.grid.shape[0])
                 for y in range(state.grid.shape[1])
                 for z in range(state.grid.shape[2])
-                if (cell := state.grid[x][y][z]).cell_type != "air"  # Exclude air cells
+                if (cell := state.grid[x][y][z]).cell_type !=6  # Exclude air cells
             ])
-            if any(state.grid[x][y][z].cell_type != "air"
+            if any(state.grid[x][y][z].cell_type !=6
                 for x in range(state.grid.shape[0])
                 for y in range(state.grid.shape[1])
                 for z in range(state.grid.shape[2]))

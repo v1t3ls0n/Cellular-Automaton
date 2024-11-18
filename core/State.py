@@ -6,9 +6,9 @@ from noise import pnoise3  # Perlin noise for realistic terrain patterns
 class State:
     def __init__(self, grid_size, initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level):
         self.grid_size = grid_size
-        # Initialize all grid positions with "air" cells by default
+        # Initialize all grid positions with6 cells by default
         self.grid = np.full((grid_size, grid_size, grid_size), Cell(
-            "air", 0.0, 0.0, (0, 0, 0), 0, 0), dtype=object)
+           6, 0.0, 0.0, (0, 0, 0), 0, 0), dtype=object)
         self.day = 0
         self.wind_direction = (1, 1)  # Example: (x, y) direction
         self.wind_strength = 1  # Number of cells clouds move per update
@@ -49,7 +49,7 @@ class State:
         for x in range(self.grid_size):
             for y in range(self.grid_size):
                 for z in range(self.grid_size):
-                    cell_type = "air"  # Default to "air"
+                    cell_type =6  # Default to6
                     rand = np.random.random()
 
                     # Below or at elevation: water or icebergs
@@ -82,7 +82,7 @@ class State:
                             cell_type = 2  # Cloud
                             cloud_count += 1
                         else:
-                            cell_type = "air"
+                            cell_type =6
                             
 
                     # Set pollution, temperature, and water level
@@ -103,7 +103,7 @@ class State:
 
     def update(self):
         """Update the state based on current grid and interactions."""
-        # Initialize new_grid with "air" cells
+        # Initialize new_grid with6 cells
         new_grid = np.full(
             (self.grid_size, self.grid_size, self.grid_size),
             Cell("air", 0.0, 0.0, (0, 0, 0), 0, 0),
@@ -143,12 +143,12 @@ class State:
 
                         target_cell = new_grid[new_x, new_y, z]
 
-                        if target_cell.cell_type == "air":
+                        if target_cell.cell_type == 6:
                             # Move the cloud to the empty air cell
                             new_grid[new_x, new_y, z] = current_cell
                             # Clear the current position
                             self.grid[x, y, z] = Cell(
-                                "air", 0.0, 0.0, (0, 0, 0), 0, 0)
+                               6, 0.0, 0.0, (0, 0, 0), 0, 0)
                         elif target_cell.cell_type == 2:  # Another cloud
                             # Merge properties of the two clouds
                             merged_temperature = (
@@ -166,14 +166,14 @@ class State:
                             )
                             # Clear the current position
                             self.grid[x, y, z] = Cell(
-                                "air", 0.0, 0.0, (0, 0, 0), 0, 0)
+                               6, 0.0, 0.0, (0, 0, 0), 0, 0)
                         else:
                             # If the target cell is not air or cloud, keep the cloud in its current position
                             new_grid[x, y, z] = current_cell
                             # Ensure the original cell is not duplicated
                             self.grid[x, y, z] = Cell(
-                                "air", 0.0, 0.0, (0, 0, 0), 0, 0)
-                    elif current_cell.cell_type != "air":
+                               6, 0.0, 0.0, (0, 0, 0), 0, 0)
+                    elif current_cell.cell_type !=6:
                         # Copy all other cells directly
                         new_grid[x, y, z] = current_cell
 

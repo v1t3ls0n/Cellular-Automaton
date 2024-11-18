@@ -1,8 +1,8 @@
 import numpy as np
 
 class Cell:
-    def __init__(self, cell_type="air", temperature=0.0, wind_strength=0.0, wind_direction=(0, 0, 0), pollution_level=0.0, water_level=0.0):
-        self.cell_type = cell_type  # Default type is "air"
+    def __init__(self, cell_type=6, temperature=0.0, wind_strength=0.0, wind_direction=(0, 0, 0), pollution_level=0.0, water_level=0.0):
+        self.cell_type = cell_type  # Default type is 6 which is for6 blank cell
         self.temperature = temperature
         self.wind_strength = wind_strength
         self.wind_direction = wind_direction
@@ -25,7 +25,7 @@ class Cell:
             return "darkgreen"
         elif self.cell_type == 5:  # Cities
             return "purple"  # Solid purple for cities
-        elif self.cell_type == "air":  # Air
+        elif self.cell_type == 6:  # Air
             return "white"
             # return (0.8, 0.8, 0.8, 0.001)  # Light gray with transparency
         else:
@@ -34,7 +34,7 @@ class Cell:
     def update(self, neighbors, global_forest_count, global_city_count):
         """Update the cell based on its type and interactions with neighbors."""
         # Air interactions
-        if self.cell_type == "air":
+        if self.cell_type == 6:
             for neighbor in neighbors:
                 if neighbor.cell_type == 2:  # Cloud neighbor
                     # Absorb some pollution from clouds
@@ -75,7 +75,7 @@ class Cell:
 
             # Spread horizontally based on wind direction
             for neighbor in neighbors:
-                if neighbor.cell_type == "air" and np.random.random() < 0.2:  # 20% chance to spread
+                if neighbor.cell_type == 6 and np.random.random() < 0.2:  # 20% chance to spread
                     neighbor.cell_type = 2  # Turn air into cloud
                     neighbor.pollution_level = self.pollution_level * 0.5  # Spread some pollution
                     temperature_diffusion = 0.01 * neighbor.temperature
