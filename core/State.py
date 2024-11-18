@@ -44,7 +44,7 @@ class State:
             for y in range(self.grid_size):
                 # Normalize and cap elevation
                 elevation_map[x, y] = int(
-                    (pnoise3(x / 10, y / 10, 0) + 1)  * (self.grid_size * 0.25))
+                    (pnoise3(x / 10, y / 10, 0) + 1) * (self.grid_size * 0.25))
 
         for x in range(self.grid_size):
             for y in range(self.grid_size):
@@ -65,35 +65,30 @@ class State:
                                 cell_type = 0  # Fallback to sea
                                 sea_count += 1
                     # First layer above terrain: land/city/forest
-                    elif elevation_map[x, y] + 1 <= z <= elevation_map[x, y] + 1:  # First layer above terrain
-                        # Enforce a balance between cities and forests
+                    elif z == elevation_map[x, y] + 1:  # First layer above terrain
+                        cell_type = 1  # Land
+                        land_count += 1
+                    elif z == elevation_map[x, y] + 2:  # Second layer above terrain
                         if city_count < initial_cities and (forest_count >= initial_forests or city_count <= forest_count):
                             cell_type = 5  # City
                             city_count += 1
-                        elif forest_count < initial_forests:
+                        elif forest_count < initial_forests and (city_count >= initial_cities or forest_count <= city_count):
                             cell_type = 4  # Forest
                             forest_count += 1
-                        elif land_probability * land_count < (forest_probability + city_probability) * (forest_count+city_count):
-                            cell_type = 1  # Land
-                            land_count += 1
-                        else:
-                            if city_count > forest_count:
-                                cell_type = 4  # Forest
-                                forest_count += 1
-                            else:
-                                cell_type = 5  # City
-                                city_count += 1
-                                
+
                     # Higher layers with a gap for clouds
                     elif z > elevation_map[x, y] + 2:
                         if cloud_count < total_cells * cloud_probability:
                             cell_type = 2  # Cloud
                             cloud_count += 1
+                        else:
+                            cell_type = "air"
+                            
 
                     # Set pollution, temperature, and water level
                     pollution_level = initial_pollution if cell_type in [
                         5, 4] else 0
-                    temperature = initial_temperature
+                    temperature = temperature = initial_temperature + np.random.uniform(-2, 2)
                     water_level = max(min_water_level, initial_water_level) if cell_type in [
                         0, 3] else 0
 
@@ -151,8 +146,8 @@ class State:
                         if target_cell.cell_type == "air":
                             # Move the cloud to the empty air cell
                             new_grid[new_x, new_y, z] = current_cell
-                            # Make the current position air
-                            new_grid[x, y, z] = Cell(
+                            # Clear the current position
+                            self.grid[x, y, z] = Cell(
                                 "air", 0.0, 0.0, (0, 0, 0), 0, 0)
                         elif target_cell.cell_type == 2:  # Another cloud
                             # Merge properties of the two clouds
@@ -169,20 +164,21 @@ class State:
                                 merged_pollution,
                                 merged_water_level,
                             )
-                            # Make the current position air
-                            new_grid[x, y, z] = Cell(
+                            # Clear the current position
+                            self.grid[x, y, z] = Cell(
                                 "air", 0.0, 0.0, (0, 0, 0), 0, 0)
                         else:
                             # If the target cell is not air or cloud, keep the cloud in its current position
                             new_grid[x, y, z] = current_cell
+                            # Ensure the original cell is not duplicated
+                            self.grid[x, y, z] = Cell(
+                                "air", 0.0, 0.0, (0, 0, 0), 0, 0)
                     elif current_cell.cell_type != "air":
                         # Copy all other cells directly
                         new_grid[x, y, z] = current_cell
 
         self.grid = new_grid
 
-
-        
     def get_neighbors(self, x, y, z):
         """Retrieve neighbors for a given cell."""
         neighbors = []

@@ -16,10 +16,9 @@ class Cell:
         elif self.cell_type == 1:  # Land
             return "yellow"
         elif self.cell_type == 2:  # Clouds (affected by pollution)
-            pollution_intensity = min(self.pollution_level / 100.0, 1.0)  # Normalize pollution level to [0, 1]
-            color_intensity = max(0.5, 1.0 - pollution_intensity)  # Adjust intensity for visibility
-            # return (color_intensity, color_intensity, color_intensity, 0.7)  # Semi-transparent grayscale
-            return "darkgray"
+            pollution_intensity = min(self.pollution_level, 1.0)  # Normalize pollution level to [0, 1]
+            return (0.8,0.8,0.8, pollution_intensity)  # Semi-transparent grayscale
+            # return "darkgray"
         elif self.cell_type == 3:  # Icebergs
             return "cyan"
         elif self.cell_type == 4:  # Forests
@@ -27,7 +26,8 @@ class Cell:
         elif self.cell_type == 5:  # Cities
             return "purple"  # Solid purple for cities
         elif self.cell_type == "air":  # Air
-            return (0.8, 0.8, 0.8, 0.1)  # Light gray with transparency
+            return "white"
+            # return (0.8, 0.8, 0.8, 0.001)  # Light gray with transparency
         else:
             return "white"  # Default fallback color
 
@@ -78,7 +78,8 @@ class Cell:
                 if neighbor.cell_type == "air" and np.random.random() < 0.2:  # 20% chance to spread
                     neighbor.cell_type = 2  # Turn air into cloud
                     neighbor.pollution_level = self.pollution_level * 0.5  # Spread some pollution
-                    neighbor.temperature = self.temperature * 0.5  # Spread some temperature effects
+                    temperature_diffusion = 0.01 * neighbor.temperature
+                    self.temperature += temperature_diffusion
 
             # Reduce pollution to ensure clouds persist longer
             if self.pollution_level > 1:
