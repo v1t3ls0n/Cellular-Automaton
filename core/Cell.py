@@ -18,7 +18,7 @@ class Cell:
             return "yellow"
         elif self.cell_type == 2:  # Clouds (affected by pollution)
             # Normalize pollution level to [0, 1]
-            pollution_intensity = min(self.pollution_level, 1.0)
+            pollution_intensity = min(float(self.pollution_level), 1.0)
             # Semi-transparent grayscale
             return (0.8, 0.8, 0.8, pollution_intensity)
             # return "darkgray"
@@ -30,9 +30,6 @@ class Cell:
             return "purple"  # Solid purple for cities
         elif self.cell_type == 6:  # Air
             return "white"
-            # return (0.8, 0.8, 0.8, 0.001)  # Light gray with transparency
-        else:
-            return "white"  # Default fallback color
 
     def update(self, neighbors, global_forest_count, global_city_count):
         """Update the cell based on its type and interactions with neighbors."""

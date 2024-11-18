@@ -11,6 +11,7 @@ class State:
         self.wind_direction = (1, 1)
         self.wind_strength = 1
         self.initialize_grid(initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level)
+        
 
     def initialize_grid(self, initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level):
         """Initialize the grid with logical placement of all cell types."""
@@ -19,15 +20,16 @@ class State:
         min_icebergs = max(1, int(total_cells * 0.01))
         sea_probability = 0.3
         iceberg_probability = sea_probability * 0.05
-        cloud_probability = 0.1
+        cloud_probability = 0.01
 
         elevation_map = self._generate_elevation_map()
 
         for x in range(self.grid_size):
             for y in range(self.grid_size):
                 for z in range(self.grid_size):
-                    cell_type = 6  # Default to air
                     rand = np.random.random()
+                    
+                    cell_type = 6  # Default to air
 
                     # Determine cell type based on elevation and probabilities
                     if z <= elevation_map[x, y]:
@@ -58,10 +60,10 @@ class State:
                             cell_type = 1
                             land_count += 1
                     elif z > elevation_map[x, y] + 1:
-                        if cloud_count < total_cells * cloud_probability:
+                        if cloud_count < total_cells * cloud_probability and rand < cloud_probability:
                             cell_type = 2
-                            cloud_count += 1
-
+                            cloud_count += 1 
+                        
                     # Set pollution, temperature, and water level
                     pollution_level = initial_pollution if cell_type in [4, 5] else 0
                     temperature = initial_temperature + np.random.uniform(-2, 2)
