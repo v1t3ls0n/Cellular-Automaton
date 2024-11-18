@@ -8,27 +8,29 @@ class Cell:
         self.wind_direction = wind_direction  # Wind direction as a tuple (dx, dy, dz)
         self.pollution_level = pollution_level  # Pollution level
         self.water_level = water_level  # Water level (e.g., sea, icebergs, or rain in clouds)
-
+        
     def get_color(self):
         """Return the color for the cell, dynamically based on its state."""
         if self.cell_type == 0:  # Sea
             return "blue"
         elif self.cell_type == 1:  # Land
             return "yellow"
-        elif self.cell_type == 2:  # Clouds
-            intensity = min(1.0, self.pollution_level / 50.0)
-            return (0.7, 0.7, 0.7, intensity)  # Gray with transparency
+        elif self.cell_type == 2:  # Clouds (affected by pollution)
+            # Clouds become darker as pollution increases
+            pollution_intensity = min(self.pollution_level / 100.0, 1.0)  # Normalize pollution level to [0, 1]
+            color_intensity = 1.0 - pollution_intensity  # Higher pollution means darker color
+            return (color_intensity, color_intensity, color_intensity, 1.0)  # Grayscale with full opacity
+
         elif self.cell_type == 3:  # Icebergs
-            return (0.5, 1.0, 1.0) if self.water_level > 0 else "cyan"
+            return "cyan"
         elif self.cell_type == 4:  # Forests
             return "darkgreen"
         elif self.cell_type == 5:  # Cities
-            intensity = min(1.0, self.pollution_level / 50.0)
-            return (1.0, 1.0 - intensity, 1.0 - intensity)  # Red with intensity
+            return "pink"  # Solid pink for cities
         else:
             return "white"  # Default to white
-
-    def update(self, neighbors):
+        
+    def update(self, neighbors, global_forest_count, global_city_count):
         """Update the cell based on its type and interactions with neighbors."""
         # Sea remains constant
         if self.cell_type == 0:
@@ -43,6 +45,10 @@ class Cell:
                     neighbor.water_level -= absorbed_water
             if self.temperature > 35:  # Drought
                 self.water_level = max(0, self.water_level - 0.5)
+
+            # Land may turn back into forest if conditions improve
+            if global_forest_count > global_city_count and np.random.random() < 0.05:
+                self.cell_type = 4  # Land turns into forest
 
         # Clouds spread pollution and rain
         elif self.cell_type == 2:
@@ -60,15 +66,18 @@ class Cell:
                 self.pollution_level -= pollution_spread
 
         # Icebergs melt due to temperature
-        elif self.cell_type == 3:
+        elif self.cell_type == 3:  # Icebergs
             if self.temperature > 0:
                 melting_rate = min(0.1 + self.temperature * 0.002, 0.5)  # Gradual melting
                 self.water_level += melting_rate
                 if self.water_level > 10:
                     self.cell_type = 0  # Turns into sea
-                    for neighbor in neighbors:  # Raise sea level for adjacent water cells
-                        if neighbor.cell_type == 0:
+                    for neighbor in neighbors:
+                        if neighbor.cell_type == 0:  # Sea cell
                             neighbor.water_level += melting_rate * 0.5
+                        if neighbor.cell_type in [1, 5]:  # Land or Cities near Icebergs
+                            neighbor.temperature += 0.2  # Regional heating effect
+
 
         # Forests absorb pollution but can be deforested
         elif self.cell_type == 4:
@@ -79,21 +88,31 @@ class Cell:
                     self.water_level += absorbed_rain
                     neighbor.water_level -= absorbed_rain
 
-            if self.pollution_level > 30:
-                self.cell_type = 1  # Forest turns into land
+            if self.pollution_level > 50:
+                self.cell_type = np.random.choice([1, 4], p=[0.4, 0.6])  # Forest may turn into land
 
-        # Cities generate pollution and increase temperature
-        elif self.cell_type == 5:
-            self.pollution_level = min(self.pollution_level + 1, 100)  # Slower pollution increase
-            self.temperature += 0.05 * self.pollution_level  # Pollution gradually increases temperature
+        elif self.cell_type == 5:  # Cities
+            # עלייה מתונה יותר בזיהום, מבוססת על רמת הזיהום הנוכחית
+            pollution_increase = 1 / (1 + 0.05 * self.pollution_level)  # גורם מתון
+            self.pollution_level = min(self.pollution_level + pollution_increase, 100)  # הגבלת זיהום ל-100
+
+            # עלייה מתונה בטמפרטורה כתוצאה מהזיהום
+            self.temperature += 0.01 * self.pollution_level  # עלייה הדרגתית יותר בטמפרטורה
+
             for neighbor in neighbors:
-                neighbor.pollution_level = min(neighbor.pollution_level + self.pollution_level * 0.01, 100)
-                if neighbor.cell_type == 4 and np.random.random() < 0.05:
-                    neighbor.cell_type = 1  # Deforestation
+                # זיהום מתפשט לשכנים בצורה מתונה יותר
+                pollution_spread = 0.01 * self.pollution_level / len(neighbors)  # חלק יחסי מהזיהום
+                neighbor.pollution_level = min(neighbor.pollution_level + pollution_spread, 100)
 
-            if self.water_level > 5:  # Flooding
-                if np.random.random() < 0.02:
-                    self.cell_type = 0  # City destroyed, becomes sea
+                # טיפול במצבי הכחדת יערות ושינוי שטח
+                if neighbor.cell_type == 4 and  np.random.random() < 0.02:  # סיכוי נמוך יותר להפיכת יער לאדמה
+                    neighbor.cell_type = 1  # יער הופך לאדמה
 
-        # Cap temperature
-        self.temperature = min(self.temperature, 50)  # Avoid runaway temperature
+                # ערים סמוכות למים עם מפלס גבוה
+                if neighbor.cell_type == 0 and neighbor.water_level > 5:
+                    if np.random.random() < 0.1:  # סיכוי מופחת להרוס עיר במפלס מים גבוה
+                        self.cell_type = 0  # עיר הופכת לים
+
+            # אפקט של זיהום גבוה מאוד
+            if self.pollution_level > 80 and np.random.random() < 0.3:  # רק אם זיהום קיצוני
+                self.cell_type = 1  # עיר הופכת לאדמה בגלל זיהום גבוה

@@ -7,25 +7,31 @@ import numpy as np
 class MatplotlibDisplay:
     def __init__(self, simulation):
         self.simulation = simulation
+        self.precomputed_results = simulation.precomputed_results  # Use precomputed results
         self.current_day = 0
-        self.fig, self.ax_3d, self.ax_pollution, self.ax_temperature = None, None, None, None
+        self.fig, self.ax_3d, self.ax_pollution, self.ax_temperature, self.ax_population, self.ax_forests = None, None, None, None, None, None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
         self.current_elev = 20  # Default elevation
         self.current_azim = 45  # Default azimuth
 
     def plot_3d(self):
-        """Create the plot with pollution and temperature graphs."""
-        self.fig = plt.figure(figsize=(15, 5))
-        self.ax_3d = self.fig.add_subplot(131, projection='3d')  # 3D simulation
-        self.ax_pollution = self.fig.add_subplot(132)  # Pollution graph
-        self.ax_temperature = self.fig.add_subplot(133)  # Temperature graph
+        """Create the plot with all relevant graphs."""
+        plt.ion()  # Enable interactive mode
+        self.fig = plt.figure(figsize=(16, 10))
+        self.ax_3d = self.fig.add_subplot(231, projection='3d')  # 3D simulation
+        self.ax_pollution = self.fig.add_subplot(232)  # Pollution graph
+        self.ax_temperature = self.fig.add_subplot(233)  # Temperature graph
+        self.ax_population = self.fig.add_subplot(234)  # Population graph
+        self.ax_forests = self.fig.add_subplot(235)  # Forest graph
 
         # Precompute 3D visualizations
         self.precompute_visualizations()
 
-        # Render pollution and temperature graphs
+        # Render the graphs
         self.render_pollution_graph()
         self.render_temperature_graph()
+        self.render_population_graph()
+        self.render_forests_graph()
 
         # Add keyboard navigation
         self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
@@ -33,12 +39,13 @@ class MatplotlibDisplay:
         # Render the initial day
         self.render_day(self.current_day)
 
+        plt.ioff()  # Disable interactive mode to ensure `plt.show()` holds the program
         plt.show()
 
     def precompute_visualizations(self):
-        """Precompute 3D scatter data for all days."""
-        print("Precomputing 3D visualizations for all days...")
-        for state in self.simulation.states:
+        """Precompute 3D scatter data for all precomputed states."""
+        print("Precomputing 3D visualizations...")
+        for state in self.precomputed_results:
             points = []
             colors = []
             sizes = []  # Add a list for point sizes
@@ -52,8 +59,7 @@ class MatplotlibDisplay:
                         sizes.append(10)  # Default size for all points
 
             self.precomputed_data.append((points, colors, sizes))
-        print("Precomputation complete.")
-
+        print("3D Precomputation complete.")
     def render_day(self, day):
         """Render the cached 3D visualization for a specific day."""
         # Save the current viewing angles
@@ -74,6 +80,52 @@ class MatplotlibDisplay:
 
         self.fig.canvas.draw_idle()
 
+    def render_population_graph(self):
+        """Render the population (number of cities) graph over time."""
+        self.ax_population.cla()
+        self.ax_population.set_title("City Population Over Time")
+        self.ax_population.set_xlabel("Day")
+        self.ax_population.set_ylabel("Number of Cities")
+
+        days = range(len(self.simulation.states))
+        city_counts = [
+            sum(
+                1
+                for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2])
+                if state.grid[x][y][z].cell_type == 5  # City cell type
+            )
+            for state in self.simulation.states
+        ]
+
+        self.ax_population.plot(days, city_counts, color="purple", label="Cities")
+        self.ax_population.set_ylim(0, max(city_counts) * 1.1)  # Dynamic scaling
+        self.ax_population.legend()
+
+    def render_forests_graph(self):
+        """Render the forest count graph over time."""
+        self.ax_forests.cla()
+        self.ax_forests.set_title("Forest Count Over Time")
+        self.ax_forests.set_xlabel("Day")
+        self.ax_forests.set_ylabel("Number of Forests")
+
+        days = range(len(self.simulation.states))
+        forest_counts = [
+            sum(
+                1
+                for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2])
+                if state.grid[x][y][z].cell_type == 4  # Forest cell type
+            )
+            for state in self.simulation.states
+        ]
+
+        self.ax_forests.plot(days, forest_counts, color="green", label="Forests")
+        self.ax_forests.set_ylim(0, max(forest_counts) * 1.1)  # Dynamic scaling
+        self.ax_forests.legend()
+
     def render_temperature_graph(self):
         """Render the temperature graph over time."""
         self.ax_temperature.cla()
@@ -83,17 +135,14 @@ class MatplotlibDisplay:
 
         days = range(len(self.simulation.states))
         avg_temperatures = [
-            np.mean([
-                cell.temperature
-                for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2])
-                for cell in [state.grid[x][y][z]]
-            ])
+            np.mean([cell.temperature for x in range(state.grid.shape[0])
+                     for y in range(state.grid.shape[1])
+                     for z in range(state.grid.shape[2])
+                     for cell in [state.grid[x][y][z]]])
             for state in self.simulation.states
         ]
 
-        self.ax_temperature.plot(days, avg_temperatures, color="blue", label="Average Temperature")
+        self.ax_temperature.plot(days, avg_temperatures, color="blue", label="Temperature")
         self.ax_temperature.legend()
 
     def render_pollution_graph(self):
@@ -105,21 +154,18 @@ class MatplotlibDisplay:
 
         days = range(len(self.simulation.states))
         avg_pollution = [
-            np.mean([
-                min(cell.pollution_level, 100)  # Cap pollution level to avoid overflow
-                for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2])
-                for cell in [state.grid[x, y, z]]
-            ])
+            np.mean([cell.pollution_level for x in range(state.grid.shape[0])
+                     for y in range(state.grid.shape[1])
+                     for z in range(state.grid.shape[2])
+                     for cell in [state.grid[x, y, z]]])
             for state in self.simulation.states
         ]
 
-        self.ax_pollution.plot(days, avg_pollution, color="red", label="Average Pollution")
+        self.ax_pollution.plot(days, avg_pollution, color="red", label="Pollution")
         self.ax_pollution.legend()
-        self.fig.canvas.draw_idle()
 
     def handle_key_press(self, event):
+        """Handle key presses for navigating and zooming/panning the graphs."""
         if event.key == "right":
             self.next_day()
         elif event.key == "left":
