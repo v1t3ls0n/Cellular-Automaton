@@ -1,28 +1,31 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
+import numpy as np
 
 
 class MatplotlibDisplay:
     def __init__(self, simulation):
         self.simulation = simulation
         self.current_day = 0
-        self.fig, self.ax_3d, self.ax_graph = None, None, None
+        self.fig, self.ax_3d, self.ax_pollution, self.ax_temperature = None, None, None, None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
         self.current_elev = 20  # Default elevation
         self.current_azim = 45  # Default azimuth
 
     def plot_3d(self):
-        # Create the figure and subplots
-        self.fig = plt.figure(figsize=(10, 5))
-        self.ax_3d = self.fig.add_subplot(121, projection='3d')
-        self.ax_graph = self.fig.add_subplot(122)
+        """Create the plot with pollution and temperature graphs."""
+        self.fig = plt.figure(figsize=(15, 5))
+        self.ax_3d = self.fig.add_subplot(131, projection='3d')  # 3D simulation
+        self.ax_pollution = self.fig.add_subplot(132)  # Pollution graph
+        self.ax_temperature = self.fig.add_subplot(133)  # Temperature graph
 
         # Precompute 3D visualizations
         self.precompute_visualizations()
 
-        # Render pollution graph (static)
+        # Render pollution and temperature graphs
         self.render_pollution_graph()
+        self.render_temperature_graph()
 
         # Add keyboard navigation
         self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
@@ -30,9 +33,7 @@ class MatplotlibDisplay:
         # Render the initial day
         self.render_day(self.current_day)
 
-        # Show the plot
         plt.show()
-
 
     def precompute_visualizations(self):
         """Precompute 3D scatter data for all days."""
@@ -73,30 +74,50 @@ class MatplotlibDisplay:
 
         self.fig.canvas.draw_idle()
 
+    def render_temperature_graph(self):
+        """Render the temperature graph over time."""
+        self.ax_temperature.cla()
+        self.ax_temperature.set_title("Temperature Over Time")
+        self.ax_temperature.set_xlabel("Day")
+        self.ax_temperature.set_ylabel("Average Temperature")
+
+        days = range(len(self.simulation.states))
+        avg_temperatures = [
+            np.mean([
+                cell.temperature
+                for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2])
+                for cell in [state.grid[x][y][z]]
+            ])
+            for state in self.simulation.states
+        ]
+
+        self.ax_temperature.plot(days, avg_temperatures, color="blue", label="Average Temperature")
+        self.ax_temperature.legend()
 
     def render_pollution_graph(self):
         """Render the pollution graph over time."""
-        self.ax_graph.cla()
-        self.ax_graph.set_title("Pollution Over Time")
-        self.ax_graph.set_xlabel("Day")
-        self.ax_graph.set_ylabel("Average Pollution")
+        self.ax_pollution.cla()
+        self.ax_pollution.set_title("Pollution Over Time")
+        self.ax_pollution.set_xlabel("Day")
+        self.ax_pollution.set_ylabel("Average Pollution")
 
-        avg_pollution = []
-        for state in self.simulation.states:
-            total_pollution = sum(
-                cell.pollution_level for x in range(state.grid.shape[0])
+        days = range(len(self.simulation.states))
+        avg_pollution = [
+            np.mean([
+                min(cell.pollution_level, 100)  # Cap pollution level to avoid overflow
+                for x in range(state.grid.shape[0])
                 for y in range(state.grid.shape[1])
                 for z in range(state.grid.shape[2])
                 for cell in [state.grid[x, y, z]]
-            )
-            total_cells = state.grid.shape[0] * state.grid.shape[1] * state.grid.shape[2]
-            avg_pollution.append(total_pollution / total_cells)
+            ])
+            for state in self.simulation.states
+        ]
 
-        self.ax_graph.plot(range(len(avg_pollution)), avg_pollution, color="red", label="Average Pollution")
-        self.ax_graph.legend()
+        self.ax_pollution.plot(days, avg_pollution, color="red", label="Average Pollution")
+        self.ax_pollution.legend()
         self.fig.canvas.draw_idle()
-
-
 
     def handle_key_press(self, event):
         if event.key == "right":
