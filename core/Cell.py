@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class Cell:
     def __init__(self, cell_type, temperature, wind_strength, wind_direction, pollution_level, water_level=0):
         self.cell_type = cell_type  # Type: Sea, Land, Clouds, Icebergs, Forests, Cities
@@ -63,9 +62,13 @@ class Cell:
         # Icebergs melt due to temperature
         elif self.cell_type == 3:
             if self.temperature > 0:
-                self.water_level += min(0.5, self.temperature * 0.01)
+                melting_rate = min(0.1 + self.temperature * 0.002, 0.5)  # Gradual melting
+                self.water_level += melting_rate
                 if self.water_level > 10:
                     self.cell_type = 0  # Turns into sea
+                    for neighbor in neighbors:  # Raise sea level for adjacent water cells
+                        if neighbor.cell_type == 0:
+                            neighbor.water_level += melting_rate * 0.5
 
         # Forests absorb pollution but can be deforested
         elif self.cell_type == 4:
@@ -81,16 +84,16 @@ class Cell:
 
         # Cities generate pollution and increase temperature
         elif self.cell_type == 5:
-            self.pollution_level = min(self.pollution_level + 2, 100)  # Cap pollution level
-            self.temperature += 0.1 * self.pollution_level  # Pollution increases temperature
+            self.pollution_level = min(self.pollution_level + 1, 100)  # Slower pollution increase
+            self.temperature += 0.05 * self.pollution_level  # Pollution gradually increases temperature
             for neighbor in neighbors:
-                neighbor.pollution_level = min(neighbor.pollution_level + self.pollution_level * 0.02, 100)
-                if neighbor.cell_type == 4 and np.random.random() < 0.1:
+                neighbor.pollution_level = min(neighbor.pollution_level + self.pollution_level * 0.01, 100)
+                if neighbor.cell_type == 4 and np.random.random() < 0.05:
                     neighbor.cell_type = 1  # Deforestation
 
             if self.water_level > 5:  # Flooding
-                if np.random.random() < 0.1:
+                if np.random.random() < 0.02:
                     self.cell_type = 0  # City destroyed, becomes sea
 
         # Cap temperature
-        self.temperature = min(self.temperature, 50)
+        self.temperature = min(self.temperature, 50)  # Avoid runaway temperature
