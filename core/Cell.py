@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Cell:
     def __init__(self, cell_type=6, temperature=0.0, wind_strength=0.0, wind_direction=(0, 0, 0), pollution_level=0.0, water_level=0.0):
         self.cell_type = cell_type  # Default type is 6 which is for6 blank cell
@@ -16,8 +17,10 @@ class Cell:
         elif self.cell_type == 1:  # Land
             return "yellow"
         elif self.cell_type == 2:  # Clouds (affected by pollution)
-            pollution_intensity = min(self.pollution_level, 1.0)  # Normalize pollution level to [0, 1]
-            return (0.8,0.8,0.8, pollution_intensity)  # Semi-transparent grayscale
+            # Normalize pollution level to [0, 1]
+            pollution_intensity = min(self.pollution_level, 1.0)
+            # Semi-transparent grayscale
+            return (0.8, 0.8, 0.8, pollution_intensity)
             # return "darkgray"
         elif self.cell_type == 3:  # Icebergs
             return "cyan"
@@ -38,7 +41,8 @@ class Cell:
             for neighbor in neighbors:
                 if neighbor.cell_type == 2:  # Cloud neighbor
                     # Absorb some pollution from clouds
-                    pollution_diffusion = min(0.01 * neighbor.pollution_level, 1.0)
+                    pollution_diffusion = min(
+                        0.01 * neighbor.pollution_level, 1.0)
                     self.pollution_level += pollution_diffusion
 
                     # Absorb some heat from clouds
@@ -46,12 +50,36 @@ class Cell:
                     self.temperature += temperature_diffusion
             return
 
-        # Sea remains constant
-        if self.cell_type == 0:
+
+    def update(self, neighbors, global_forest_count, global_city_count):
+        """Update the cell based on its type and interactions with neighbors."""
+
+        # Sea interactions
+        if self.cell_type == 0:  # Sea
+            for neighbor in neighbors:
+                # Spread temperature to neighbors
+                if neighbor.cell_type in [1, 4, 5]:  # Land, Forest, or City
+                    temperature_diffusion = 0.1 * \
+                        (self.temperature - neighbor.temperature)
+                    neighbor.temperature += temperature_diffusion
+
+                # Flooding logic
+                if neighbor.cell_type in [1, 4, 5]:  # Land, Forest, or City
+                    if neighbor.water_level < self.water_level:  # Neighbor is lower
+                        flooding_amount = min(
+                            self.water_level - neighbor.water_level, 0.5)
+                        neighbor.water_level += flooding_amount
+                        self.water_level -= flooding_amount
+
+                        # Transform the flooded cell into sea if fully flooded
+                        if neighbor.water_level > 5:  # Arbitrary threshold for flooding
+                            neighbor.cell_type = 0  # Transform to sea
+                            neighbor.temperature = self.temperature  # Match sea temperature
             return
 
+        # Other interactions (Land, Clouds, Icebergs, Forests, Cities) remain the same
         # Land absorbs water and is affected by drought
-        elif self.cell_type == 1:
+        if self.cell_type == 1:
             for neighbor in neighbors:
                 if neighbor.cell_type == 2 and neighbor.water_level > 0:  # Rain
                     absorbed_water = min(0.1, neighbor.water_level)
@@ -85,18 +113,19 @@ class Cell:
             if self.pollution_level > 1:
                 self.pollution_level -= 0.5
 
-
-        # Icebergs melt due to temperature
+            # Icebergs melt due to temperature
         elif self.cell_type == 3:  # Icebergs
             if self.temperature > 0:
-                melting_rate = min(0.1 + self.temperature * 0.002, 0.5)  # Gradual melting
+                melting_rate = min(0.1 + self.temperature *
+                                0.002, 0.5)  # Gradual melting
                 self.water_level += melting_rate
                 if self.water_level > 10:
                     self.cell_type = 0  # Turns into sea
                     for neighbor in neighbors:
                         if neighbor.cell_type == 0:  # Sea cell
                             neighbor.water_level += melting_rate * 0.5
-                        if neighbor.cell_type in [1, 5]:  # Land or Cities near Icebergs
+                        # Land or Cities near Icebergs
+                        if neighbor.cell_type in [1, 5]:
                             neighbor.temperature += 0.2  # Regional heating effect
 
             # Spread icebergs if temperature is low and adjacent sea cells exist
@@ -108,10 +137,11 @@ class Cell:
 
                         if neighbor.cell_type == 0:  # Sea cell
                             neighbor.water_level += melting_rate * 0.5
-                        if neighbor.cell_type in [1, 5]:  # Land or Cities near Icebergs
+                        # Land or Cities near Icebergs
+                        if neighbor.cell_type in [1, 5]:
                             neighbor.temperature += 0.2  # Regional heating effect
 
-        # Forests absorb pollution but can be deforested
+            # Forests absorb pollution but can be deforested
         elif self.cell_type == 4:
             self.pollution_level = max(0, self.pollution_level - 0.5)
             for neighbor in neighbors:
@@ -119,14 +149,17 @@ class Cell:
                     absorbed_rain = min(0.1, neighbor.water_level)
                     self.water_level += absorbed_rain
                     neighbor.water_level -= absorbed_rain
-
-            if self.pollution_level > 50:
-                self.cell_type = np.random.choice([1, 4], p=[0.4, 0.6])  # Forest may turn into land
-
+            # Forest extinction based on global pollution and temperature
+            if global_forest_count < global_city_count:
+                self.pollution_level += 0.5  # Absorb more pollution if forests are fewer
+                if self.pollution_level > 50:
+                    self.cell_type = 1  # Forest turns into land
         elif self.cell_type == 5:  # Cities
             # Increase pollution
-            pollution_increase = 1 / (1 + 0.05 * self.pollution_level)  # Moderate growth
-            self.pollution_level = min(self.pollution_level + pollution_increase, 100)
+            pollution_increase = 1 / \
+                (1 + 0.05 * self.pollution_level)  # Moderate growth
+            self.pollution_level = min(
+                self.pollution_level + pollution_increase, 100)
 
             # Increase temperature due to pollution
             self.temperature += 0.01 * self.pollution_level
@@ -134,7 +167,8 @@ class Cell:
             for neighbor in neighbors:
                 # Spread pollution to neighbors
                 pollution_spread = 0.01 * self.pollution_level / len(neighbors)
-                neighbor.pollution_level = min(neighbor.pollution_level + pollution_spread, 100)
+                neighbor.pollution_level = min(
+                    neighbor.pollution_level + pollution_spread, 100)
 
                 # Deforestation effect
                 if neighbor.cell_type == 4 and np.random.random() < 0.02:
@@ -148,3 +182,16 @@ class Cell:
             # Extreme pollution effect
             if self.pollution_level > 80 and np.random.random() < 0.3:
                 self.cell_type = 1  # City turns into land
+
+            # Air interactions
+        elif self.cell_type == 6:
+            for neighbor in neighbors:
+                if neighbor.cell_type == 2:  # Cloud neighbor
+                    # Absorb some pollution from clouds
+                    pollution_diffusion = min(0.01 * neighbor.pollution_level, 1.0)
+                    self.pollution_level += pollution_diffusion
+
+                    # Absorb some heat from clouds
+                    temperature_diffusion = 0.05 * neighbor.temperature
+                    self.temperature += temperature_diffusion
+            return
