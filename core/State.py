@@ -1,39 +1,66 @@
 import numpy as np
 from .Cell import Cell
-from noise import pnoise3  # Perlin noise for realistic terrain patterns
 
 
 class State:
-    def __init__(self, grid_size, initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level):
+    def __init__(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities=None, initial_forests=None):
+        """
+        Initialize the State class with a 3D grid of Cell objects.
+        :param grid_size: Tuple of (x, y, z) dimensions for the grid.
+        :param initial_temperature: Initial temperature for all cells.
+        :param initial_pollution: Initial pollution level for all cells.
+        :param initial_water_mass: Initial water mass for all cells.
+        :param initial_cities: (Optional) Target number of initial city cells.
+        :param initial_forests: (Optional) Target number of initial forest cells.
+        """
         self.grid_size = grid_size
-        self.grid = np.full((grid_size, grid_size, grid_size), Cell(6, 0.0, 0.0, (0, 0, 0), 0, 0), dtype=object)
-        self.day = 0
-        self.wind_direction = (1, 1)
-        self.wind_strength = 1
-        self.initialize_grid(initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level)
-        
+        self.grid = self.initialize_grid(
+            grid_size,
+            initial_temperature,
+            initial_pollution,
+            initial_water_mass,
+            initial_cities,
+            initial_forests,
+        )
+        self.state_index = 0  # Represents the number of days passed
 
-    def initialize_grid(self, initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level):
-        """Initialize the grid with logical placement of all cell types."""
+    def initialize_grid(self, grid_size, temperature, pollution, water_mass, initial_cities, initial_forests):
+        """
+        Initialize the grid with logical placement of all cell types.
+        :param grid_size: Tuple of (x, y, z) dimensions for the grid.
+        :param temperature: Initial temperature for all cells.
+        :param pollution: Initial pollution level for all cells.
+        :param water_mass: Initial water mass for all cells.
+        :param initial_cities: Target number of city cells.
+        :param initial_forests: Target number of forest cells.
+        :return: A 3D numpy array of Cell objects.
+        """
         city_count = forest_count = land_count = sea_count = iceberg_count = cloud_count = 0
-        total_cells = self.grid_size ** 3
+        x, y, z = grid_size
+        total_cells = x * y * z
         min_icebergs = max(1, int(total_cells * 0.01))
         sea_probability = 0.3
         iceberg_probability = sea_probability * 0.05
         cloud_probability = 0.01
 
-        elevation_map = self._generate_elevation_map()
+        # Set default values for optional parameters
+        initial_cities = initial_cities if initial_cities is not None else total_cells // 50
+        initial_forests = initial_forests if initial_forests is not None else total_cells // 50
 
-        for x in range(self.grid_size):
-            for y in range(self.grid_size):
-                for z in range(self.grid_size):
+        elevation_map = self._generate_elevation_map(x, y)
+
+        grid = np.empty((x, y, z), dtype=object)
+
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
                     rand = np.random.random()
-                    
+
                     cell_type = 6  # Default to air
 
                     # Determine cell type based on elevation and probabilities
-                    if z <= elevation_map[x, y]:
-                        if z <= 2:
+                    if k <= elevation_map[i, j]:
+                        if k <= 2:
                             if rand < sea_probability:
                                 cell_type = 0  # Sea
                                 sea_count += 1
@@ -43,7 +70,7 @@ class State:
                         else:
                             cell_type = 0
                             sea_count += 1
-                    elif z == elevation_map[x, y] + 1:
+                    elif k == elevation_map[i, j] + 1:
                         if city_count < initial_cities and forest_count < initial_forests:
                             cell_type = 5 if rand < 0.5 else 4
                             if cell_type == 5:
@@ -59,128 +86,140 @@ class State:
                         else:
                             cell_type = 1
                             land_count += 1
-                    elif z > elevation_map[x, y] + 1:
+                    elif k > elevation_map[i, j] + 1:
                         if cloud_count < total_cells * cloud_probability and rand < cloud_probability:
                             cell_type = 2
-                            cloud_count += 1 
-                        
-                    # Set pollution, temperature, and water level
-                    pollution_level = initial_pollution if cell_type in [4, 5] else 0
-                    temperature = initial_temperature + np.random.uniform(-2, 2)
-                    water_level = initial_water_level if cell_type in [0, 3] else 0
+                            cloud_count += 1
 
-                    self.grid[x, y, z] = Cell(cell_type, temperature, 0.0, (0, 0, 0), pollution_level, water_level)
+                    # Set pollution, temperature, and water level
+                    pollution_level = pollution if cell_type in [4, 5] else 0
+                    cell_temperature = temperature + np.random.uniform(-2, 2)
+                    cell_water_level = water_mass if cell_type in [0, 3] else 0
+
+                    grid[i, j, k] = Cell(cell_type, cell_temperature, cell_water_level, pollution_level)
 
         print(f"Grid initialized: {city_count} cities, {forest_count} forests, {land_count} land cells, "
               f"{sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.")
+        return grid
 
-    def update(self):
-        """Update the grid based on interactions between cells."""
-        new_grid = np.full(
-            (self.grid_size, self.grid_size, self.grid_size),
-            Cell(6, 0.0, 0.0, (0, 0, 0), 0, 0),
-            dtype=object,
-        )
 
-        forest_count = city_count = total_temperature = total_pollution = total_cells = 0
+    def _generate_elevation_map(self, grid_size):
+        """
+        Generate an elevation map using Perlin noise to simulate terrain elevation.
+        :param grid_size: Tuple of (x, y) dimensions for the grid.
+        :return: A 2D numpy array representing terrain elevation.
+        """
+        from noise import pnoise2
+        x, y, _ = grid_size
+        elevation_map = np.zeros((x, y))
 
-        for x in range(self.grid_size):
-            for y in range(self.grid_size):
-                for z in range(self.grid_size):
-                    cell = self.grid[x, y, z]
+        for i in range(x):
+            for j in range(y):
+                # Normalize Perlin noise output to fit within the grid's z-dimensions
+                elevation_map[i, j] = int((pnoise2(i / 10, j / 10, octaves=4) + 1) * (grid_size[2] * 0.25))
 
-                    if cell.cell_type == 4:
-                        forest_count += 1
-                    elif cell.cell_type == 5:
-                        city_count += 1
-                    if cell.cell_type != 6:
-                        total_temperature += cell.temperature
-                        total_pollution += cell.pollution_level
-                        total_cells += 1
+        return elevation_map
 
-        self.average_temperature = total_temperature / total_cells if total_cells else 0
-        self.average_pollution = total_pollution / total_cells if total_cells else 0
-        forest_to_city_ratio = forest_count / city_count if city_count else 0
+    def move_cells(self):
+        """
+        Move cells based on their direction property.
+        """
+        x, y, z = self.grid_size
+        new_grid = np.empty((x, y, z), dtype=object)
 
-        for x in range(self.grid_size):
-            for y in range(self.grid_size):
-                for z in range(self.grid_size):
-                    current_cell = self.grid[x, y, z]
-                    
-                    # Handle air cells (type 6)
-                    if current_cell.cell_type == 6:
-                        neighbors = self.get_neighbors_with_distances(x, y, z, include_distances=False)
-                        for neighbor in neighbors:
-                            # Absorb temperature and pollution
-                            current_cell.temperature += 0.05 * neighbor.temperature
-                            current_cell.pollution_level += min(0.01 * neighbor.pollution_level, 1.0)
+        # Initialize the new grid with empty cells
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
+                    new_grid[i, j, k] = Cell(6)  # Empty cells (air)
 
-                            # Check for cloud formation
-                            if neighbor.cell_type == 2 and current_cell.pollution_level > 10 and current_cell.temperature > 25:
-                                if np.random.random() < 0.1:  # 10% chance
-                                    current_cell.cell_type = 2
-                                    current_cell.water_level = neighbor.water_level * 0.5
-                        continue  # Skip further updates for air cells
+        # Move cells
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
+                    current_cell = self.grid[i, j, k]
+                    dx, dy = current_cell.direction
 
-                    neighbors = self.get_neighbors_with_distances(x, y, z, include_distances=True)
-                    simple_neighbors = [neighbor for neighbor, _ in neighbors]
-                    current_cell.update(simple_neighbors, forest_count, city_count)
+                    # Calculate new position
+                    new_i = (i + dx) % x
+                    new_j = (j + dy) % y
+                    new_k = k  # Z-direction is static in this example
 
-                    if current_cell.cell_type == 5:  # City
-                        extinction_chance = 0.05 + (0.5 - forest_to_city_ratio)
-                        if np.random.random() < extinction_chance:
-                            current_cell.cell_type = 1  # City turns into land
-                            city_count -= 1
-
-                    elif current_cell.cell_type == 4 and self.average_pollution > 40 and self.average_temperature > 30:
-                        current_cell.cell_type = 1  # Turn forest into land
-                        forest_count -= 1
-
-                        for neighbor, distance in neighbors:
-                            if neighbor.cell_type == 5:
-                                extinction_chance = 0.1 + abs((city_count - forest_count) / city_count) / (distance + 1)
-                                if np.random.random() < extinction_chance:
-                                    neighbor.cell_type = 1
-                                    city_count -= 1
-
-                    if current_cell.cell_type == 2:
-                        dx, dy = self.wind_direction
-                        new_x = (x + dx * self.wind_strength) % self.grid_size
-                        new_y = (y + dy * self.wind_strength) % self.grid_size
-                        target_cell = new_grid[new_x, new_y, z]
-
-                        if target_cell.cell_type == 6:
-                            new_grid[new_x, new_y, z] = current_cell
-                        elif target_cell.cell_type == 2:
-                            merged_temperature = (current_cell.temperature + target_cell.temperature) / 2
-                            merged_pollution = current_cell.pollution_level + target_cell.pollution_level
-                            merged_water_level = current_cell.water_level + target_cell.water_level
-                            new_grid[new_x, new_y, z] = Cell(2, merged_temperature, 0.0, self.wind_direction, merged_pollution, merged_water_level)
-
+                    # Move cell to new position if it's not empty
                     if current_cell.cell_type != 6:
-                        new_grid[x, y, z] = current_cell
+                        new_grid[new_i, new_j, new_k] = current_cell
 
         self.grid = new_grid
 
-    def _generate_elevation_map(self):
-        elevation_map = np.zeros((self.grid_size, self.grid_size))
-        for x in range(self.grid_size):
-            for y in range(self.grid_size):
-                elevation_map[x, y] = int((pnoise3(x / 10, y / 10, 0) + 1) * (self.grid_size * 0.25))
-        return elevation_map
+    def update_cells(self):
+        """
+        Update each cell in the grid based on its interactions with neighbors.
+        """
+        x, y, z = self.grid_size
 
-    def get_neighbors_with_distances(self, x, y, z, include_distances=False):
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
+                    current_cell = self.grid[i, j, k]
+
+                    # Get neighbors of the current cell
+                    neighbors = self.get_neighbors(i, j, k)
+                    current_cell.update(neighbors)
+
+    def get_neighbors(self, i, j, k):
+        """
+        Get the neighbors of a cell at position (i, j, k).
+        :param i: X-coordinate.
+        :param j: Y-coordinate.
+        :param k: Z-coordinate.
+        :return: A list of neighboring Cell objects.
+        """
         neighbors = []
+        x, y, z = self.grid_size
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 for dz in [-1, 0, 1]:
-                    if (dx, dy, dz) != (0, 0, 0):
-                        nx, ny, nz = x + dx, y + dy, z + dz
-                        if 0 <= nx < self.grid_size and 0 <= ny < self.grid_size and 0 <= nz < self.grid_size:
-                            neighbor = self.grid[nx, ny, nz]
-                            if include_distances:
-                                distance = np.sqrt(dx**2 + dy**2 + dz**2)
-                                neighbors.append((neighbor, distance))
-                            else:
-                                neighbors.append(neighbor)
+                    if dx == 0 and dy == 0 and dz == 0:
+                        continue
+                    ni, nj, nk = (i + dx) % x, (j + dy) % y, (k + dz) % z
+                    neighbors.append(self.grid[ni, nj, nk])
         return neighbors
+
+    def next_state(self):
+        """
+        Calculate the next state of the grid (simulate one day).
+        """
+        self.move_cells()  # Move cells based on their direction
+        self.update_cells()  # Update cells based on their interactions
+        self.state_index += 1  # Increment the state index (day counter)
+
+    def visualize(self):
+        """
+        Visualize the 3D grid using matplotlib.
+        """
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        x, y, z = self.grid_size
+        colors = {
+            0: 'blue',  # Sea
+            1: 'yellow',  # Land
+            2: 'gray',  # Cloud
+            3: 'cyan',  # Ice
+            4: 'green',  # Forest
+            5: 'purple',  # City
+            6: 'white'  # Air
+        }
+
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
+                    cell = self.grid[i, j, k]
+                    color = colors.get(cell.cell_type, 'black')
+                    ax.scatter(i, j, k, color=color)
+
+        plt.title(f"State at Day {self.state_index}")
+        plt.show()

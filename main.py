@@ -1,12 +1,13 @@
 import sys
 import subprocess
 
+# Compile Cython files if requested
 if "--compile" in sys.argv:
     print("Compiling Cython files...")
     subprocess.run(["python", "setup.py", "build_ext", "--inplace"], cwd="core", check=True)
     print("Compilation complete.")
 
-# Import and run the main simulation code
+# Import the updated simulation and display classes
 from core.Simulation import Simulation
 from display.MatplotlibDisplay import MatplotlibDisplay
 
@@ -25,12 +26,11 @@ def get_user_input(prompt, default, value_type=float):
 print("Please enter the initial parameters for the simulation:")
 grid_size = get_user_input("Grid size (e.g., 10)", 10, int)
 days = get_user_input("Number of days to simulate (e.g., 365)", 365, int)
-initial_cities = get_user_input("Initial number of cities (e.g., 500)", 500, int)  # ערכים נמוכים יותר
-initial_forests = get_user_input("Initial number of forests (e.g., 500)", 500, int)  # יותר יערות
-initial_pollution = get_user_input("Initial pollution level (e.g., 15.0)", 30.0)  # זיהום נמוך יותר
-initial_temperature = get_user_input("Initial temperature (e.g., 15.0)", 15.0)  # טמפרטורה יותר טבעית
-initial_water_level = get_user_input("Initial water level (e.g., 2.5)", 2.5)  # מפלס מים יותר גבוה
-
+initial_cities = get_user_input("Initial number of cities (e.g., 50)", 50, int)
+initial_forests = get_user_input("Initial number of forests (e.g., 50)", 50, int)
+initial_pollution = get_user_input("Initial pollution level (e.g., 10.0)", 10.0)
+initial_temperature = get_user_input("Initial temperature (e.g., 15.0)", 15.0)
+initial_water_mass = get_user_input("Initial water level (e.g., 1.0)", 1.0)
 
 # Initialize simulation with user-provided inputs
 simulation = Simulation(
@@ -40,15 +40,20 @@ simulation = Simulation(
     initial_forests=initial_forests,
     initial_pollution=initial_pollution,
     initial_temperature=initial_temperature,
-    initial_water_level=initial_water_level,
+    initial_water_mass=initial_water_mass,
 )
 
-# חישוב מוקדם
+# Precompute states
+print("Precomputing simulation states...")
 simulation.precompute()
+print("Precomputation complete.")
 
-# הרצת הסימולציה
+# Run the simulation
+print("Running simulation...")
 simulation.run()
+print("Simulation complete.")
 
-# Display the results
+# Display the results using Matplotlib
+print("Displaying results...")
 display = MatplotlibDisplay(simulation)
 display.plot_3d()

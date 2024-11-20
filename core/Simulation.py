@@ -1,58 +1,155 @@
 import numpy as np
-from core.State import State
-from core.Cell import Cell
-from copy import deepcopy
+from .State import State
+from .Cell import Cell
+import matplotlib.pyplot as plt
+
 
 class Simulation:
-    def __init__(self, grid_size, days, initial_cities=None, initial_forests=None, initial_pollution=None, initial_temperature=None, initial_water_level=None):
+    def __init__(self, grid_size, days,  initial_pollution, initial_temperature, initial_water_mass, initial_cities=None, initial_forests=None,):
         self.grid_size = grid_size
         self.days = days
-        self.states = []  # Initialize an empty list to store states
-        self.precomputed_results = []  # Store precomputed states for all days
+        self.initial_cities = initial_cities
+        self.initial_forests = initial_forests
+        self.initial_pollution = initial_pollution
+        self.initial_temperature = initial_temperature
+        self.initial_water_mass = initial_water_mass
+        self.states = []
 
-        if all(param is not None for param in [initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level]):
-            # Create the initial state with dynamic input
-            initial_state = self.create_dynamic_initial_state(initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level)
-        else:
-            # Create the initial state with default settings
-            initial_state = self.create_default_initial_state()
-
+        # Initialize the first state
+        initial_state = State(
+            grid_size=self.grid_size,
+            initial_cities=self.initial_cities,
+            initial_forests=self.initial_forests,
+            initial_pollution=self.initial_pollution,
+            initial_temperature=self.initial_temperature,
+            initial_water_mass=self.initial_water_mass,
+        )
         self.states.append(initial_state)
 
-    def create_default_initial_state(self):
-        """Create an initial state using the grid size with default values."""
-        return State(self.grid_size)
-
-    def create_dynamic_initial_state(self, initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level):
-        """Create an initial state with dynamic parameters."""
-        return State(self.grid_size, initial_cities, initial_forests, initial_pollution, initial_temperature, initial_water_level)
+    def precompute(self):
+        """Precompute all states for the simulation."""
+        for day in range(1, self.days + 1):
+            next_state = self.states[-1].next_state()
+            self.states.append(next_state)
 
     def run(self):
-        """Simulate for the given number of days."""
-        print("Starting simulation...")
-        for day in range(1, self.days + 1):  # Iterate from day 1 to the last day
-            new_state = deepcopy(self.states[-1])  # Start with the last state
-            new_state.day = day
-            new_state.update()  # Apply updates to the state
-            self.states.append(new_state)  # Save the new state
-        print(f"Simulation completed for {self.days} days.")
+        """Run the simulation."""
+        for day in range(self.days):
+            print(f"Simulating day {day + 1}...")
+            next_state = self.states[-1].next_state()
+            self.states.append(next_state)
 
-    def precompute(self):
-        """Precompute all the states for the simulation."""
-        print("Precomputing all states...")
-        current_state = deepcopy(self.states[0])  # Start from the initial state
-        for day in range(1, self.days + 1):
-            # print(f"Precomputing day {day}...")
-            next_state = deepcopy(current_state)  # Create a new state from the current one
-            next_state.update()  # Update the state
-            next_state.day = day  # Set the day for the new state
-            self.precomputed_results.append(next_state)  # Store precomputed state
-            current_state = next_state  # Move to the next state
-        print("Precomputation complete.")
+    def simulate(self):
+        """
+        Run the simulation for the defined number of days.
+        """
+        print(f"Starting simulation for {self.days} days...")
+        for day in range(self.days - 1):  # Iterate over all days
+            print(f"Simulating day {day + 1}...")
+            # Copy the current state to the next day's state and calculate the next state
+            self.states[day + 1].grid = np.copy(self.states[day].grid)
+            self.states[day + 1].next_state()
 
-    def get_state(self, day):
-        """Retrieve the state for a specific day."""
-        if 0 <= day < len(self.states):
-            return self.states[day]
+        print("Simulation complete.")
+
+    def analyze(self):
+        """
+        Analyze the simulation data for trends over time.
+        Generates data for pollution, temperature, and other attributes.
+        """
+        pollution_over_time = []
+        temperature_over_time = []
+        city_count_over_time = []
+        forest_count_over_time = []
+
+        for state in self.states:
+            total_pollution = 0
+            total_temperature = 0
+            total_cities = 0
+            total_forests = 0
+            total_cells = 0
+
+            for i in range(self.grid_size[0]):
+                for j in range(self.grid_size[1]):
+                    for k in range(self.grid_size[2]):
+                        cell = state.grid[i, j, k]
+                        if cell.cell_type != 6:  # Exclude air cells
+                            total_pollution += cell.pollution_level
+                            total_temperature += cell.temperature
+                            total_cells += 1
+
+                            if cell.cell_type == 5:  # City
+                                total_cities += 1
+                            elif cell.cell_type == 4:  # Forest
+                                total_forests += 1
+
+            # Compute averages and save for graphing
+            avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
+            avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
+
+            pollution_over_time.append(avg_pollution)
+            temperature_over_time.append(avg_temperature)
+            city_count_over_time.append(total_cities)
+            forest_count_over_time.append(total_forests)
+
+        return pollution_over_time, temperature_over_time, city_count_over_time, forest_count_over_time
+
+    def visualize(self):
+        """
+        Generate graphs based on simulation data.
+        """
+        pollution, temperature, city_count, forest_count = self.analyze()
+
+        # Create subplots for graphs
+        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+        # Pollution over time
+        axes[0, 0].plot(pollution, color='red', label='Pollution')
+        axes[0, 0].set_title("Pollution Over Time")
+        axes[0, 0].set_xlabel("Day")
+        axes[0, 0].set_ylabel("Average Pollution")
+        axes[0, 0].legend()
+
+        # Temperature over time
+        axes[0, 1].plot(temperature, color='blue', label='Temperature')
+        axes[0, 1].set_title("Temperature Over Time")
+        axes[0, 1].set_xlabel("Day")
+        axes[0, 1].set_ylabel("Average Temperature")
+        axes[0, 1].legend()
+
+        # City count over time
+        axes[1, 0].plot(city_count, color='purple', label='Cities')
+        axes[1, 0].set_title("City Count Over Time")
+        axes[1, 0].set_xlabel("Day")
+        axes[1, 0].set_ylabel("Number of Cities")
+        axes[1, 0].legend()
+
+        # Forest count over time
+        axes[1, 1].plot(forest_count, color='green', label='Forests')
+        axes[1, 1].set_title("Forest Count Over Time")
+        axes[1, 1].set_xlabel("Day")
+        axes[1, 1].set_ylabel("Number of Forests")
+        axes[1, 1].legend()
+
+        plt.tight_layout()
+        plt.show()
+
+    def visualize_3d(self, day=None):
+        """
+        Visualize the 3D grid of a specific day.
+        :param day: The day to visualize (default is the current day).
+        """
+        if day is None:
+            day = self.current_day
+
+        if 0 <= day < self.days:
+            self.states[day].visualize()
         else:
-            raise IndexError(f"Day {day} is out of range. The simulation has {len(self.states)} states.")
+            print(f"Day {day} is out of range (0-{self.days - 1}).")
+
+
+# Example usage:
+# sim = Simulation(grid_size=(10, 10, 10), initial_temperature=20, initial_pollution=5, initial_water_mass=10)
+# sim.simulate()
+# sim.visualize()
+# sim.visualize_3d(day=100)
