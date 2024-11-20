@@ -38,11 +38,11 @@ class State:
         city_count = forest_count = sea_count = iceberg_count = cloud_count = 0
         total_cells = x * y * z
         min_icebergs = max(1, int(total_cells * 0.01))
-        sea_probability = 0.3
-        iceberg_probability = sea_probability * 0.05
-        cloud_probability = 0.01
+        sea_probability = 0.7
+        iceberg_probability = sea_probability * 0.1
+        cloud_probability = 0.02
 
-        elevation_map = self._generate_elevation_map()
+        elevation_map = self._generate_elevation_map(grid_size)
 
         for i in range(x):
             for j in range(y):
@@ -51,20 +51,16 @@ class State:
                     rand = np.random.random()
 
                     # Assign cell types based on elevation and probabilities
-                    if k <= elevation_map[i, j]:
-                        if k <= 2:
-                            if rand < sea_probability:
-                                cell_type = 0  # Sea
-                                sea_count += 1
-                            elif rand < iceberg_probability:
-                                cell_type = 3  # Iceberg
-                                iceberg_count += 1
+                    if k <= elevation_map[i, j]:  # Below or at sea level
+                        if rand < iceberg_probability:
+                            cell_type = 3  # Iceberg
+                            iceberg_count += 1
                         else:
-                            cell_type = 0
+                            cell_type = 0  # Sea
                             sea_count += 1
-                    elif k == elevation_map[i, j] + 1:
+                    elif k == elevation_map[i, j] + 1:  # Surface level
                         if city_count < (initial_cities or 0) and forest_count < (initial_forests or 0):
-                            cell_type = 5 if rand < 0.5 else 4
+                            cell_type = 5 if rand < 0.5 else 4  # City or Forest
                             if cell_type == 5:
                                 city_count += 1
                             else:
@@ -77,10 +73,12 @@ class State:
                             forest_count += 1
                         else:
                             cell_type = 1  # Land
-                    elif k > elevation_map[i, j] + 1:
-                        if cloud_count < total_cells * cloud_probability and rand < cloud_probability:
-                            cell_type = 2
+                    elif k > elevation_map[i, j] + 1:  # Above sea level
+                        if rand < cloud_probability:
+                            cell_type = 2  # Cloud
                             cloud_count += 1
+                        else:
+                            cell_type = 6  # Air
 
                     # Create the cell
                     grid[i, j, k] = Cell(
@@ -90,23 +88,25 @@ class State:
                         initial_pollution if cell_type in [4, 5] else 0,
                         (np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])),
                     )
+
+        print(f"Grid initialized: {city_count} cities, {forest_count} forests, {sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.")
         return grid
 
-    def _generate_elevation_map(self):
+
+    def _generate_elevation_map(self, grid_size):
         """
         Generate an elevation map using Perlin noise to simulate terrain elevation.
-        :param grid_size: Tuple of (x, y) dimensions for the grid.
+        :param grid_size: Tuple of (x, y, z) dimensions for the grid.
         :return: A 2D numpy array representing terrain elevation.
         """
         from noise import pnoise2
-        grid_size = self.grid_size
-        x, y, _ = grid_size
+        x, y, z = grid_size
         elevation_map = np.zeros((x, y))
 
         for i in range(x):
             for j in range(y):
                 # Normalize Perlin noise output to fit within the grid's z-dimensions
-                elevation_map[i, j] = int((pnoise2(i / 10, j / 10, octaves=4) + 1) * (grid_size[2] * 0.25))
+                elevation_map[i, j] = int((pnoise2(i / 10, j / 10, octaves=4) + 1) * (z * 0.25))
 
         return elevation_map
 
