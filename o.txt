@@ -1,2 +1,0 @@
-Please enter the initial parameters for the simulation:
-Grid size (e.g., 10) (default: (10, 10, 10)): 
