@@ -91,6 +91,7 @@ class Cell:
             4: (0.0, 0.5, 0.0),  # Forest (dark green)
             5: (0.5, 0.0, 0.5),  # City (purple)
             6: (0.7, 0.9, 1.0),  # Air (light blue)
+            # 6: (0.0, 0.0, 0.0),  # Air (light blue)
         }
         
         # Get the base color for the cell type

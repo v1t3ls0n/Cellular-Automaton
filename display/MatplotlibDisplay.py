@@ -17,7 +17,10 @@ class MatplotlibDisplay:
     def plot_3d(self):
         """Create the plot with all relevant graphs."""
         plt.ion()  # Enable interactive mode
-        self.fig = plt.figure(figsize=(18, 12))
+        self.fig = plt.figure(figsize=(18, 12))  # Adjusted figure size for better layout
+        # self.fig = plt.figure(figsize=(16, 10))  # Adjusted figure size for better layout
+
+        # Adjust the positions of subplots
         self.ax_3d = self.fig.add_subplot(231, projection='3d')  # 3D simulation
         self.ax_pollution = self.fig.add_subplot(232)  # Pollution graph
         self.ax_temperature = self.fig.add_subplot(233)  # Temperature graph
@@ -33,8 +36,6 @@ class MatplotlibDisplay:
         self.render_population_graph()
         self.render_forests_graph()
 
-        # Add the legend to the 3D plot
-        self.ax_3d.legend(loc='upper left', bbox_to_anchor=(1.1, 1))  # Legend outside the plot
 
         # Add keyboard navigation
         self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
@@ -42,8 +43,19 @@ class MatplotlibDisplay:
         # Render the initial day
         self.render_day(self.current_day)
 
-        # Add a legend for the color map
-        self.add_legend()
+        """Add a legend explaining the cell colors."""
+        legend_elements = [
+            plt.Line2D([0], [0], marker='o', color='w', label='Sea', markersize=10, markerfacecolor='blue'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Land', markersize=10, markerfacecolor='yellow'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='cyan'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor='green'),
+            plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor='purple'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor='lightblue'),
+        ]
+        self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))
+
+
         plt.tight_layout()  # Automatically adjust subplot spacing
         plt.ioff()  # Disable interactive mode to ensure `plt.show()` holds the program
         plt.show()
