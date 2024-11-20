@@ -77,3 +77,28 @@ class Cell:
             if self.temperature > 0:
                 self.cell_type = 0  # Sea
                 self.phase = "liquid"
+
+    def get_color(self):
+        """
+        Get the color of the cell based on its type and pollution level.
+        Pollution affects the transparency (alpha) of the color.
+        """
+        base_colors = {
+            0: (0.0, 0.0, 1.0),  # Sea (blue)
+            1: (1.0, 1.0, 0.0),  # Land (yellow)
+            2: (0.5, 0.5, 0.5),  # Cloud (gray)
+            3: (0.0, 1.0, 1.0),  # Ice (cyan)
+            4: (0.0, 0.5, 0.0),  # Forest (dark green)
+            5: (0.5, 0.0, 0.5),  # City (purple)
+            6: (0.7, 0.9, 1.0),  # Air (light blue)
+        }
+        
+        # Get the base color for the cell type
+        base_color = base_colors.get(self.cell_type, (0.0, 0.0, 0.0))  # Default to black if type is unknown
+        
+        # Adjust transparency (alpha) based on pollution level
+        pollution_alpha = min(self.pollution_level / 100.0, 1.0)  # Normalize pollution level to [0, 1]
+        
+        # Combine base color with adjusted alpha (pollution effect)
+        return (*base_color[:3], 0.5 + 0.5 * pollution_alpha)  # Alpha range from 0.5 (low pollution) to 1.0 (high pollution)
+

@@ -24,7 +24,7 @@ def get_user_input(prompt, default, value_type=float):
 
 # Collect input from user with improved defaults
 print("Please enter the initial parameters for the simulation:")
-grid_size = get_user_input("Grid size (e.g., 10)", 10, int)
+grid_size = get_user_input("Grid size (e.g., 10)", (10,10,10), int)
 days = get_user_input("Number of days to simulate (e.g., 365)", 365, int)
 initial_cities = get_user_input("Initial number of cities (e.g., 50)", 50, int)
 initial_forests = get_user_input("Initial number of forests (e.g., 50)", 50, int)

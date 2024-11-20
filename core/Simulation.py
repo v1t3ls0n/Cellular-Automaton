@@ -28,6 +28,7 @@ class Simulation:
 
     def precompute(self):
         """Precompute all states for the simulation."""
+        print(f"self.states:{self.states[-1]}")
         for day in range(1, self.days + 1):
             next_state = self.states[-1].next_state()
             self.states.append(next_state)

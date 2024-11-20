@@ -2,6 +2,7 @@ import numpy as np
 from .Cell import Cell
 
 
+
 class State:
     def __init__(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities=None, initial_forests=None):
         """
@@ -24,41 +25,32 @@ class State:
         )
         self.state_index = 0  # Represents the number of days passed
 
-    def initialize_grid(self, grid_size, temperature, pollution, water_mass, initial_cities, initial_forests):
+    def initialize_grid(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities=None, initial_forests=None):
         """
-        Initialize the grid with logical placement of all cell types.
+        Initialize the 3D grid with cells.
         :param grid_size: Tuple of (x, y, z) dimensions for the grid.
-        :param temperature: Initial temperature for all cells.
-        :param pollution: Initial pollution level for all cells.
-        :param water_mass: Initial water mass for all cells.
-        :param initial_cities: Target number of city cells.
-        :param initial_forests: Target number of forest cells.
         :return: A 3D numpy array of Cell objects.
         """
-        city_count = forest_count = land_count = sea_count = iceberg_count = cloud_count = 0
         x, y, z = grid_size
+        grid = np.empty((x, y, z), dtype=object)
+
+        # Reasonable placement logic for cell types
+        city_count = forest_count = sea_count = iceberg_count = cloud_count = 0
         total_cells = x * y * z
         min_icebergs = max(1, int(total_cells * 0.01))
         sea_probability = 0.3
         iceberg_probability = sea_probability * 0.05
         cloud_probability = 0.01
 
-        # Set default values for optional parameters
-        initial_cities = initial_cities if initial_cities is not None else total_cells // 50
-        initial_forests = initial_forests if initial_forests is not None else total_cells // 50
-
-        elevation_map = self._generate_elevation_map(x, y)
-
-        grid = np.empty((x, y, z), dtype=object)
+        elevation_map = self._generate_elevation_map()
 
         for i in range(x):
             for j in range(y):
                 for k in range(z):
+                    cell_type = 6  # Default to air
                     rand = np.random.random()
 
-                    cell_type = 6  # Default to air
-
-                    # Determine cell type based on elevation and probabilities
+                    # Assign cell types based on elevation and probabilities
                     if k <= elevation_map[i, j]:
                         if k <= 2:
                             if rand < sea_probability:
@@ -71,45 +63,43 @@ class State:
                             cell_type = 0
                             sea_count += 1
                     elif k == elevation_map[i, j] + 1:
-                        if city_count < initial_cities and forest_count < initial_forests:
+                        if city_count < (initial_cities or 0) and forest_count < (initial_forests or 0):
                             cell_type = 5 if rand < 0.5 else 4
                             if cell_type == 5:
                                 city_count += 1
                             else:
                                 forest_count += 1
-                        elif city_count < initial_cities:
+                        elif city_count < (initial_cities or 0):
                             cell_type = 5
                             city_count += 1
-                        elif forest_count < initial_forests:
+                        elif forest_count < (initial_forests or 0):
                             cell_type = 4
                             forest_count += 1
                         else:
-                            cell_type = 1
-                            land_count += 1
+                            cell_type = 1  # Land
                     elif k > elevation_map[i, j] + 1:
                         if cloud_count < total_cells * cloud_probability and rand < cloud_probability:
                             cell_type = 2
                             cloud_count += 1
 
-                    # Set pollution, temperature, and water level
-                    pollution_level = pollution if cell_type in [4, 5] else 0
-                    cell_temperature = temperature + np.random.uniform(-2, 2)
-                    cell_water_level = water_mass if cell_type in [0, 3] else 0
-
-                    grid[i, j, k] = Cell(cell_type, cell_temperature, cell_water_level, pollution_level)
-
-        print(f"Grid initialized: {city_count} cities, {forest_count} forests, {land_count} land cells, "
-              f"{sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.")
+                    # Create the cell
+                    grid[i, j, k] = Cell(
+                        cell_type,
+                        initial_temperature + np.random.uniform(-2, 2),
+                        initial_water_mass if cell_type in [0, 3] else 0,
+                        initial_pollution if cell_type in [4, 5] else 0,
+                        (np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])),
+                    )
         return grid
 
-
-    def _generate_elevation_map(self, grid_size):
+    def _generate_elevation_map(self):
         """
         Generate an elevation map using Perlin noise to simulate terrain elevation.
         :param grid_size: Tuple of (x, y) dimensions for the grid.
         :return: A 2D numpy array representing terrain elevation.
         """
         from noise import pnoise2
+        grid_size = self.grid_size
         x, y, _ = grid_size
         elevation_map = np.zeros((x, y))
 
@@ -131,7 +121,7 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = Cell(6)  # Empty cells (air)
+                    new_grid[i, j, k] = Cell(6)  # Default empty air cells
 
         # Move cells
         for i in range(x):
@@ -141,15 +131,31 @@ class State:
                     dx, dy = current_cell.direction
 
                     # Calculate new position
-                    new_i = (i + dx) % x
-                    new_j = (j + dy) % y
-                    new_k = k  # Z-direction is static in this example
+                    new_i = (i + dx) % x  # Wrap around the grid in the x direction
+                    new_j = (j + dy) % y  # Wrap around the grid in the y direction
+                    new_k = k  # Z-direction remains static
 
-                    # Move cell to new position if it's not empty
+                    # Move cell to new position if it's not air
                     if current_cell.cell_type != 6:
-                        new_grid[new_i, new_j, new_k] = current_cell
+                        # Avoid overwriting existing cells
+                        if new_grid[new_i, new_j, new_k].cell_type == 6:
+                            new_grid[new_i, new_j, new_k] = current_cell
+                        else:
+                            # Handle collision (if two cells move to the same position)
+                            # Prioritize non-air cells
+                            new_grid[new_i, new_j, new_k] = self.resolve_collision(
+                                new_grid[new_i, new_j, new_k], current_cell
+                            )
 
         self.grid = new_grid
+
+    def resolve_collision(self, cell1, cell2):
+        """
+        Resolve a collision between two cells.
+        Prioritize based on a predefined hierarchy: City > Forest > Cloud > Land > Sea > Ice > Air.
+        """
+        priority = {5: 6, 4: 5, 2: 4, 1: 3, 0: 2, 3: 1, 6: 0}  # Higher priority wins
+        return cell1 if priority[cell1.cell_type] >= priority[cell2.cell_type] else cell2
 
     def update_cells(self):
         """
@@ -165,6 +171,7 @@ class State:
                     # Get neighbors of the current cell
                     neighbors = self.get_neighbors(i, j, k)
                     current_cell.update(neighbors)
+
 
     def get_neighbors(self, i, j, k):
         """
@@ -184,14 +191,49 @@ class State:
                     ni, nj, nk = (i + dx) % x, (j + dy) % y, (k + dz) % z
                     neighbors.append(self.grid[ni, nj, nk])
         return neighbors
+        return neighbors
 
     def next_state(self):
         """
         Calculate the next state of the grid (simulate one day).
+        :return: A new State object representing the next state.
         """
-        self.move_cells()  # Move cells based on their direction
-        self.update_cells()  # Update cells based on their interactions
-        self.state_index += 1  # Increment the state index (day counter)
+        # Step 1: Move cells based on their direction
+        self.move_cells()
+
+        # Step 2: Update each cell based on interactions with neighbors
+        self.update_cells()
+
+        # Step 3: Derive global state attributes (temperature, pollution, water mass) from the current grid
+        total_temperature = 0
+        total_pollution = 0
+        total_water_mass = 0
+        total_cells = 0
+
+        for i in range(self.grid_size[0]):
+            for j in range(self.grid_size[1]):
+                for k in range(self.grid_size[2]):
+                    cell = self.grid[i, j, k]
+                    if cell.cell_type != 6:  # Exclude air cells
+                        total_temperature += cell.temperature
+                        total_pollution += cell.pollution_level
+                        total_water_mass += cell.water_mass
+                        total_cells += 1
+
+        avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
+        avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
+        avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
+
+        # Step 4: Create a new state object and return it
+        new_state = State(
+            grid_size=self.grid_size,
+            initial_temperature=avg_temperature,
+            initial_pollution=avg_pollution,
+            initial_water_mass=avg_water_mass
+        )
+        new_state.grid = np.copy(self.grid)  # Copy the updated grid to the new state
+        new_state.state_index = self.state_index + 1
+        return new_state
 
     def visualize(self):
         """
