@@ -10,20 +10,20 @@ class Cell:
         self.direction = direction
 
     def update(self, neighbors, current_position=None, grid_size=None):
-        # self._adjust_temperature_with_pollution()
-        # has_neighboring_cities = any(neighbor.cell_type == 5 for neighbor in neighbors)
-
-        # if not has_neighboring_cities:
-        #     # Decrease pollution and temperature if no neighboring cities
-        #     pollution_decay = 0.1  # Adjust this value for pollution decay rate
-        #     temperature_decay = 0.1  # Adjust this value for temperature decay rate
-        #     self.pollution_level = max(0, self.pollution_level - pollution_decay)
-        #     self.temperature = max(0, self.temperature - temperature_decay)
+        self._adjust_temperature_with_pollution()
+        has_neighboring_cities = any(neighbor.cell_type == 5 for neighbor in neighbors)
+        if not has_neighboring_cities:
+            # Decrease pollution and temperature if no neighboring cities
+            pollution_decay = 0.1  # Adjust this value for pollution decay rate
+            temperature_decay = 0.1  # Adjust this value for temperature decay rate
+            self.pollution_level = max(0, self.pollution_level - pollution_decay)
+            self.temperature = max(0, self.temperature - temperature_decay)
 
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)
         elif self.cell_type == 1:  # Land
-            self._update_land(neighbors)
+            # self._update_land(neighbors)
+            return
         elif self.cell_type == 2:  # Cloud
             self._update_cloud(neighbors, current_position, grid_size)
         elif self.cell_type == 3:  # Ice
@@ -223,23 +223,25 @@ class Cell:
     
     def get_color(self):
         """Get the color of the cell."""
+        base_colors = {
+            0: (0.0, 0.0, 1.0),  # Sea (blue)
+            1: (1.0, 0.84, 0.0),  # Land (gold)
+            2: (0.5, 0.5, 0.5),  # Cloud (gray)
+            3: (0.0, 1.0, 1.0),  # Ice (cyan)
+            4: (0.0, 0.5, 0.0),  # Forest (green)
+            5: (1.0, 0.0, 0.0),  # City (Red)
+            # 5: (1.0, 69/255, 0.0, 1.0),  # City (Orange)
+            # 6: (1.0, 1.0, 1.0, 0.1),  # Air (White)
+            6: None,  # Air (Transparent)
+            
+            # 6: (0.0, 0.0, 0.0, 0.02),  # Air (Black)
+            # 6: (1.0, 69/255, 0.0),  # Air (Orange)
+        }
 
         if self.cell_type == 6: # Air (Transparent)
             return None
-
-        base_colors = {
-            0: (0.0, 0.0, 1.0, 1.0),  # Sea (blue)
-            1: (1.0, 0.84, 0.0, 1.0),  # Land (gold)
-            2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
-            3: (0.0, 1.0, 1.0, 1.0),  # Ice (cyan)
-            4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
-            5: (1.0, 0.0, 0.0, 1.0),  # City (Red)
-            6: (1.0, 1.0, 1.0, 0.1),  # Air (White)
-
-        }
-
+        
         base_color = base_colors[self.cell_type]
-    
         # Tint towards black based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(
