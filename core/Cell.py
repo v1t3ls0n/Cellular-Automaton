@@ -85,12 +85,12 @@ class Cell:
         Update logic for cities. Cities generate pollution and can collapse.
         """
         # Generate pollution
-        self.pollution_level += 0.05 *  self.pollution_level
-        self.temperature += 0.05 * self.temperature  # Cities are heat sources
+        self.pollution_level += 0.2 *  self.pollution_level
+        self.temperature += 0.2 * self.temperature  # Cities are heat sources
 
         for neighbor in neighbors:
             # Spread pollution to neighboring cells
-            pollution_spread = 0.1 * self.pollution_level
+            pollution_spread = 0.5 * self.pollution_level
             neighbor.pollution_level = neighbor.pollution_level + pollution_spread
 
             # Cause deforestation in neighboring forests
@@ -127,7 +127,7 @@ class Cell:
 
         for neighbor in neighbors:
             # Update temperature through diffusion
-            temp_diffusion = (self.temperature - neighbor.temperature) * 0.05
+            temp_diffusion = (self.temperature - neighbor.temperature) * 0.2
             neighbor.temperature += temp_diffusion
             self.temperature -= temp_diffusion / len(neighbors)
 
