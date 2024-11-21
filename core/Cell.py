@@ -6,25 +6,17 @@ class Cell:
         # 0: Sea, 1: Land, 2: Cloud, 3: Ice, 4: Forest, 5: City, 6: Air
         self.cell_type = cell_type
         # Automatically assign phase based on cell type
-        self.phase = self.determine_phase(cell_type)
         self.temperature = temperature
         self.water_mass = water_mass
         self.pollution_level = pollution_level
         self.direction = direction  # Represents (dx, dy)
 
-    @staticmethod
-    def determine_phase(cell_type):
-        """Determine the phase of the cell based on its type."""
-        if cell_type in [1, 4, 5, 3]:  # Solid: Land, Forest, City, Ice
-            return "solid"
-        elif cell_type in [0]:  # Liquid: Sea
-            return "liquid"
-        elif cell_type in [2, 6]:  # Gas: Cloud, Air
-            return "gas"
-        else:
-            return "unknown"  # Fallback for undefined cell types
 
     def update(self, neighbors, current_position=None, grid_size=None):
+        # General updates for all cell types
+        self._adjust_temperature_with_pollution()
+        
+        # Delegate specific updates based on cell type
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)
         elif self.cell_type == 3:  # Ice
@@ -38,14 +30,37 @@ class Cell:
         elif self.cell_type == 5:  # City
             self._update_city(neighbors)
 
+    def _adjust_temperature_with_pollution(self):
+        """
+        Adjust the cell's temperature based on its pollution level.
+        A higher pollution level increases the temperature, with diminishing returns at high levels.
+        """
+        pollution_effect = self.pollution_level * 0.05  # Adjust the scaling factor as needed
+        max_effect = 10  # Cap the effect at a certain maximum
+        
+        # Increase temperature proportionally to pollution
+        self.temperature += min(pollution_effect, max_effect)
+        
+        # Simulate cooling if pollution level is low
+        if self.pollution_level < 10:
+            self.temperature = max(0, self.temperature - 0.1)  # Cooling effect
+
     def _update_forest(self, neighbors):
         """
         Update logic for forests. Forests absorb pollution and may undergo deforestation.
         """
-        # Absorb pollution
+        # Absorb pollution from the forest itself
         self.pollution_level = max(0, self.pollution_level - 0.2)
+        cooling_effect = min(0.1, self.pollution_level * 0.02)
+        self.temperature -= cooling_effect
 
         for neighbor in neighbors:
+            # Absorb pollution from neighboring cells
+            if neighbor.pollution_level > 0:
+                absorbed_pollution = min(0.1, neighbor.pollution_level)  # Forest can absorb up to 0.1 pollution
+                neighbor.pollution_level -= absorbed_pollution
+                self.pollution_level = max(0, self.pollution_level - absorbed_pollution)
+
             # Deforestation due to nearby city or high pollution
             if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
                 self.cell_type = 1  # Forest turns into land
@@ -57,37 +72,34 @@ class Cell:
                 self.water_mass += rain
                 neighbor.water_mass -= rain
 
-            # Recovery logic: Turn land into forest if pollution is low
-            if self.pollution_level < 10 and self.cell_type == 1:  # Land
-                recovery_chance = 0.01
-                if np.random.random() < recovery_chance:
-                    self.cell_type = 4  # Land turns back into forest
-
         # Recovery logic: Turn land into forest if pollution is low
         if self.pollution_level < 10 and self.cell_type == 1:  # Land
             recovery_chance = 0.01
             if np.random.random() < recovery_chance:
                 self.cell_type = 4  # Land turns back into forest
 
+
+
     def _update_city(self, neighbors):
         """
         Update logic for cities. Cities generate pollution and can collapse.
         """
         # Generate pollution
-        self.pollution_level = min(100, self.pollution_level + 1)
+        self.pollution_level += 1
+        self.temperature += 0.2  # Cities are heat sources
 
         for neighbor in neighbors:
             # Spread pollution to neighboring cells
             pollution_spread = 0.1 * self.pollution_level
-            neighbor.pollution_level = min(100, neighbor.pollution_level + pollution_spread)
+            neighbor.pollution_level = neighbor.pollution_level + pollution_spread
 
             # Cause deforestation in neighboring forests
             if neighbor.cell_type == 4 and (neighbor.pollution_level > 50 or neighbor.temperature > 50) and np.random.random() < 0.05:  # Forest
                 neighbor.cell_type = 1  # Forest turns into land
 
-        # Collapse into land if pollution is extreme
-        if (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
-            self.cell_type = 1  # City collapses into land
+            # Collapse into land if pollution is extreme
+            if (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
+                self.cell_type = 1  # City collapses into land
                 
 
     def _update_ice(self, neighbors):
@@ -100,7 +112,7 @@ class Cell:
             self.water_mass += 1
 
         for neighbor in neighbors:
-            if neighbor.cell_type == 0 and neighbor.temperature < -2.0:  # Freeze sea to ice
+            if neighbor.cell_type == 0 and neighbor.temperature < 0.0:  # Freeze sea to ice
                 neighbor.cell_type = 3
                 neighbor.water_mass = 0
 
