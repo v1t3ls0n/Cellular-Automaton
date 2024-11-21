@@ -10,15 +10,15 @@ class Cell:
         self.direction = direction
 
     def update(self, neighbors, current_position=None, grid_size=None):
-        self._adjust_temperature_with_pollution()
-        has_neighboring_cities = any(neighbor.cell_type == 5 for neighbor in neighbors)
+        # self._adjust_temperature_with_pollution()
+        # has_neighboring_cities = any(neighbor.cell_type == 5 for neighbor in neighbors)
 
-        if not has_neighboring_cities:
-            # Decrease pollution and temperature if no neighboring cities
-            pollution_decay = 0.1  # Adjust this value for pollution decay rate
-            temperature_decay = 0.1  # Adjust this value for temperature decay rate
-            self.pollution_level = max(0, self.pollution_level - pollution_decay)
-            self.temperature = max(0, self.temperature - temperature_decay)
+        # if not has_neighboring_cities:
+        #     # Decrease pollution and temperature if no neighboring cities
+        #     pollution_decay = 0.1  # Adjust this value for pollution decay rate
+        #     temperature_decay = 0.1  # Adjust this value for temperature decay rate
+        #     self.pollution_level = max(0, self.pollution_level - pollution_decay)
+        #     self.temperature = max(0, self.temperature - temperature_decay)
 
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)

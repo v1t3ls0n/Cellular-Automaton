@@ -56,19 +56,19 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    cell_type = 0  # Default to sea
+                    cell_type = 6  # Default to sea
 
                     if k <= elevation_map[i, j] * 0.1:
                         cell_type = np.random.choice([1, 0], p=[0.6, 0.4])
                         land_count += (1 if cell_type == 1 else 0)
                         sea_count += (1 if cell_type == 0 else 0)
 
-                    if k <= elevation_map[i, j] * 0.4:
+                    if k <= elevation_map[i, j] * 0.2:
                         cell_type = np.random.choice([1, 0], p=[0.3, 0.7])
                         land_count += (1 if cell_type == 1 else 0)
                         sea_count += (1 if cell_type == 0 else 0)
                         
-                    elif k <= elevation_map[i, j] * 0.6:
+                    elif k <= elevation_map[i, j] * 0.3:
                         if k <= sea_level:
                             cell_type = np.random.choice([3, 0, 1], p=[0.19, 0.8, 0.01])
                             land_count += (1 if cell_type == 1 else 0)
@@ -79,7 +79,7 @@ class State:
                             sea_count += (1 if cell_type == 0 else 0)
                             iceberg_count += (1 if cell_type == 3 else 0)
 
-                    elif k <= elevation_map[i, j] * 0.8:
+                    elif k < elevation_map[i, j]:
                         if k <= sea_level:
                             cell_type = np.random.choice(
                                 [3, 0], p=[0.5, 0.5])
@@ -104,13 +104,13 @@ class State:
 
 
                     elif elevation_map[i, j] + 1 < k <= elevation_map[i, j] + 3:
-                        cell_type = np.random.choice([6, 2], p=[0.999, 0.001])
+                        cell_type = np.random.choice([6, 2], p=[1,0])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count += (1 if cell_type == 6 else 0)
 
                     # else:
                     elif k > elevation_map[i, j] + 3:
-                        cell_type = np.random.choice([6, 2], p=[0.8, 0.2])
+                        cell_type = np.random.choice([6, 2], p=[0.92, 0.08])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count += (1 if cell_type == 6 else 0)
 
