@@ -21,7 +21,8 @@ class Cell:
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)
         elif self.cell_type == 1:  # Land
-            self._update_land(neighbors)
+            # self._update_land(neighbors)
+            return
         elif self.cell_type == 2:  # Cloud
             self._update_cloud(neighbors, current_position, grid_size)
         elif self.cell_type == 3:  # Ice
@@ -90,12 +91,11 @@ class Cell:
                     0, self.pollution_level - absorbed_pollution)
 
             # Deforestation due to nearby city or high pollution
-            if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
-                self.cell_type = 1  # Forest turns into land
+            if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 and neighbor.temperature > 50):
                 self.convert_to_land()
                 return
 
-            if neighbor.cell_type == 4 and self.pollution_level < 10 and neighbor.pollution_level < 10 and np.random.random() < 0.05:
+            if neighbor.cell_type == 4 and self.pollution_level == 0  and neighbor.cell_type == 5:
                 self.convert_to_city()
                 return
 
@@ -132,7 +132,7 @@ class Cell:
 
         # Check if the forest should turn into land due to high temperature or pollution
         for neighbor in neighbors:
-            if neighbor.cell_type == 4:  # Neighboring forest
+             if neighbor.cell_type == 4:  # Neighboring forest
                 if self.temperature > 50 or self.pollution_level > 80:
                     deforestation_chance = 0.05
                     if np.random.random() < deforestation_chance:
