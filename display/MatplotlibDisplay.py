@@ -57,7 +57,6 @@ class MatplotlibDisplay:
         plt.ioff()  # Disable interactive mode to ensure `plt.show()` holds the program
         plt.show()
 
-
     def precompute_visualizations(self):
         """Precompute 3D scatter data for all precomputed states."""
         logging.info("Precomputing 3D visualizations...")
@@ -69,10 +68,14 @@ class MatplotlibDisplay:
                 for y in range(state.grid.shape[1]):
                     for z in range(state.grid.shape[2]):
                         cell = state.grid[x][y][z]
-                        # Collect points and corresponding data
-                        points.append((x, y, z))
-                        colors.append(to_rgba(cell.get_color()))  # Convert to valid RGBA
-                        sizes.append(10)  # Default size for all points
+                        if cell.get_color() is not None:
+                            # Interpolate multiple points for "densification"
+                            for dx in np.linspace(-0.5, 0.5, 2):  # Fine-tune interpolation
+                                for dy in np.linspace(-0.5, 0.5, 2):
+                                    for dz in np.linspace(-0.5, 0.5, 2):
+                                        points.append((x + dx, y + dy, z + dz))
+                                        colors.append(to_rgba(cell.get_color()))
+                                        sizes.append(50)  # Larger size for denser appearance
 
             self.precomputed_data.append((points, colors, sizes))
         logging.info("3D Precomputation complete.")
@@ -91,7 +94,7 @@ class MatplotlibDisplay:
 
         points, colors, sizes = self.precomputed_data[day]
         xs, ys, zs = zip(*points) if points else ([], [], [])
-        self.ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
+        self.ax_3d.scatter(xs, ys, zs, c=colors, s=sizes, alpha=0.7)  # Adjust alpha for density
 
         # Restore the saved viewing angles
         self.ax_3d.view_init(elev=self.current_elev, azim=self.current_azim)

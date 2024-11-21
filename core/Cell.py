@@ -198,14 +198,17 @@ class Cell:
             4: (0.0, 0.5, 0.0),  # Forest (green)
             5: (1.0, 0.0, 0.0),  # City (Red)
             # 5: (1.0, 69/255, 0.0, 1.0),  # City (Orange)
-            6: (1.0, 1.0, 1.0),  # Air (White)
+            # 6: (1.0, 1.0, 1.0, 0.1),  # Air (White)
+            6: None,  # Air (Transparent)
             
             # 6: (0.0, 0.0, 0.0, 0.02),  # Air (Black)
             # 6: (1.0, 69/255, 0.0),  # Air (Orange)
         }
 
+        if self.cell_type == 6: # Air (Transparent)
+            return None
+        
         base_color = base_colors[self.cell_type]
-
         # Tint towards black based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(
@@ -213,7 +216,6 @@ class Cell:
         )
 
         return black_tinted_color
-        # return base_color
 
 
 
