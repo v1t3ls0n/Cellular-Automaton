@@ -103,14 +103,14 @@ class State:
                         land_count += (1 if cell_type == 1 else 0)
 
 
-                    elif elevation_map[i, j] + 1 < k <= elevation_map[i, j] + 5:
+                    elif elevation_map[i, j] + 1 < k <= elevation_map[i, j] + 3:
                         cell_type = np.random.choice([6, 2], p=[0.999, 0.001])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count += (1 if cell_type == 6 else 0)
 
                     # else:
-                    elif k > elevation_map[i, j] + 5:
-                        cell_type = np.random.choice([6, 2], p=[0.95, 0.05])
+                    elif k > elevation_map[i, j] + 3:
+                        cell_type = np.random.choice([6, 2], p=[0.5, 0.5])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count += (1 if cell_type == 6 else 0)
 

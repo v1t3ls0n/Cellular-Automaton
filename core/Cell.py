@@ -239,6 +239,8 @@ class Cell:
         }
 
         base_color = base_colors[self.cell_type]
+        return base_color
+    
         # Tint towards black based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(
