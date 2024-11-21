@@ -78,7 +78,39 @@ class Cell:
                 self.cell_type = 0  # Sea
                 self.phase = "liquid"
 
+
+
     def get_color(self):
+        """
+        Get the color of the cell based on its type and pollution level.
+        Pollution affects the hue of air cells.
+        """
+        base_colors = {
+            0: (0.0, 0.0, 1.0),  # Sea (blue)
+            1: (1.0, 1.0, 0.0),  # Land (yellow)
+            2: (0.5, 0.5, 0.5),  # Cloud (gray)
+            3: (0.0, 1.0, 1.0),  # Ice (cyan)
+            4: (0.0, 0.5, 0.0),  # Forest (dark green)
+            5: (0.5, 0.0, 0.5),  # City (purple)
+            6: (1.0, 1.0, 1.0, 0.2),  # Air (light white with low opacity)
+        }
+
+        # Base color for the current cell type
+        base_color = base_colors.get(self.cell_type, (0.0, 0.0, 0.0))  # Default to black if type is unknown
+
+        if self.cell_type == 6:  # Air
+            pollution_factor = min(self.pollution_level / 100, 1.0)  # Scale pollution [0, 1]
+            # Adjust the base white color to reflect pollution levels
+            adjusted_color = tuple(base * (1 - pollution_factor) for base in base_color[:3]) + (base_color[3],)
+            return adjusted_color
+
+        # Return the base color for other cell types without adjusting transparency
+        if len(base_color) == 3:  # If color doesn't have alpha, add default alpha
+            return base_color + (1.0,)
+        else:
+            return base_color
+    
+    def get_color_dynamic(self):
         """
         Get the color of the cell based on its type and pollution level.
         Pollution affects the transparency (alpha) of the color.
@@ -90,16 +122,21 @@ class Cell:
             3: (0.0, 1.0, 1.0),  # Ice (cyan)
             4: (0.0, 0.5, 0.0),  # Forest (dark green)
             5: (0.5, 0.0, 0.5),  # City (purple)
-            6: (0.7, 0.9, 1.0),  # Air (light blue)
-            # 6: (0.0, 0.0, 0.0),  # Air (light blue)
+            6: (1.0, 1.0, 1.0, 0.2),  # Air (light white with low opacity)
         }
-        
-        # Get the base color for the cell type
-        base_color = base_colors.get(self.cell_type, (0.0, 0.0, 0.0))  # Default to black if type is unknown
-        
-        # Adjust transparency (alpha) based on pollution level
-        pollution_alpha = min(self.pollution_level / 100.0, 1.0)  # Normalize pollution level to [0, 1]
-        
-        # Combine base color with adjusted alpha (pollution effect)
-        return (*base_color[:3], 0.5 + 0.5 * pollution_alpha)  # Alpha range from 0.5 (low pollution) to 1.0 (high pollution)
 
+        # Base color for the current cell type
+        base_color = base_colors.get(self.cell_type, (0.0, 0.0, 0.0))  # Default to black if type is unknown
+
+        if self.cell_type == 6:  # Air
+            pollution_factor = min(self.pollution_level / 100, 1.0)  # Scale pollution [0, 1]
+            # Adjust the base white color to reflect pollution levels
+            adjusted_color = tuple(base * (1 - pollution_factor) for base in base_color[:3]) + (base_color[3],)
+            return adjusted_color
+
+        # For all other cell types, apply pollution transparency
+        alpha = 1.0 - min(self.pollution_level / 100, 1.0)  # More pollution = lower alpha
+        if len(base_color) == 3:  # If color doesn't have alpha, add it
+            return base_color + (alpha,)
+        else:
+            return base_color[:3] + (alpha,)

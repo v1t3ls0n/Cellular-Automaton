@@ -34,16 +34,16 @@ class State:
         grid = np.empty((x, y, z), dtype=object)
 
         # Reasonable placement logic for cell types
-        city_count = forest_count = sea_count = iceberg_count = cloud_count = land_count =  air_count = 0
+        city_count = forest_count = sea_count = iceberg_count = cloud_count = land_count = air_count = 0
         total_cells = x * y * z
-        city_probability = initial_cities/total_cells
-        forest_probability = initial_forests/total_cells
-        land_probability = 1 - (forest_probability+city_probability)
+        city_probability = initial_cities/total_cells if initial_cities else 0.6
+        forest_probability = initial_forests/total_cells if initial_forests else 0.3
+        land_probability = (1 - (forest_probability+city_probability))
 
-        sea_probability = 0.8
-        iceberg_probability = 0.2
+        sea_probability = 0.5
+        iceberg_probability = 0.5
 
-        cloud_probability =  0.3
+        cloud_probability = 0.3
         air_probability = 0.7
 
         elevation_map = self._generate_elevation_map(grid_size)
@@ -52,35 +52,45 @@ class State:
             for j in range(y):
                 for k in range(z):
                     cell_type = 6
+                    elev = elevation_map[i, j]
+
                     # Assign cell types based on elevation and probabilities
-                    if k <= elevation_map[i, j] * 0.6:  # Below 60% of elevation
+                    if k <= elev * 0.6:  # Below 60% of elevation, Sea
                         cell_type = 0
+                    elif k <= elev * 0.8:  # 60%-80% of elevation, Sea or Iceberg
+                        cell_type = np.random.choice(
+                            [0, 3], p=[sea_probability, iceberg_probability])
 
-                    elif k <= elevation_map[i, j] * 0.8:  # 60%-80% of elevation
-                        cell_type = np.random.choice([0,3], p=[sea_probability, iceberg_probability])
+                    elif 0.8 * elev < k < elev:  # Between Sea level and Land Level
+                        cell_type = np.random.choice(
+                            [1, 0], p=[land_probability, 1 - land_probability])
 
-                    elif k == int(elevation_map[i, j]):  # Exactly at elevation
-                        cell_type = np.random.choice([1, 4, 5], p=[land_probability, forest_probability, city_probability])
+                    elif k > min(elev + 3, grid_size[2]):  # Sky
+                        cell_type = np.random.choice(
+                            [2, 6], p=[cloud_probability, air_probability])
 
-                    elif k > elevation_map[i, j]:  # Above elevation
-                        cell_type = np.random.choice([2,6], p=[cloud_probability,air_probability])
-
+                    # Exactly at elevation
+                    elif k == int(elev):
+                        cell_type = np.random.choice(
+                            [4, 5, 1], p=[forest_probability, city_probability, land_probability])
+                    else:
+                        cell_type = 6
 
                     match cell_type:
                         case 0:
-                            sea_count+=1
+                            sea_count += 1
                         case 1:
-                            land_count+=1
+                            land_count += 1
                         case 2:
-                            cloud_count+=1
+                            cloud_count += 1
                         case 3:
-                            iceberg_count+=1
+                            iceberg_count += 1
                         case 4:
-                            forest_count+=1
+                            forest_count += 1
                         case 5:
-                            city_count+=1
+                            city_count += 1
                         case 6:
-                            air_count+=1
+                            air_count += 1
 
                     # Create the cell
                     grid[i, j, k] = Cell(
@@ -94,7 +104,7 @@ class State:
 
         print(f"Grid initialized: {city_count} cities, {forest_count} forests, {
               sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.")
-        
+
         return grid
 
     def _generate_elevation_map(self, grid_size):
@@ -119,7 +129,7 @@ class State:
                 noise_value = pnoise2(i / scale, j / scale, octaves=octaves,
                                       persistence=persistence, lacunarity=lacunarity, repeatx=x, repeaty=y)
                 # Normalize to [0, z * 0.4]
-                elevation_map[i, j] = (noise_value + 1) * (z * 0.5)
+                elevation_map[i, j] = (noise_value + 1) * (z * 0.3)
 
         return elevation_map
 
