@@ -60,16 +60,12 @@ class State:
 
                     if k <= elevation_map[i, j]:
                         if k <= sea_level:
-                            # Sea cells below sea level
-                            if rand < 0.4 and iceberg_count < total_cells * 0.02:  # Add a few icebergs
-                                cell_type = 3  # Iceberg
-                                iceberg_count += 1
-                            else:
-                                cell_type = 0  # Sea
-                                sea_count += 1
+                            cell_type = np.random.choice([3, 0], p=[0.01, 0.99])
+                            sea_count += (1 if cell_type == 0 else 0)
+                            iceberg_count += (1 if cell_type == 3 else 0)
                         else:
                             # Land cells above sea level
-                            cell_type = np.random.choice([1, 3, 0], p=[0.1, 0.2, 0.7])
+                            cell_type = np.random.choice([1, 3, 0], p=[0.000, 0.3, 0.7])
                             land_count += (1 if cell_type == 1 else 0)
                             sea_count += (1 if cell_type == 0 else 0)
                             iceberg_count += (1 if cell_type == 3 else 0)
@@ -86,27 +82,22 @@ class State:
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count+=(1 if cell_type == 6 else 0)
                     else:
-                        cell_type = np.random.choice([6, 2], p=[0.99, 0.01])
+                        cell_type = np.random.choice([6, 2], p=[1, 0])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count+=(1 if cell_type == 6 else 0)
 
 
                     # Create the cell with relevant parameters
-                    grid[i, j, k] = Cell(
-                        cell_type=cell_type,
-                        temperature=initial_temperature +
-                        np.random.uniform(-2, 2),
-                        water_mass=initial_water_mass if cell_type in [
-                            0, 3] else 0,
-                        pollution_level=initial_pollution if cell_type in [
-                            4, 5] else 0,
-                        direction=(np.random.choice(
-                            [-1, 1]), np.random.choice([-1, 1])) if cell_type not in {1, 4, 5} else (0, 0),
-                    )
+                    if grid[i, j, k] is None:
+                        grid[i, j, k] = Cell(cell_type=cell_type,
+                            temperature=initial_temperature + np.random.uniform(-2, 2),
+                            water_mass=initial_water_mass if cell_type in {0,3} else 0,
+                            pollution_level=initial_pollution if cell_type in {4, 5} else 0,
+                            direction=((np.random.choice([-1, 1]), np.random.choice([-1, 1])) if cell_type not in {1, 4, 5} else (0, 0)))
 
         # Log final counts
-        print(f"Grid initialized: {city_count} cities, {forest_count} forests, {land_count} land cells, "
-              f"{sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.  {air_count} air ")
+        # print(f"Grid initialized: {city_count} cities, {forest_count} forests, {land_count} land cells, "
+        #       f"{sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.  {air_count} air ")
         return grid
 
     def _generate_elevation_map(self):
@@ -119,7 +110,7 @@ class State:
         x, y, _ = self.grid_size
         elevation_map = np.zeros((x, y))
 
-        scale = 20.0  # Adjust for larger/smaller features
+        scale = 10.0  # Adjust for larger/smaller features
         octaves = 10  # Higher value for more detail
         persistence = 0.5
         lacunarity = 2.0

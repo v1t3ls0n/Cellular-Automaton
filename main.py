@@ -42,16 +42,15 @@ simulation = Simulation(
 
 
 
-logging.basicConfig(level=logging.INFO)
 
 
 
-logging.info("Initialized simulation with parameters: %s", simulation.__dict__)
+# logging.info("Initialized simulation with parameters: %s", simulation.__dict__)
 simulation.precompute()
 
-logging.info("Simulation precomputed. Running simulation...")
-simulation.run()
+# logging.info("Simulation precomputed. Running simulation...")
+# simulation.run()
 
-logging.info("Simulation complete. Displaying results...")
+# logging.info("Simulation complete. Displaying results...")
 display = MatplotlibDisplay(simulation)
 display.plot_3d()

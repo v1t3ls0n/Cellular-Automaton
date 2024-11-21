@@ -46,7 +46,8 @@ class Cell:
         self.pollution_level = max(0, self.pollution_level - 0.2)
 
         for neighbor in neighbors:
-            if neighbor.cell_type == 5 or neighbor.pollution_level > 50:
+            # Deforestation due to nearby city or high pollution
+            if neighbor.cell_type == 5 and (neighbor.pollution_level > 50 or neighbor.temperature > 50):
                 self.cell_type = 1  # Forest turns into land
                 return
 
@@ -56,12 +57,11 @@ class Cell:
                 self.water_mass += rain
                 neighbor.water_mass -= rain
 
-            # Deforestation logic due to nearby pollution or cities
-            if neighbor.cell_type == 5:  # City
-                deforestation_chance = 0.05 + (neighbor.pollution_level / 100)
-                if np.random.random() < deforestation_chance:
-                    self.cell_type = 1  # Forest turns into land
-                    return
+            # Recovery logic: Turn land into forest if pollution is low
+            if self.pollution_level < 10 and self.cell_type == 1:  # Land
+                recovery_chance = 0.01
+                if np.random.random() < recovery_chance:
+                    self.cell_type = 4  # Land turns back into forest
 
         # Recovery logic: Turn land into forest if pollution is low
         if self.pollution_level < 10 and self.cell_type == 1:  # Land
@@ -79,16 +79,16 @@ class Cell:
         for neighbor in neighbors:
             # Spread pollution to neighboring cells
             pollution_spread = 0.1 * self.pollution_level
-            neighbor.pollution_level = min(
-                100, neighbor.pollution_level + pollution_spread)
+            neighbor.pollution_level = min(100, neighbor.pollution_level + pollution_spread)
 
             # Cause deforestation in neighboring forests
-            if neighbor.cell_type == 4 and np.random.random() < 0.05:  # Forest
+            if neighbor.cell_type == 4 and (neighbor.pollution_level > 50 or neighbor.temperature > 50) and np.random.random() < 0.05:  # Forest
                 neighbor.cell_type = 1  # Forest turns into land
 
         # Collapse into land if pollution is extreme
-        if self.pollution_level > 80 and np.random.random() < 0.1:
+        if (neighbor.pollution_level > 50 or neighbor.temperature > 50) and np.random.random() < 0.1:
             self.cell_type = 1  # City collapses into land
+                
 
     def _update_ice(self, neighbors):
         """
@@ -192,15 +192,16 @@ class Cell:
         """Get the color of the cell."""
         base_colors = {
             0: (0.0, 0.0, 1.0),  # Sea (blue)
-            1: (1.0, 1.0, 0.0, 0.0),  # Land (yellow)
+            1: (1.0, 0.84, 0.0),  # Land (gold)
             2: (0.5, 0.5, 0.5),  # Cloud (gray)
-            3: (0.0, 0.8, 1.0),  # Ice (vibrant cyan)
-            4: (0.0, 0.5, 0.0),  # Forest (dark green)
+            3: (0.0, 1.0, 1.0),  # Ice (cyan)
+            4: (0.0, 0.5, 0.0),  # Forest (green)
             5: (0.5, 0.0, 0.5),  # City (purple)
-            6: (1.0, 1.0, 1.0, 0.2),  # Air (white)
+            6: (1.0, 1.0, 1.0),  # Air (white)
         }
 
         base_color = base_colors[self.cell_type]
+        # print(f"base color: {base_color}")
 
         # Add red tint based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 1000.0)
@@ -211,6 +212,7 @@ class Cell:
         )
 
         return red_tinted_color
+
 
     def get_color_dynamic(self):
         """
