@@ -224,8 +224,8 @@ class Cell:
     def get_color(self):
         """Get the color of the cell."""
 
-        if self.cell_type == 6: # Air (Transparent)
-            return None
+        # if self.cell_type == 6: # Air (Transparent)
+        #     return None
 
         base_colors = {
             0: (0.0, 0.0, 1.0, 1.0),  # Sea (blue)
@@ -242,7 +242,7 @@ class Cell:
         # Tint towards black based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(
-            base_color[i] * (1.0 - pollution_intensity) for i in range(3)
+            base_color[i] * (1.0 - pollution_intensity) for i in range(4)
         )
 
         return black_tinted_color
