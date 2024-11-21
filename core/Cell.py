@@ -192,7 +192,7 @@ class Cell:
         """Get the color of the cell."""
         base_colors = {
             0: (0.0, 0.0, 1.0),  # Sea (blue)
-            1: (1.0, 1.0, 0.0),  # Land (yellow)
+            1: (1.0, 1.0, 0.0, 0.0),  # Land (yellow)
             2: (0.5, 0.5, 0.5),  # Cloud (gray)
             3: (0.0, 0.8, 1.0),  # Ice (vibrant cyan)
             4: (0.0, 0.5, 0.0),  # Forest (dark green)

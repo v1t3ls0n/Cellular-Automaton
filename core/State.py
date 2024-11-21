@@ -2,6 +2,8 @@ import numpy as np
 from .Cell import Cell
 import logging
 import random
+
+
 class State:
     def __init__(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities, initial_forests):
         """
@@ -15,9 +17,10 @@ class State:
         """
         self.grid_size = grid_size
         self.grid = self.initialize_grid(
+            grid_size,
             initial_temperature,
             initial_pollution,
-            initial_water_mass,
+            initial_water_mass=initial_water_mass,
             initial_cities=initial_cities,
             initial_forests=initial_forests,
         )
@@ -30,126 +33,101 @@ class State:
         logging.info(f"Initial Cities: {initial_cities}")
         logging.info(f"Initial Forests: {initial_forests}")
 
-    def initialize_grid(self, initial_temperature, initial_pollution, initial_water_mass, initial_cities=None, initial_forests=None):
+    def initialize_grid(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities=None, initial_forests=None):
         """
-        Initialize the grid with appropriate placement of cell types based on elevation and user parameters.
+        Initialize the 3D grid with cells to create islands surrounded by the sea.
+        :param grid_size: Tuple of (x, y, z) dimensions for the grid.
         """
-        x, y, z = self.grid_size
+        x, y, z = grid_size
         grid = np.empty((x, y, z), dtype=object)
 
-        # Track counts for debugging/logging
-        city_count = 0
-        forest_count = 0
-        sea_count = 0
-        iceberg_count = 0
-        cloud_count = 0
-        air_count = 0
+        # Generate the elevation map
+        elevation_map = self._generate_elevation_map()
 
-        # Elevation map
-        elevation_map = self._generate_elevation_map(grid_size=self.grid_size)
+        # Threshold for sea level
+        sea_level = z // 6  # Adjust this value for desired sea coverage
 
-        # Flatten the grid indices for land and sea
-        land_positions = []
-        sea_positions = []
+        # Track cell counts
+        city_count = forest_count = land_count = sea_count = iceberg_count = cloud_count = air_count = 0
+        total_cells = x * y * z
+
+        # Iterate through the grid and assign cell types
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    elev = elevation_map[i, j]
-                    if k <= elev:  # Below or at elevation is sea or ice
-                        sea_positions.append((i, j, k))
-                    elif k == elev + 1:  # Exactly at elevation is land
-                        land_positions.append((i, j, k))
+                    cell_type = 6  # Default to air
+                    rand = np.random.random()
 
-        # Shuffle positions for randomized placement
-        random.shuffle(land_positions)
-        random.shuffle(sea_positions)
-
-        # Assign cities and forests on land
-        for idx, position in enumerate(land_positions):
-            i, j, k = position
-            if idx < (initial_cities or 0):
-                cell_type = 5  # City
-                city_count += 1
-            elif idx < (initial_cities or 0) + (initial_forests or 0):
-                cell_type = 4  # Forest
-                forest_count += 1
-            else:
-                cell_type = 1  # Land
-            grid[i, j, k] = Cell(
-                cell_type=cell_type,
-                temperature=initial_temperature + np.random.uniform(-2, 2),
-                water_mass=0,
-                pollution_level=initial_pollution if cell_type in [4, 5] else 0,
-                direction=(0, 0),
-            )
-
-        # Assign sea and icebergs in sea positions
-        for idx, position in enumerate(sea_positions):
-            i, j, k = position
-            if idx < len(sea_positions) * 0.1:  # 10% icebergs
-                cell_type = 3  # Iceberg
-                iceberg_count += 1
-            else:
-                cell_type = 0  # Sea
-                sea_count += 1
-            grid[i, j, k] = Cell(
-                cell_type=cell_type,
-                temperature=initial_temperature - 5,  # Cooler for ice/sea
-                water_mass=initial_water_mass,
-                pollution_level=0,
-                direction=(0, 0),
-            )
-
-        # Assign clouds and air above the land/sea
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    if not grid[i, j, k]:  # If not assigned yet
-                        if np.random.random() < 0.05:  # 5% chance for clouds
-                            cell_type = 2  # Cloud
-                            cloud_count += 1
+                    if k <= elevation_map[i, j]:
+                        if k <= sea_level:
+                            # Sea cells below sea level
+                            if rand < 0.4 and iceberg_count < total_cells * 0.02:  # Add a few icebergs
+                                cell_type = 3  # Iceberg
+                                iceberg_count += 1
+                            else:
+                                cell_type = 0  # Sea
+                                sea_count += 1
                         else:
-                            cell_type = 6  # Air
-                            air_count += 1
-                        grid[i, j, k] = Cell(
-                            cell_type=cell_type,
-                            temperature=initial_temperature + np.random.uniform(-2, 2),
-                            water_mass=0,
-                            pollution_level=0,
-                            direction=(np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])),
-                        )
+                            # Land cells above sea level
+                            cell_type = np.random.choice([1, 3, 0], p=[0.1, 0.2, 0.7])
+                            land_count += (1 if cell_type == 1 else 0)
+                            sea_count += (1 if cell_type == 0 else 0)
+                            iceberg_count += (1 if cell_type == 3 else 0)
 
-        # Logging for debugging
-        logging.info(f"Grid initialized with counts:")
-        logging.info(f"Cities: {city_count}, Forests: {forest_count}, Land: {len(land_positions) - city_count - forest_count}")
-        logging.info(f"Sea: {sea_count}, Icebergs: {iceberg_count}, Air: {air_count}, Clouds: {cloud_count}")
+                    elif  k == elevation_map[i, j] + 1:
+                        base = initial_cities+initial_forests 
+                        cell_type = np.random.choice([5, 4], p=[initial_cities/base, initial_forests/base])
 
+                        forest_count +=( 1 if cell_type == 4 else 0)
+                        city_count += (1 if cell_type == 5 else 0)
+
+                    elif k > elevation_map[i, j] + 3:
+                        cell_type = np.random.choice([6, 2], p=[0.9, 0.1])
+                        cloud_count += (1 if cell_type == 2 else 0)
+                        air_count+=(1 if cell_type == 6 else 0)
+                    else:
+                        cell_type = np.random.choice([6, 2], p=[0.99, 0.01])
+                        cloud_count += (1 if cell_type == 2 else 0)
+                        air_count+=(1 if cell_type == 6 else 0)
+
+
+                    # Create the cell with relevant parameters
+                    grid[i, j, k] = Cell(
+                        cell_type=cell_type,
+                        temperature=initial_temperature +
+                        np.random.uniform(-2, 2),
+                        water_mass=initial_water_mass if cell_type in [
+                            0, 3] else 0,
+                        pollution_level=initial_pollution if cell_type in [
+                            4, 5] else 0,
+                        direction=(np.random.choice(
+                            [-1, 1]), np.random.choice([-1, 1])) if cell_type not in {1, 4, 5} else (0, 0),
+                    )
+
+        # Log final counts
+        print(f"Grid initialized: {city_count} cities, {forest_count} forests, {land_count} land cells, "
+              f"{sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.  {air_count} air ")
         return grid
 
-
-    def _generate_elevation_map(self, grid_size):
+    def _generate_elevation_map(self):
         """
-        Generate an elevation map using Perlin noise to simulate terrain elevation.
-        :param grid_size: Tuple of (x, y, z) dimensions for the grid.
+        Generate an elevation map using Perlin noise for smooth terrain.
         :return: A 2D numpy array representing terrain elevation.
         """
         from noise import pnoise2
-        x, y, z = grid_size
+
+        x, y, _ = self.grid_size
         elevation_map = np.zeros((x, y))
 
-        # Scale factor for Perlin noise coordinates to create variability
-        scale = 10.0
-        octaves = 4
+        scale = 20.0  # Adjust for larger/smaller features
+        octaves = 10  # Higher value for more detail
         persistence = 0.5
         lacunarity = 2.0
 
         for i in range(x):
             for j in range(y):
-                # Generate Perlin noise and normalize it to fit the z-dimension
-                noise_value = pnoise2(i / scale, j / scale, octaves=octaves,
-                                      persistence=persistence, lacunarity=lacunarity, repeatx=x, repeaty=y)
-                # Normalize to [0, z * 0.4]
-                elevation_map[i, j] = (noise_value + 1) * (z * 0.2)
+                elevation_map[i, j] = int((pnoise2(i / scale, j / scale, octaves=octaves,
+                                                     persistence=persistence, lacunarity=lacunarity) + 1) * (self.grid_size[2] // 5))
 
         return elevation_map
 
@@ -176,22 +154,26 @@ class State:
 
                     if current_cell.cell_type in [2, 6]:  # Clouds or Air
                         # Clouds and Air move freely in X-Y plane
-                        new_i, new_j, new_k = current_cell.move((i, j, k), self.grid_size)
+                        new_i, new_j, new_k = current_cell.move(
+                            (i, j, k), self.grid_size)
                     elif current_cell.cell_type == 3:  # Ice
                         # Ice moves if adjacent to water or under specific conditions
                         neighbors = self.get_neighbors(i, j, k)
                         if any(neighbor.cell_type == 0 for neighbor in neighbors):  # Adjacent to water
-                            new_i, new_j, new_k = current_cell.move((i, j, k), self.grid_size)
+                            new_i, new_j, new_k = current_cell.move(
+                                (i, j, k), self.grid_size)
                         else:
                             new_i, new_j, new_k = i, j, k  # No movement
                     elif current_cell.cell_type == 0:  # Water
                         # Water flows downhill if elevation map exists
                         neighbors = self.get_neighbors(i, j, k)
-                        lowest_neighbor = min(neighbors, key=lambda n: n.elevation if hasattr(n, 'elevation') else float('inf'))
+                        lowest_neighbor = min(neighbors, key=lambda n: n.elevation if hasattr(
+                            n, 'elevation') else float('inf'))
                         if hasattr(lowest_neighbor, 'elevation') and lowest_neighbor.elevation < current_cell.elevation:
                             new_i, new_j, new_k = lowest_neighbor.position
                         else:
-                            new_i, new_j, new_k = current_cell.move((i, j, k), self.grid_size)
+                            new_i, new_j, new_k = current_cell.move(
+                                (i, j, k), self.grid_size)
                     else:
                         # Other cells (Land, Forest, City) do not move
                         new_i, new_j, new_k = i, j, k
@@ -203,17 +185,15 @@ class State:
                         # Merge properties for Cloud and Water
                         target_cell = new_grid[new_i, new_j, new_k]
                         target_cell.water_mass += current_cell.water_mass
-                        target_cell.pollution_level = max(target_cell.pollution_level, current_cell.pollution_level)
+                        target_cell.pollution_level = max(
+                            target_cell.pollution_level, current_cell.pollution_level)
                     else:
                         # If the target cell is not Air, Cloud, or Water, retain the original position
                         new_grid[i, j, k] = current_cell
 
-
         logging.debug("Completed moving cells.")
 
-
         self.grid = new_grid
-
 
     def resolve_collision(self, cell1, cell2):
         """
@@ -240,7 +220,8 @@ class State:
                     # Get neighbors of the current cell
                     neighbors = self.get_neighbors(i, j, k)
                     current_position = (i, j, k)
-                    current_cell.update(neighbors, current_position, self.grid_size)
+                    current_cell.update(
+                        neighbors, current_position, self.grid_size)
 
         logging.debug("Completed updating cells.")
 
@@ -265,7 +246,8 @@ class State:
         return neighbors
 
     def next_state(self):
-        logging.info("Calculating next state from state index %d", self.state_index)
+        logging.info("Calculating next state from state index %d",
+                     self.state_index)
 
         """
         Calculate the next state of the grid (simulate one day).
@@ -290,8 +272,8 @@ class State:
                 for k in range(self.grid_size[2]):
                     cell = self.grid[i, j, k]
                     if cell.cell_type != 6:  # Exclude air cells
-                        total_cities+=1
-                        total_forests+=1
+                        total_cities += 1
+                        total_forests += 1
                         total_temperature += cell.temperature
                         total_pollution += cell.pollution_level
                         total_water_mass += cell.water_mass
@@ -313,8 +295,9 @@ class State:
         # Copy the updated grid to the new state
         new_state.grid = np.copy(self.grid)
         new_state.state_index = self.state_index + 1
-        logging.info("Next state calculated: state index %d", self.state_index + 1)
-        
+        logging.info("Next state calculated: state index %d",
+                     self.state_index + 1)
+
         return new_state
 
     def visualize(self):
@@ -347,4 +330,3 @@ class State:
 
         plt.title(f"State at Day {self.state_index}")
         plt.show()
-
