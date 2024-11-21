@@ -55,17 +55,17 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    cell_type = 6  # Default to air
-                    rand = np.random.random()
+                    cell_type = None  # Default to air
 
                     if k <= elevation_map[i, j]:
                         if k <= sea_level:
-                            cell_type = np.random.choice([3, 0], p=[0.05, 0.99])
+                            cell_type = np.random.choice([3, 0], p=[0.05, 0.95])
                             sea_count += (1 if cell_type == 0 else 0)
                             iceberg_count += (1 if cell_type == 3 else 0)
                         else:
                             # Land cells above sea level
-                            cell_type = np.random.choice([1, 3, 0], p=[0.1, 0.2, 0.7])
+                            # cell_type = np.random.choice([1, 3, 0], p=[0.1, 0.2, 0.7])
+                            cell_type = np.random.choice([1, 0], p=[0.5,0.5])
                             land_count += (1 if cell_type == 1 else 0)
                             sea_count += (1 if cell_type == 0 else 0)
                             iceberg_count += (1 if cell_type == 3 else 0)
@@ -77,11 +77,13 @@ class State:
                         forest_count +=( 1 if cell_type == 4 else 0)
                         city_count += (1 if cell_type == 5 else 0)
 
-                    elif k > elevation_map[i, j] + 3:
+                    elif  elevation_map[i, j] + 1 < k <= elevation_map[i, j] + 3 :
                         cell_type = np.random.choice([6, 2], p=[0.9, 0.1])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count+=(1 if cell_type == 6 else 0)
+
                     else:
+                    # elif k > elevation_map[i, j] + 3:
                         cell_type = np.random.choice([6, 2], p=[0.9, 0.1])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count+=(1 if cell_type == 6 else 0)

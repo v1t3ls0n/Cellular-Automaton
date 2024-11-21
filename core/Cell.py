@@ -196,8 +196,10 @@ class Cell:
             2: (0.5, 0.5, 0.5),  # Cloud (gray)
             3: (0.0, 1.0, 1.0),  # Ice (cyan)
             4: (0.0, 0.5, 0.0),  # Forest (green)
-            5: (0.5, 0.0, 0.5),  # City (purple)
-            6: (1.0, 1.0, 1.0),  # Air (white)
+            5: (1.0, 0.0, 0.0),  # City (purple)
+            # 6: (0.0, 0.0, 0.0, 0.02),  # Air (Black)
+            # 6: (1.0, 1.0, 1.0, 0.02),  # Air (White)
+            6: (255, 69, 0),  # Air (Orange)
         }
 
         base_color = base_colors[self.cell_type]
@@ -208,7 +210,8 @@ class Cell:
             base_color[i] * (1.0 - pollution_intensity) for i in range(3)
         )
 
-        return black_tinted_color
+        # return black_tinted_color
+        return base_color
 
 
 
