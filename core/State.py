@@ -61,18 +61,13 @@ class State:
                         cell_type = np.random.choice(
                             [0, 3], p=[sea_probability, iceberg_probability])
 
-                    elif 0.8 * elev < k < elev:  # Between Sea level and Land Level
+                    elif 0.8 * elev < k <= elev + 2:  # Between Sea level and Air
                         cell_type = np.random.choice(
-                            [1, 0], p=[land_probability, 1 - land_probability])
+                            [4, 5, 1], p=[forest_probability, city_probability, land_probability])
 
                     elif k > min(elev + 3, grid_size[2]):  # Sky
                         cell_type = np.random.choice(
                             [2, 6], p=[cloud_probability, air_probability])
-
-                    # Exactly at elevation
-                    elif k == int(elev):
-                        cell_type = np.random.choice(
-                            [4, 5, 1], p=[forest_probability, city_probability, land_probability])
                     else:
                         cell_type = 6
 
