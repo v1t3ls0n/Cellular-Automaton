@@ -102,8 +102,9 @@ class MatplotlibDisplay:
         self.ax_population.set_xlabel("Day")
         self.ax_population.set_ylabel("Number of Cities")
 
-        days = range(len(self.simulation.states))
+        # Retrieve data
         _, _, _, city_population, _ = self.simulation.analyze()
+        days = range(len(city_population))
 
         self.ax_population.plot(days, city_population, color="purple", label="Cities")
         self.ax_population.legend()
