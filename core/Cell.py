@@ -196,10 +196,12 @@ class Cell:
             2: (0.5, 0.5, 0.5),  # Cloud (gray)
             3: (0.0, 1.0, 1.0),  # Ice (cyan)
             4: (0.0, 0.5, 0.0),  # Forest (green)
-            5: (1.0, 0.0, 0.0),  # City (purple)
+            5: (1.0, 0.0, 0.0),  # City (Red)
+            # 5: (1.0, 69/255, 0.0, 1.0),  # City (Orange)
+            6: (1.0, 1.0, 1.0),  # Air (White)
+            
             # 6: (0.0, 0.0, 0.0, 0.02),  # Air (Black)
-            # 6: (1.0, 1.0, 1.0, 0.02),  # Air (White)
-            6: (255, 69, 0),  # Air (Orange)
+            # 6: (1.0, 69/255, 0.0),  # Air (Orange)
         }
 
         base_color = base_colors[self.cell_type]
@@ -210,45 +212,10 @@ class Cell:
             base_color[i] * (1.0 - pollution_intensity) for i in range(3)
         )
 
-        # return black_tinted_color
-        return base_color
+        return black_tinted_color
+        # return base_color
 
 
-
-    def get_color_dynamic(self):
-        """
-        Get the color of the cell based on its type and pollution level.
-        Pollution affects the transparency (alpha) of the color.
-        """
-        base_colors = {
-            0: (0.0, 0.0, 1.0, 1.0),  # Sea (blue)
-            1: (1.0, 1.0, 0.0, 1.0),  # Land (yellow)
-            2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
-            3: (0.0, 1.0, 1.0, 1.0),  # Ice (cyan)
-            4: (0.0, 0.5, 0.0, 1.0),  # Forest (dark green)
-            5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
-            6: (1.0, 1.0, 1.0, 0.02),  # Air (light white with low opacity)
-        }
-
-        # Base color for the current cell type
-        # Default to black if type is unknown
-        base_color = base_colors.get(self.cell_type, (0.0, 0.0, 0.0))
-
-        if self.cell_type == 6:  # Air
-            # Scale pollution [0, 1]
-            pollution_factor = min(self.pollution_level / 100, 1.0)
-            # Adjust the base white color to reflect pollution levels
-            adjusted_color = tuple(base * (1 - pollution_factor)
-                                   for base in base_color[:3]) + (base_color[3],)
-            return adjusted_color
-
-        # For all other cell types, apply pollution transparency
-        # More pollution = lower alpha
-        alpha = 1.0 - min(self.pollution_level / 100, 1.0)
-        if len(base_color) == 3:  # If color doesn't have alpha, add it
-            return base_color + (alpha,)
-        else:
-            return base_color[:3] + (alpha,)
 
 
     def _update_ice(self, neighbors):
