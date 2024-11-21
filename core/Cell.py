@@ -224,8 +224,8 @@ class Cell:
     def get_color(self):
         """Get the color of the cell."""
 
-        # if self.cell_type == 6: # Air (Transparent)
-        #     return None
+        if self.cell_type == 6: # Air (Transparent)
+            return None
 
         base_colors = {
             0: (0.0, 0.0, 1.0, 1.0),  # Sea (blue)
