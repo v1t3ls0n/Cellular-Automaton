@@ -95,7 +95,7 @@ class Cell:
                 self.convert_to_land()
                 return
 
-            if neighbor.cell_type == 4 and self.pollution_level == 0  and neighbor.cell_type == 5:
+            if neighbor.cell_type == 4 and self.pollution_level <= 1  and neighbor.pollution_level <= 1:
                 self.convert_to_city()
                 return
 
@@ -130,13 +130,6 @@ class Cell:
                 self.pollution_level = 0  # Reset pollution
                 return
 
-        # Check if the forest should turn into land due to high temperature or pollution
-        for neighbor in neighbors:
-             if neighbor.cell_type == 4:  # Neighboring forest
-                if self.temperature > 50 or self.pollution_level > 80:
-                    deforestation_chance = 0.05
-                    if np.random.random() < deforestation_chance:
-                        neighbor.convert_to_land()  # Neighboring forest turns into land
 
     def _update_city(self, neighbors):
         """
