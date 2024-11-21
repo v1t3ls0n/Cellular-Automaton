@@ -234,17 +234,16 @@ class Cell:
             3: (0.0, 1.0, 1.0, 1.0),  # Ice (cyan)
             4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
             5: (1.0, 0.0, 0.0, 1.0),  # City (Red)
-            6: (1.0, 1.0, 1.0, 0.01),  # Air (White)
+            6: (1.0, 1.0, 1.0, 0.1),  # Air (White)
 
         }
 
         base_color = base_colors[self.cell_type]
-        return base_color
     
         # Tint towards black based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(
-            base_color[i] * (1.0 - pollution_intensity) for i in range(4)
+            base_color[i] * (1.0 - pollution_intensity) for i in range(3)
         )
 
         return black_tinted_color

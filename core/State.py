@@ -110,7 +110,7 @@ class State:
 
                     # else:
                     elif k > elevation_map[i, j] + 3:
-                        cell_type = np.random.choice([6, 2], p=[0.5, 0.5])
+                        cell_type = np.random.choice([6, 2], p=[0.8, 0.2])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count += (1 if cell_type == 6 else 0)
 
