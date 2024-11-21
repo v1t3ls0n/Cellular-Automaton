@@ -47,7 +47,7 @@ class Cell:
 
         for neighbor in neighbors:
             # Deforestation due to nearby city or high pollution
-            if neighbor.cell_type == 5 and (neighbor.pollution_level > 50 or neighbor.temperature > 50):
+            if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
                 self.cell_type = 1  # Forest turns into land
                 return
 
@@ -86,7 +86,7 @@ class Cell:
                 neighbor.cell_type = 1  # Forest turns into land
 
         # Collapse into land if pollution is extreme
-        if (neighbor.pollution_level > 50 or neighbor.temperature > 50) and np.random.random() < 0.1:
+        if (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
             self.cell_type = 1  # City collapses into land
                 
 
