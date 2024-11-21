@@ -11,6 +11,15 @@ class Cell:
 
     def update(self, neighbors, current_position=None, grid_size=None):
         self._adjust_temperature_with_pollution()
+        has_neighboring_cities = any(neighbor.cell_type == 5 for neighbor in neighbors)
+
+        if not has_neighboring_cities:
+            # Decrease pollution and temperature if no neighboring cities
+            pollution_decay = 0.1  # Adjust this value for pollution decay rate
+            temperature_decay = 0.1  # Adjust this value for temperature decay rate
+            self.pollution_level = max(0, self.pollution_level - pollution_decay)
+            self.temperature = max(0, self.temperature - temperature_decay)
+
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)
         elif self.cell_type == 1:  # Land
@@ -37,11 +46,12 @@ class Cell:
         if self.cell_type == 0:  # Sea
             self.cell_type = 3  # Convert to ice
             # Water mass remains, but ice is solid
-            
+
     def convert_to_city(self):
         if self.cell_type == 4:
             self.cell_type = 5
-            self.pollution_level = 10
+            # self.pollution_level = 10
+            self.pollution_level = 0
             # self.water_mass = 0
             self.temperature += 2
 
@@ -74,7 +84,7 @@ class Cell:
                 neighbor.water_mass -= rain
 
         # Convert to land if pollution and temperature are too high
-        if self.pollution_level > 80 and self.temperature > 50 and np.random.random() < 0.2:
+        if self.pollution_level > 80 and self.temperature > 50 and np.random.random() < 0.02:
             self.convert_to_land()
 
         # Convert to city under suitable conditions
@@ -214,8 +224,8 @@ class Cell:
     def get_color(self):
         """Get the color of the cell."""
 
-        # if self.cell_type == 6: # Air (Transparent)
-        #     return None
+        if self.cell_type == 6: # Air (Transparent)
+            return None
 
         base_colors = {
             0: (0.0, 0.0, 1.0, 1.0),  # Sea (blue)
@@ -232,7 +242,7 @@ class Cell:
         # Tint towards black based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(
-            base_color[i] * (1.0 - pollution_intensity) for i in range(4)
+            base_color[i] * (1.0 - pollution_intensity) for i in range(3)
         )
 
         return black_tinted_color
