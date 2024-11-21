@@ -5,25 +5,27 @@ import matplotlib.pyplot as plt
 
 
 class Simulation:
-    def __init__(self, grid_size, days,  initial_pollution, initial_temperature, initial_water_mass, initial_cities=None, initial_forests=None,):
-        self.grid_size = grid_size
-        self.days = days
-        self.initial_cities = initial_cities
-        self.initial_forests = initial_forests
-        self.initial_pollution = initial_pollution
-        self.initial_temperature = initial_temperature
-        self.initial_water_mass = initial_water_mass
-        self.states = []
+    def __init__(self, grid_size, days,  initial_pollution, initial_temperature, initial_water_mass, initial_cities, initial_forests):
 
+        self.grid_size = grid_size,
+        self.initial_temperature = initial_temperature,
+        self.initial_pollution = initial_pollution,
+        self.initial_water_mass = initial_water_mass,
+        self.initial_cities = initial_cities,
+        self.initial_forests = initial_forests
+
+        self.days = days
+        self.states = []
         # Initialize the first state
         initial_state = State(
-            grid_size=self.grid_size,
-            initial_cities=self.initial_cities,
-            initial_forests=self.initial_forests,
-            initial_pollution=self.initial_pollution,
-            initial_temperature=self.initial_temperature,
-            initial_water_mass=self.initial_water_mass,
+           grid_size,
+           initial_temperature,
+           initial_pollution,
+           initial_water_mass,
+           initial_cities,
+           initial_forests,
         )
+
         self.states.append(initial_state)
 
     def precompute(self):
@@ -56,18 +58,15 @@ class Simulation:
     def analyze(self):
         """
         Analyze the simulation data for trends over time.
-        Generates data for pollution, temperature, and other attributes.
         """
         pollution_over_time = []
         temperature_over_time = []
-        city_count_over_time = []
-        forest_count_over_time = []
+        water_mass_over_time = []
 
         for state in self.states:
-            total_pollution = 0
             total_temperature = 0
-            total_cities = 0
-            total_forests = 0
+            total_pollution = 0
+            total_water_mass = 0
             total_cells = 0
 
             for i in range(self.grid_size[0]):
@@ -75,25 +74,22 @@ class Simulation:
                     for k in range(self.grid_size[2]):
                         cell = state.grid[i, j, k]
                         if cell.cell_type != 6:  # Exclude air cells
-                            total_pollution += cell.pollution_level
                             total_temperature += cell.temperature
+                            total_pollution += cell.pollution_level
+                            total_water_mass += cell.water_mass
                             total_cells += 1
 
-                            if cell.cell_type == 5:  # City
-                                total_cities += 1
-                            elif cell.cell_type == 4:  # Forest
-                                total_forests += 1
-
-            # Compute averages and save for graphing
-            avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
+            # Compute averages
             avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
+            avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
+            avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
 
-            pollution_over_time.append(avg_pollution)
             temperature_over_time.append(avg_temperature)
-            city_count_over_time.append(total_cities)
-            forest_count_over_time.append(total_forests)
+            pollution_over_time.append(avg_pollution)
+            water_mass_over_time.append(avg_water_mass)
 
-        return pollution_over_time, temperature_over_time, city_count_over_time, forest_count_over_time
+        return pollution_over_time, temperature_over_time, water_mass_over_time
+
 
     def visualize(self):
         """

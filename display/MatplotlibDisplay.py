@@ -9,7 +9,14 @@ class MatplotlibDisplay:
         self.simulation = simulation
         self.precomputed_results = simulation.states  # Use precomputed results
         self.current_day = 0
-        self.fig, self.ax_3d, self.ax_pollution, self.ax_temperature, self.ax_population, self.ax_forests = None, None, None, None, None, None
+        self.fig = None
+        self.ax_3d = None
+        self.ax_pollution = None
+        self.ax_temperature = None
+        self.ax_population = None
+        self.ax_forests = None
+        self.ax_water_mass = None
+        self.ax_ice_coverage = None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
         self.current_elev = 20  # Default elevation
         self.current_azim = 45  # Default azimuth
@@ -17,8 +24,7 @@ class MatplotlibDisplay:
     def plot_3d(self):
         """Create the plot with all relevant graphs."""
         plt.ion()  # Enable interactive mode
-        self.fig = plt.figure(figsize=(18, 12))  # Adjusted figure size for better layout
-        # self.fig = plt.figure(figsize=(16, 10))  # Adjusted figure size for better layout
+        self.fig = plt.figure(figsize=(16, 10))  # Adjusted figure size for better layout
 
         # Adjust the positions of subplots
         self.ax_3d = self.fig.add_subplot(231, projection='3d')  # 3D simulation
@@ -26,6 +32,7 @@ class MatplotlibDisplay:
         self.ax_temperature = self.fig.add_subplot(233)  # Temperature graph
         self.ax_population = self.fig.add_subplot(234)  # Population graph
         self.ax_forests = self.fig.add_subplot(235)  # Forest graph
+        self.ax_water_mass = self.fig.add_subplot(236)  # Water Mass graph
 
         # Precompute 3D visualizations
         self.precompute_visualizations()
@@ -35,26 +42,16 @@ class MatplotlibDisplay:
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
+        self.render_water_mass_graph()
 
+        # Add legend for the simulation
+        self.add_legend()
 
         # Add keyboard navigation
         self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
 
         # Render the initial day
         self.render_day(self.current_day)
-
-        """Add a legend explaining the cell colors."""
-        legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', label='Sea', markersize=10, markerfacecolor='blue'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Land', markersize=10, markerfacecolor='yellow'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='cyan'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor='green'),
-            plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor='purple'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor='lightblue'),
-        ]
-        self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))
-
 
         plt.tight_layout()  # Automatically adjust subplot spacing
         plt.ioff()  # Disable interactive mode to ensure `plt.show()` holds the program
@@ -123,7 +120,6 @@ class MatplotlibDisplay:
         self.ax_population.set_ylim(0, max_count * 1.1)
         self.ax_population.legend()
 
-
     def render_forests_graph(self):
         """Render the forest count graph over time."""
         self.ax_forests.cla()
@@ -148,7 +144,6 @@ class MatplotlibDisplay:
         self.ax_forests.set_ylim(0, max_count * 1.1)
         self.ax_forests.legend()
 
-
     def render_temperature_graph(self):
         """Render the temperature graph over time."""
         self.ax_temperature.cla()
@@ -162,22 +157,14 @@ class MatplotlibDisplay:
                 cell.temperature for x in range(state.grid.shape[0])
                 for y in range(state.grid.shape[1])
                 for z in range(state.grid.shape[2])
-                if (cell := state.grid[x][y][z]).cell_type !=6  # Exclude air cells
+                if (cell := state.grid[x][y][z]).cell_type != 6  # Exclude air cells
             ])
-            if any(state.grid[x][y][z].cell_type !=6
-                for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2]))
-            else 0  # Default to 0 if only air cells are present
             for state in self.simulation.states
         ]
 
         max_temp = max(avg_temperatures) if avg_temperatures else 1
-        min_temp = min(avg_temperatures) if avg_temperatures else 0
         self.ax_temperature.plot(days, avg_temperatures, color="blue", label="Temperature")
-        self.ax_temperature.set_ylim(min_temp * 0.9, max_temp * 1.1)
         self.ax_temperature.legend()
-
 
     def render_pollution_graph(self):
         """Render the pollution graph over time."""
@@ -194,18 +181,46 @@ class MatplotlibDisplay:
                 for z in range(state.grid.shape[2])
                 if (cell := state.grid[x][y][z]).cell_type not in ["air", 0]  # Exclude air and sea cells
             ])
-            if any(state.grid[x][y][z].cell_type not in ["air", 0]
-                for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2]))
-            else 0  # Default to 0 if only air or sea cells are present
             for state in self.simulation.states
         ]
 
         max_pollution = max(avg_pollution) if avg_pollution else 1
         self.ax_pollution.plot(days, avg_pollution, color="red", label="Pollution")
-        self.ax_pollution.set_ylim(0, max_pollution * 1.1)
         self.ax_pollution.legend()
+
+    def render_water_mass_graph(self):
+        """Render the water mass graph over time."""
+        self.ax_water_mass.cla()
+        self.ax_water_mass.set_title("Water Mass Over Time")
+        self.ax_water_mass.set_xlabel("Day")
+        self.ax_water_mass.set_ylabel("Average Water Mass")
+
+        days = range(len(self.simulation.states))
+        avg_water_mass = [
+            np.mean([
+                cell.water_mass for x in range(state.grid.shape[0])
+                for y in range(state.grid.shape[1])
+                for z in range(state.grid.shape[2])
+                if (cell := state.grid[x][y][z]).cell_type in [0, 3]  # Sea and Ice
+            ])
+            for state in self.simulation.states
+        ]
+
+        self.ax_water_mass.plot(days, avg_water_mass, color="cyan", label="Water Mass")
+        self.ax_water_mass.legend()
+
+    def add_legend(self):
+        """Add a legend explaining the cell colors."""
+        legend_elements = [
+            plt.Line2D([0], [0], marker='o', color='w', label='Sea', markersize=10, markerfacecolor='blue'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Land', markersize=10, markerfacecolor='yellow'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='darkcyan'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor='green'),
+            plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor='purple'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor='lightblue'),
+        ]
+        self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))
 
     def handle_key_press(self, event):
         """Handle key presses for navigating and zooming/panning the graphs."""
@@ -223,16 +238,3 @@ class MatplotlibDisplay:
         if self.current_day > 0:
             self.current_day -= 1
             self.render_day(self.current_day)
-
-    def add_legend(self):
-        """Add a legend explaining the cell colors."""
-        legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', label='Sea', markersize=10, markerfacecolor='blue'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Land', markersize=10, markerfacecolor='yellow'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='cyan'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor='green'),
-            plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor='purple'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor='lightblue'),
-        ]
-        self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))

@@ -24,23 +24,26 @@ def get_user_input(prompt, default, value_type=float):
 
 # Collect input from user with improved defaults
 print("Please enter the initial parameters for the simulation:")
-grid_size = get_user_input("Grid size (e.g., 10)", (10,10,10), int)
+grid_dimension = get_user_input("Grid size (e.g., 10)", 10, int)
 days = get_user_input("Number of days to simulate (e.g., 365)", 365, int)
-initial_cities = get_user_input("Initial number of cities (e.g., 50)", 450, int)
-initial_forests = get_user_input("Initial number of forests (e.g., 50)", 450, int)
-initial_pollution = get_user_input("Initial pollution level (e.g., 10.0)", 10.0)
-initial_temperature = get_user_input("Initial temperature (e.g., 15.0)", 15.0)
+initial_cities = get_user_input("Initial number of cities (e.g., 50)", 800, int)
+initial_forests = get_user_input("Initial number of forests (e.g., 50)", 10, int)
+initial_pollution = get_user_input("Initial pollution level (e.g., 10.0)", 30.0)
+initial_temperature = get_user_input("Initial temperature (e.g., 15.0)", 25.0)
 initial_water_mass = get_user_input("Initial water level (e.g., 1.0)", 1.0)
 
+
+
+grid_size =  (grid_dimension,grid_dimension,grid_dimension)
 # Initialize simulation with user-provided inputs
 simulation = Simulation(
-    grid_size=grid_size,
+    grid_size = grid_size,
     days=days,
-    initial_cities=initial_cities,
-    initial_forests=initial_forests,
     initial_pollution=initial_pollution,
     initial_temperature=initial_temperature,
     initial_water_mass=initial_water_mass,
+    initial_cities=initial_cities,
+    initial_forests=initial_forests,
 )
 
 # Precompute states
