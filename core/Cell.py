@@ -13,22 +13,25 @@ class Cell:
 
 
     def update(self, neighbors, current_position=None, grid_size=None):
+        
         # General updates for all cell types
         self._adjust_temperature_with_pollution()
         
         # Delegate specific updates based on cell type
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)
-        elif self.cell_type == 3:  # Ice
-            self._update_ice(neighbors)
-        elif self.cell_type == 6:  # Air
-            self._update_gas(neighbors)
+        elif self.cell_type == 1: # Land
+            self._update_land(neighbors)
         elif self.cell_type == 2:  # Cloud
             self._update_cloud(neighbors, current_position, grid_size)
+        elif self.cell_type == 3:  # Ice
+            self._update_ice(neighbors)
         elif self.cell_type == 4:  # Forest
             self._update_forest(neighbors)
         elif self.cell_type == 5:  # City
             self._update_city(neighbors)
+        elif self.cell_type == 6:  # Air
+            self._update_gas(neighbors)
 
     def _adjust_temperature_with_pollution(self):
         """
@@ -45,25 +48,51 @@ class Cell:
         if self.pollution_level < 10:
             self.temperature = max(0, self.temperature - 0.1)  # Cooling effect
 
+    def convert_to_city(self):
+        """
+        Change the cell type from forest to city.
+        """
+        if self.cell_type == 4:  # Ensure the current cell is a forest
+            self.cell_type = 5  # Change to city
+            self.pollution_level = 10  # Initial pollution level for a city
+            self.water_mass = 0  # Cities don't retain water mass
+            self.temperature += 2  # Cities may raise the local temperature slightly
+    
+    def convert_to_land(self):
+        """
+        Change the cell type to land.
+        """
+        if self.cell_type in [4, 5]:  # Ensure the cell is a forest or city
+            self.cell_type = 1  # Change to land
+            self.pollution_level = 0  # Reset pollution level for land
+            self.water_mass = 0  # Land does not retain water mass
+            self.temperature -= 1  # Slightly decrease temperature as vegetation or urban heat effect disappears
+
     def _update_forest(self, neighbors):
         """
         Update logic for forests. Forests absorb pollution and may undergo deforestation.
         """
         # Absorb pollution from the forest itself
-        self.pollution_level = max(0, self.pollution_level - 0.2 * self.pollution_level)
+        self.pollution_level = max(0, self.pollution_level - 0.02 * self.pollution_level)
         cooling_effect = min(0.1, self.pollution_level * 0.02)
         self.temperature -= cooling_effect
 
         for neighbor in neighbors:
             # Absorb pollution from neighboring cells
             if neighbor.pollution_level > 0:
-                absorbed_pollution = min(0.1, neighbor.pollution_level)  # Forest can absorb up to 0.1 pollution
+                absorbed_pollution = min(0.1, neighbor.pollution_level * 0.1)  # Forest can absorb up to 0.1 pollution
                 neighbor.pollution_level -= absorbed_pollution
                 self.pollution_level = max(0, self.pollution_level - absorbed_pollution)
 
             # Deforestation due to nearby city or high pollution
-            if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 and neighbor.temperature > 50) and np.random.random() < 0.05:
+            if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
                 self.cell_type = 1  # Forest turns into land
+                self.convert_to_land()
+                return
+                
+            
+            if neighbor.cell_type ==4 and self.pollution_level < 10 and neighbor.pollution_level < 10 and np.random.random() < 0.05:
+                self.convert_to_city()
                 return
 
             # Increase water mass from rainfall (clouds)
@@ -72,11 +101,37 @@ class Cell:
                 self.water_mass += rain
                 neighbor.water_mass -= rain
 
-        # Recovery logic: Turn land into forest if pollution is low
-        if self.pollution_level < 10 and self.cell_type == 1:  # Land
+
+    def _update_land(self, neighbors):
+        """
+        Update logic for land cells:
+        - Forests turn to land if temperature or pollution is high.
+        - Land can turn into a forest if pollution is low and temperature is suitable.
+        - Land surrounded by sea and with significant rainfall may turn into sea.
+        """
+        # Check if the land should turn into sea
+        surrounding_sea_count = sum(1 for neighbor in neighbors if neighbor.cell_type == 0)
+        if surrounding_sea_count > len(neighbors) * 0.6 and self.water_mass > 1.0:  # High water mass and surrounded by sea
+            self.cell_type = 0  # Land turns into sea
+            self.water_mass = 1.0  # Normalize water mass for sea
+            self.pollution_level = 0  # Sea has no pollution
+            return
+
+        # Check if the land should turn into a forest
+        if self.pollution_level < 5 and self.temperature < 25:  # Low pollution and suitable temperature
             recovery_chance = 0.01
             if np.random.random() < recovery_chance:
-                self.cell_type = 4  # Land turns back into forest
+                self.cell_type = 4  # Land turns into forest
+                self.pollution_level = 0  # Reset pollution
+                return
+
+        # Check if the forest should turn into land due to high temperature or pollution
+        for neighbor in neighbors:
+            if neighbor.cell_type == 4:  # Neighboring forest
+                if self.temperature > 50 or self.pollution_level > 80:
+                    deforestation_chance = 0.05
+                    if np.random.random() < deforestation_chance:
+                        neighbor.convert_to_land()  # Neighboring forest turns into land
 
 
 
@@ -90,7 +145,7 @@ class Cell:
 
         for neighbor in neighbors:
             # Spread pollution to neighboring cells
-            pollution_spread = 0.5 * self.pollution_level
+            pollution_spread = 0.1 * self.pollution_level
             neighbor.pollution_level = neighbor.pollution_level + pollution_spread
 
             # Cause deforestation in neighboring forests
@@ -144,12 +199,6 @@ class Cell:
                 self.cell_type = 3  # Freeze to ice
                 self.water_mass = 0
 
-    def _update_gas(self, neighbors):
-        if self.cell_type == 6:  # Air
-            self._update_air(neighbors)
-        elif self.cell_type == 2:  # Cloud
-            self._update_cloud(neighbors)
-
     def _update_air(self, neighbors):
         for neighbor in neighbors:
             if neighbor.cell_type == 2 or neighbor.cell_type == 6:  # Cloud
@@ -199,29 +248,28 @@ class Cell:
 
     def get_color(self):
         """Get the color of the cell."""
+        
+        # if self.cell_type == 6: # Air (Transparent)
+        #     return None
+        
         base_colors = {
-            0: (0.0, 0.0, 1.0),  # Sea (blue)
-            1: (1.0, 0.84, 0.0),  # Land (gold)
-            2: (0.5, 0.5, 0.5),  # Cloud (gray)
-            3: (0.0, 1.0, 1.0),  # Ice (cyan)
-            4: (0.0, 0.5, 0.0),  # Forest (green)
-            5: (1.0, 0.0, 0.0),  # City (Red)
-            # 5: (1.0, 69/255, 0.0, 1.0),  # City (Orange)
-            # 6: (1.0, 1.0, 1.0, 0.1),  # Air (White)
-            6: None,  # Air (Transparent)
-            
-            # 6: (0.0, 0.0, 0.0, 0.02),  # Air (Black)
-            # 6: (1.0, 69/255, 0.0),  # Air (Orange)
+            0: (0.0, 0.0, 1.0, 1.0),  # Sea (blue)
+            1: (1.0, 0.84, 0.0, 1.0),  # Land (gold)
+            2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
+            3: (0.0, 1.0, 1.0, 1.0),  # Ice (cyan)
+            4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
+            5: (1.0, 0.0, 0.0, 1.0),  # City (Red)
+            6: (1.0, 1.0, 1.0, 0.01 ),  # Air (White)
+
         }
 
-        if self.cell_type == 6: # Air (Transparent)
-            return None
+
         
         base_color = base_colors[self.cell_type]
         # Tint towards black based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(
-            base_color[i] * (1.0 - pollution_intensity) for i in range(3)
+            base_color[i] * (1.0 - pollution_intensity) for i in range(4)
         )
 
         return black_tinted_color
