@@ -201,17 +201,15 @@ class Cell:
         }
 
         base_color = base_colors[self.cell_type]
-        # print(f"base color: {base_color}")
 
-        # Add red tint based on pollution level
-        pollution_intensity = min(1.0, self.pollution_level / 1000.0)
-        red_tinted_color = (
-            base_color[0] + pollution_intensity * (1.0 - base_color[0]),
-            base_color[1] * (1.0 - pollution_intensity),
-            base_color[2] * (1.0 - pollution_intensity),
+        # Tint towards black based on pollution level
+        pollution_intensity = min(1.0, self.pollution_level / 100.0)
+        black_tinted_color = tuple(
+            base_color[i] * (1.0 - pollution_intensity) for i in range(3)
         )
 
-        return red_tinted_color
+        return black_tinted_color
+
 
 
     def get_color_dynamic(self):

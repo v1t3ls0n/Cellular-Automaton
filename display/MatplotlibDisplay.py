@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
 import numpy as np
-
+import logging
 
 class MatplotlibDisplay:
     def __init__(self, simulation):
@@ -57,10 +57,11 @@ class MatplotlibDisplay:
         plt.ioff()  # Disable interactive mode to ensure `plt.show()` holds the program
         plt.show()
 
+
     def precompute_visualizations(self):
         """Precompute 3D scatter data for all precomputed states."""
-        print("Precomputing 3D visualizations...")
-        for state in self.precomputed_results:
+        logging.info("Precomputing 3D visualizations...")
+        for state in self.simulation.states:
             points = []
             colors = []
             sizes = []  # Add a list for point sizes
@@ -74,7 +75,8 @@ class MatplotlibDisplay:
                         sizes.append(10)  # Default size for all points
 
             self.precomputed_data.append((points, colors, sizes))
-        print("3D Precomputation complete.")
+        logging.info("3D Precomputation complete.")
+
 
     def render_day(self, day):
         """Render the cached 3D visualization for a specific day."""
@@ -97,31 +99,39 @@ class MatplotlibDisplay:
         self.fig.canvas.draw_idle()
 
     def render_population_graph(self):
+        """Render the city population graph over time."""
         self.ax_population.cla()
         self.ax_population.set_title("City Population Over Time")
         self.ax_population.set_xlabel("Day")
         self.ax_population.set_ylabel("Number of Cities")
 
         # Retrieve data
-        _, _, _, city_population, _ = self.simulation.analyze()
-        days = range(len(city_population))
+        days = range(len(self.simulation.city_population_over_time))
+        city_population = self.simulation.city_population_over_time
 
-        self.ax_population.plot(days, city_population, color="purple", label="Cities")
-        self.ax_population.legend()
-
+        # Ensure data matches the length of days
+        if len(days) == len(city_population):
+            self.ax_population.plot(days, city_population, color="purple", label="Cities")
+            self.ax_population.legend()
+        else:
+            logging.error("Data length mismatch in population graph.")
 
     def render_forests_graph(self):
+        """Render the forest count graph over time."""
         self.ax_forests.cla()
         self.ax_forests.set_title("Forest Count Over Time")
         self.ax_forests.set_xlabel("Day")
         self.ax_forests.set_ylabel("Number of Forests")
 
-        days = range(len(self.simulation.states))
-        _, _, _, _, forest_count = self.simulation.analyze()
+        # Retrieve data
+        days = range(len(self.simulation.forest_count_over_time))
+        forest_count = self.simulation.forest_count_over_time
 
-        self.ax_forests.plot(days, forest_count, color="green", label="Forests")
-        self.ax_forests.legend()
-
+        if len(days) == len(forest_count):
+            self.ax_forests.plot(days, forest_count, color="green", label="Forests")
+            self.ax_forests.legend()
+        else:
+            logging.error("Data length mismatch in forest graph.")
 
     def render_temperature_graph(self):
         """Render the temperature graph over time."""
@@ -130,20 +140,14 @@ class MatplotlibDisplay:
         self.ax_temperature.set_xlabel("Day")
         self.ax_temperature.set_ylabel("Average Temperature")
 
-        days = range(len(self.simulation.states))
-        avg_temperatures = [
-            np.mean([
-                cell.temperature for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2])
-                if (cell := state.grid[x][y][z]).cell_type != 6  # Exclude air cells
-            ])
-            for state in self.simulation.states
-        ]
+        days = range(len(self.simulation.temperature_over_time))
+        avg_temperatures = self.simulation.temperature_over_time
 
-        max_temp = max(avg_temperatures) if avg_temperatures else 1
-        self.ax_temperature.plot(days, avg_temperatures, color="blue", label="Temperature")
-        self.ax_temperature.legend()
+        if len(days) == len(avg_temperatures):
+            self.ax_temperature.plot(days, avg_temperatures, color="blue", label="Temperature")
+            self.ax_temperature.legend()
+        else:
+            logging.error("Data length mismatch in temperature graph.")
 
     def render_pollution_graph(self):
         """Render the pollution graph over time."""
@@ -152,20 +156,14 @@ class MatplotlibDisplay:
         self.ax_pollution.set_xlabel("Day")
         self.ax_pollution.set_ylabel("Average Pollution")
 
-        days = range(len(self.simulation.states))
-        avg_pollution = [
-            np.mean([
-                cell.pollution_level for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2])
-                if (cell := state.grid[x][y][z]).cell_type not in ["air", 0]  # Exclude air and sea cells
-            ])
-            for state in self.simulation.states
-        ]
+        days = range(len(self.simulation.pollution_over_time))
+        avg_pollution = self.simulation.pollution_over_time
 
-        max_pollution = max(avg_pollution) if avg_pollution else 1
-        self.ax_pollution.plot(days, avg_pollution, color="red", label="Pollution")
-        self.ax_pollution.legend()
+        if len(days) == len(avg_pollution):
+            self.ax_pollution.plot(days, avg_pollution, color="red", label="Pollution")
+            self.ax_pollution.legend()
+        else:
+            logging.error("Data length mismatch in pollution graph.")
 
     def render_water_mass_graph(self):
         """Render the water mass graph over time."""
@@ -174,19 +172,14 @@ class MatplotlibDisplay:
         self.ax_water_mass.set_xlabel("Day")
         self.ax_water_mass.set_ylabel("Average Water Mass")
 
-        days = range(len(self.simulation.states))
-        avg_water_mass = [
-            np.mean([
-                cell.water_mass for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2])
-                if (cell := state.grid[x][y][z]).cell_type in [0, 3]  # Sea and Ice
-            ])
-            for state in self.simulation.states
-        ]
+        days = range(len(self.simulation.water_mass_over_time))
+        avg_water_mass = self.simulation.water_mass_over_time
 
-        self.ax_water_mass.plot(days, avg_water_mass, color="cyan", label="Water Mass")
-        self.ax_water_mass.legend()
+        if len(days) == len(avg_water_mass):
+            self.ax_water_mass.plot(days, avg_water_mass, color="cyan", label="Water Mass")
+            self.ax_water_mass.legend()
+        else:
+            logging.error("Data length mismatch in water mass graph.")
 
     def add_legend(self):
         """Add a legend explaining the cell colors."""

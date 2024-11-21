@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import logging
 
 class Simulation:
-    def __init__(self, grid_size, days,  initial_pollution, initial_temperature, initial_water_mass, initial_cities, initial_forests):
+    def __init__(self, initial_pollution, initial_temperature, initial_water_mass, initial_cities, initial_forests, grid_size = (10,10,10), days = 5):
 
         self.grid_size = grid_size,
         self.initial_temperature = initial_temperature,
@@ -13,12 +13,9 @@ class Simulation:
         self.initial_water_mass = initial_water_mass,
         self.initial_cities = initial_cities,
         self.initial_forests = initial_forests
-        print("initial Simulation paramaters:")
-        print(f"grid_size : {grid_size}")
-        print(f"temperature : {initial_temperature}")
-        print(f"pollution : {initial_pollution}")
-        print(f"initial_cities : {initial_cities}")
-        print(f"initial_forests : {initial_forests}")
+
+
+        
         self.days = days
         self.states = []
         # Initialize the first state
@@ -29,6 +26,7 @@ class Simulation:
            initial_water_mass,
            initial_cities,
            initial_forests,
+           prev_state_index = -1
         )
 
         self.states.append(initial_state)
@@ -45,33 +43,47 @@ class Simulation:
 
         logging.info("Precomputed all states.")
 
-
-    def run(self):
-        """Run the simulation."""
-        for day in range(self.days):
-            print(f"Simulating day {day + 1}...")
-            next_state = self.states[-1].next_state()
-            self.states.append(next_state)
-
-    def simulate(self):
+class Simulation:
+    def __init__(self, initial_pollution, initial_temperature, initial_water_mass, initial_cities, initial_forests, grid_size=(10, 10, 10), days=5):
         """
-        Run the simulation for the defined number of days.
+        Initialize the Simulation class with initial conditions.
         """
-        print(f"Starting simulation for {self.days} days...")
-        for day in range(self.days - 1):  # Iterate over all days
-            print(f"Simulating day {day + 1}...")
-            # Copy the current state to the next day's state and calculate the next state
-            self.states[day + 1].grid = np.copy(self.states[day].grid)
-            self.states[day + 1].next_state()
+        self.grid_size = grid_size
+        self.initial_temperature = initial_temperature
+        self.initial_pollution = initial_pollution
+        self.initial_water_mass = initial_water_mass
+        self.initial_cities = initial_cities
+        self.initial_forests = initial_forests
+        self.days = days
 
-        print("Simulation complete.")
+        self.states = []  # Store the history of State objects
+        self.avg_temperature = []
+        self.avg_pollution = []
+        self.avg_water_mass = []
+        self.city_counts = []
+        self.forest_counts = []
 
-    def analyze(self):
-        pollution_over_time = []
-        temperature_over_time = []
-        water_mass_over_time = []
-        city_population_over_time = []
-        forest_count_over_time = []
+        # Initialize the first state
+        initial_state = State(
+            grid_size=self.grid_size,
+            initial_temperature=self.initial_temperature,
+            initial_pollution=self.initial_pollution,
+            initial_water_mass=self.initial_water_mass,
+            initial_cities=self.initial_cities,
+            initial_forests=self.initial_forests,
+        )
+        self.states.append(initial_state)
+
+    def _calculate_aggregates(self):
+        """
+        Compute and store aggregates for all states (pollution, temperature, water mass, city count, forest count).
+        These aggregates are stored as arrays to track changes over time.
+        """
+        self.pollution_over_time = []
+        self.temperature_over_time = []
+        self.water_mass_over_time = []
+        self.city_population_over_time = []
+        self.forest_count_over_time = []
 
         for state in self.states:
             total_pollution = 0
@@ -100,69 +112,78 @@ class Simulation:
             avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
             avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
 
-            pollution_over_time.append(avg_pollution)
-            temperature_over_time.append(avg_temperature)
-            water_mass_over_time.append(avg_water_mass)
-            city_population_over_time.append(city_count)
-            forest_count_over_time.append(forest_count)
+            # Append to history lists
+            self.pollution_over_time.append(avg_pollution)
+            self.temperature_over_time.append(avg_temperature)
+            self.water_mass_over_time.append(avg_water_mass)
+            self.city_population_over_time.append(city_count)
+            self.forest_count_over_time.append(forest_count)
 
-        logging.info(f"Analysis complete. Data collected over {len(self.states)} days.")
-        return pollution_over_time, temperature_over_time, water_mass_over_time, city_population_over_time, forest_count_over_time
+        logging.info(f"Aggregate calculation complete for {len(self.states)} states.")
 
 
-    def visualize(self):
+    def run(self):
         """
-        Generate graphs based on simulation data.
+        Simulate the environment for the specified number of days.
         """
-        pollution, temperature, city_count, forest_count = self.analyze()
+        logging.info("Simulation started.")
+        for day in range(1, self.days + 1):
+            logging.info("Simulating day %d...", day)
+            current_state = self.states[-1]
+            next_state = current_state.next_state()  # Calculate the next state
+            self.states.append(next_state)  # Append the new state to the history
 
-        # Create subplots for graphs
-        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        logging.info("Simulation complete.")
 
-        # Pollution over time
-        axes[0, 0].plot(pollution, color='red', label='Pollution')
-        axes[0, 0].set_title("Pollution Over Time")
-        axes[0, 0].set_xlabel("Day")
-        axes[0, 0].set_ylabel("Average Pollution")
-        axes[0, 0].legend()
-
-        # Temperature over time
-        axes[0, 1].plot(temperature, color='blue', label='Temperature')
-        axes[0, 1].set_title("Temperature Over Time")
-        axes[0, 1].set_xlabel("Day")
-        axes[0, 1].set_ylabel("Average Temperature")
-        axes[0, 1].legend()
-
-        # City count over time
-        axes[1, 0].plot(city_count, color='purple', label='Cities')
-        axes[1, 0].set_title("City Count Over Time")
-        axes[1, 0].set_xlabel("Day")
-        axes[1, 0].set_ylabel("Number of Cities")
-        axes[1, 0].legend()
-
-        # Forest count over time
-        axes[1, 1].plot(forest_count, color='green', label='Forests')
-        axes[1, 1].set_title("Forest Count Over Time")
-        axes[1, 1].set_xlabel("Day")
-        axes[1, 1].set_ylabel("Number of Forests")
-        axes[1, 1].legend()
-
-        plt.tight_layout()
-        plt.show()
-
-    def visualize_3d(self, day=None):
+    def get_averages_over_time(self):
         """
-        Visualize the 3D grid of a specific day.
-        :param day: The day to visualize (default is the current day).
+        Retrieve averages and counts over time.
         """
-        if day is None:
-            day = self.current_day
+        return {
+            "temperature": self.avg_temperature,
+            "pollution": self.avg_pollution,
+            "water_mass": self.avg_water_mass,
+            "cities": self.city_counts,
+            "forests": self.forest_counts,
+        }
 
-        if 0 <= day < self.days:
-            self.states[day].visualize()
+    def get_state_by_day(self, day):
+        """
+        Retrieve the state object for a specific day.
+        :param day: The day index (0-based).
+        :return: The State object for the given day.
+        """
+        if 0 <= day < len(self.states):
+            return self.states[day]
         else:
-            print(f"Day {day} is out of range (0-{self.days - 1}).")
+            raise IndexError("Invalid day index.")
 
+    def log_summary(self):
+        """
+        Log a summary of the simulation results.
+        """
+        logging.info("Simulation Summary:")
+        averages = self.get_averages_over_time()
+        logging.info("Average Temperature Over Time: %s", averages["temperature"])
+        logging.info("Average Pollution Over Time: %s", averages["pollution"])
+        logging.info("Average Water Mass Over Time: %s", averages["water_mass"])
+        logging.info("City Population Over Time: %s", averages["cities"])
+        logging.info("Forest Count Over Time: %s", averages["forests"])
+
+    def analyze(self):
+        """
+        Analyze the simulation history and return aggregates.
+        """
+        if not hasattr(self, 'pollution_over_time'):
+            self._calculate_aggregates()  # Calculate if not already done
+
+        return {
+            "pollution": self.pollution_over_time,
+            "temperature": self.temperature_over_time,
+            "water_mass": self.water_mass_over_time,
+            "cities": self.city_population_over_time,
+            "forests": self.forest_count_over_time,
+        }
 
 # Example usage:
 # sim = Simulation(grid_size=(10, 10, 10), initial_temperature=20, initial_pollution=5, initial_water_mass=10)

@@ -5,7 +5,7 @@ import random
 
 
 class State:
-    def __init__(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities, initial_forests):
+    def __init__(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities, initial_forests, prev_state_index = -1):
         """
         Initialize the State class with a 3D grid of Cell objects.
         :param grid_size: Tuple of (x, y, z) dimensions for the grid.
@@ -24,7 +24,7 @@ class State:
             initial_cities=initial_cities,
             initial_forests=initial_forests,
         )
-        self.state_index = 0  # Represents the number of days passed
+        self.prev_state_index = prev_state_index  # Represents the number of days passed
         # After initializing the simulation
         logging.info("Initial simulation parameters:")
         logging.info(f"Initial Pollution Level: {initial_pollution}")
@@ -60,12 +60,12 @@ class State:
 
                     if k <= elevation_map[i, j]:
                         if k <= sea_level:
-                            cell_type = np.random.choice([3, 0], p=[0.01, 0.99])
+                            cell_type = np.random.choice([3, 0], p=[0.05, 0.99])
                             sea_count += (1 if cell_type == 0 else 0)
                             iceberg_count += (1 if cell_type == 3 else 0)
                         else:
                             # Land cells above sea level
-                            cell_type = np.random.choice([1, 3, 0], p=[0.000, 0.3, 0.7])
+                            cell_type = np.random.choice([1, 3, 0], p=[0.1, 0.2, 0.7])
                             land_count += (1 if cell_type == 1 else 0)
                             sea_count += (1 if cell_type == 0 else 0)
                             iceberg_count += (1 if cell_type == 3 else 0)
@@ -82,7 +82,7 @@ class State:
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count+=(1 if cell_type == 6 else 0)
                     else:
-                        cell_type = np.random.choice([6, 2], p=[1, 0])
+                        cell_type = np.random.choice([6, 2], p=[0.9, 0.1])
                         cloud_count += (1 if cell_type == 2 else 0)
                         air_count+=(1 if cell_type == 6 else 0)
 
@@ -126,7 +126,7 @@ class State:
         """
         Move cells based on their direction property, handling Clouds, Air, Ice, and Water.
         """
-        logging.debug("Moving cells for state index %d", self.state_index)
+        logging.debug("Moving cells for state index %d", self.prev_state_index)
 
         x, y, z = self.grid_size
         new_grid = np.empty((x, y, z), dtype=object)
@@ -199,7 +199,7 @@ class State:
         """
         Update each cell in the grid based on its interactions with neighbors.
         """
-        logging.debug("Updating cells for state index %d", self.state_index)
+        logging.debug("Updating cells for state index %d", self.prev_state_index)
 
         x, y, z = self.grid_size
 
@@ -237,13 +237,12 @@ class State:
         return neighbors
 
     def next_state(self):
-        logging.info("Calculating next state from state index %d",
-                     self.state_index)
-
         """
         Calculate the next state of the grid (simulate one day).
         :return: A new State object representing the next state.
         """
+        logging.info("Calculating next state from state index %d", self.prev_state_index)
+
         # Step 1: Move cells based on their direction
         self.move_cells()
 
@@ -254,40 +253,56 @@ class State:
         total_temperature = 0
         total_pollution = 0
         total_water_mass = 0
-        total_cells = 0
         total_cities = 0
         total_forests = 0
+        total_cells = 0
 
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
                     cell = self.grid[i, j, k]
                     if cell.cell_type != 6:  # Exclude air cells
-                        total_cities += 1
-                        total_forests += 1
                         total_temperature += cell.temperature
                         total_pollution += cell.pollution_level
                         total_water_mass += cell.water_mass
+                        if cell.cell_type == 5:  # City
+                            total_cities += 1
+                        elif cell.cell_type == 4:  # Forest
+                            total_forests += 1
                         total_cells += 1
 
         avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
         avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
         avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
 
-        # Step 4: Create a new state object and return it
+        logging.info(
+            f"Day {self.prev_state_index + 1}: Avg Temp: {avg_temperature:.2f}, Avg Pollution: {avg_pollution:.2f}, Avg Water Mass: {avg_water_mass:.2f}"
+        )
+        logging.info(
+            f"Cities: {total_cities}, Forests: {total_forests}, Total Cells: {total_cells}"
+        )
+
+        # Step 4: Create a new state object
         new_state = State(
             grid_size=self.grid_size,
             initial_temperature=avg_temperature,
             initial_pollution=avg_pollution,
             initial_water_mass=avg_water_mass,
             initial_cities=total_cities,
-            initial_forests=total_forests
+            initial_forests=total_forests,
         )
         # Copy the updated grid to the new state
         new_state.grid = np.copy(self.grid)
-        new_state.state_index = self.state_index + 1
-        logging.info("Next state calculated: state index %d",
-                     self.state_index + 1)
+        new_state.prev_state_index = self.prev_state_index + 1
+
+        # Step 5: Save the calculated averages as properties in the new state
+        new_state.avg_temperature = avg_temperature
+        new_state.avg_pollution = avg_pollution
+        new_state.avg_water_mass = avg_water_mass
+        new_state.total_cities = total_cities
+        new_state.total_forests = total_forests
+
+        logging.info("Next state calculated: state index %d", self.prev_state_index + 1)
 
         return new_state
 
@@ -319,5 +334,5 @@ class State:
                     color = colors.get(cell.cell_type, 'black')
                     ax.scatter(i, j, k, color=color)
 
-        plt.title(f"State at Day {self.state_index}")
+        plt.title(f"State at Day {self.prev_state_index}")
         plt.show()
