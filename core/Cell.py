@@ -50,7 +50,7 @@ class Cell:
         Update logic for forests. Forests absorb pollution and may undergo deforestation.
         """
         # Absorb pollution from the forest itself
-        self.pollution_level = max(0, self.pollution_level - 0.2)
+        self.pollution_level = max(0, self.pollution_level - 0.2 * self.pollution_level)
         cooling_effect = min(0.1, self.pollution_level * 0.02)
         self.temperature -= cooling_effect
 
@@ -62,7 +62,7 @@ class Cell:
                 self.pollution_level = max(0, self.pollution_level - absorbed_pollution)
 
             # Deforestation due to nearby city or high pollution
-            if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
+            if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 and neighbor.temperature > 50) and np.random.random() < 0.05:
                 self.cell_type = 1  # Forest turns into land
                 return
 
@@ -85,8 +85,8 @@ class Cell:
         Update logic for cities. Cities generate pollution and can collapse.
         """
         # Generate pollution
-        self.pollution_level += 1
-        self.temperature += 0.2  # Cities are heat sources
+        self.pollution_level += 0.05 *  self.pollution_level
+        self.temperature += 0.05 * self.temperature  # Cities are heat sources
 
         for neighbor in neighbors:
             # Spread pollution to neighboring cells
@@ -94,12 +94,9 @@ class Cell:
             neighbor.pollution_level = neighbor.pollution_level + pollution_spread
 
             # Cause deforestation in neighboring forests
-            if neighbor.cell_type == 4 and (neighbor.pollution_level > 50 or neighbor.temperature > 50) and np.random.random() < 0.05:  # Forest
+            if neighbor.cell_type == 4 and (neighbor.pollution_level > 50 and neighbor.temperature > 50) and np.random.random() < 0.02:  # Forest
                 neighbor.cell_type = 1  # Forest turns into land
 
-            # Collapse into land if pollution is extreme
-            if (neighbor.pollution_level > 80 or neighbor.temperature > 50) and np.random.random() < 0.05:
-                self.cell_type = 1  # City collapses into land
                 
 
     def _update_ice(self, neighbors):
@@ -228,16 +225,3 @@ class Cell:
         )
 
         return black_tinted_color
-
-
-
-
-    def _update_ice(self, neighbors):
-        logging.debug("Updating ice cell at position with properties: %s", self.__dict__)
-        ...
-        logging.debug("Updated ice cell with new properties: %s", self.__dict__)
-
-    def _update_gas(self, neighbors):
-        logging.debug("Updating air/cloud cell at position with properties: %s", self.__dict__)
-        ...
-        logging.debug("Updated air/cloud cell with new properties: %s", self.__dict__)
