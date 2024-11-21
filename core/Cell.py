@@ -21,8 +21,8 @@ class Cell:
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)
         elif self.cell_type == 1:  # Land
-            self._update_land(neighbors)
-            # return
+            # self._update_land(neighbors)
+            return
         elif self.cell_type == 2:  # Cloud
             self._update_cloud(neighbors, current_position, grid_size)
         elif self.cell_type == 3:  # Ice
@@ -80,6 +80,7 @@ class Cell:
             0, self.pollution_level - 0.02 * self.pollution_level)
         cooling_effect = min(0.1, self.pollution_level * 0.02)
         self.temperature -= cooling_effect
+        
 
         for neighbor in neighbors:
             # Absorb pollution from neighboring cells
@@ -90,22 +91,25 @@ class Cell:
                 self.pollution_level = max(
                     0, self.pollution_level - absorbed_pollution)
 
-            # Deforestation due to nearby city or high pollution
-            if neighbor.cell_type == 5 and (neighbor.pollution_level > 80 and neighbor.temperature > 50):
-                self.convert_to_land()
-                return
-
-            if neighbor.cell_type == 4 and self.pollution_level <= 1  and neighbor.pollution_level <= 1:
-                self.convert_to_city()
-                return
-
             # Increase water mass from rainfall (clouds)
             if neighbor.cell_type == 2 and neighbor.water_mass > 0:  # Cloud neighbor
                 rain = min(0.1, neighbor.water_mass)
                 self.water_mass += rain
                 neighbor.water_mass -= rain
 
+        # Deforestation due to nearby city or high pollution
+        if (self.pollution_level > 80 and self.temperature > 50) and np.random.uniform(0,1) < 0.2:
+                    self.convert_to_land()
+                    return
+        # Orbanization
+        if self.pollution_level == 0 and self.temperature <= 25 and np.random.uniform(0,1) < 0.2:
+                    self.convert_to_city()
+                    return
+
+
+
     def _update_land(self, neighbors):
+        
         """
         Update logic for land cells:
         - Forests turn to land if temperature or pollution is high.
@@ -123,9 +127,9 @@ class Cell:
             return
 
         # Check if the land should turn into a forest
-        if self.pollution_level < 5 and self.temperature < 25:  # Low pollution and suitable temperature
-            recovery_chance = 0.01
-            if np.random.random() < recovery_chance:
+        if self.pollution_level == 0 and self.temperature < 25:  # Low pollution and suitable temperature
+            recovery_chance = 0.4
+            if np.random.uniform(0,1)  < recovery_chance:
                 self.cell_type = 4  # Land turns into forest
                 self.pollution_level = 0  # Reset pollution
                 return

@@ -5,45 +5,6 @@ import matplotlib.pyplot as plt
 import logging
 
 class Simulation:
-    def __init__(self, initial_pollution, initial_temperature, initial_water_mass, initial_cities, initial_forests, grid_size = (10,10,10), days = 5):
-
-        self.grid_size = grid_size,
-        self.initial_temperature = initial_temperature,
-        self.initial_pollution = initial_pollution,
-        self.initial_water_mass = initial_water_mass,
-        self.initial_cities = initial_cities,
-        self.initial_forests = initial_forests
-
-
-        
-        self.days = days
-        self.states = []
-        # Initialize the first state
-        initial_state = State(
-           grid_size,
-           initial_temperature,
-           initial_pollution,
-           initial_water_mass,
-           initial_cities,
-           initial_forests,
-           prev_state_index = -1
-        )
-
-        self.states.append(initial_state)
-
-    def precompute(self):
-        """Precompute all states for the simulation."""
-        print(f"self.states:{self.states[-1]}")
-
-        logging.info("Precomputing all states...")
-
-        for day in range(1, self.days + 1):
-            next_state = self.states[-1].next_state()
-            self.states.append(next_state)
-
-        logging.info("Precomputed all states.")
-
-class Simulation:
     def __init__(self, initial_pollution, initial_temperature, initial_water_mass, initial_cities, initial_forests, grid_size=(10, 10, 10), days=5):
         """
         Initialize the Simulation class with initial conditions.

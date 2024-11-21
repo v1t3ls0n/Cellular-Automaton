@@ -126,8 +126,8 @@ class State:
                                          direction=((np.random.choice([-1, 1]), np.random.choice([-1, 1])) if cell_type not in {1, 4, 5} else (0, 0)))
 
         # Log final counts
-        # print(f"Grid initialized: {city_count} cities, {forest_count} forests, {land_count} land cells, "
-        #       f"{sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.  {air_count} air ")
+        print(f"Grid initialized: {city_count} cities, {forest_count} forests, {land_count} land cells, "
+              f"{sea_count} seas, {iceberg_count} icebergs, {cloud_count} clouds.  {air_count} air ")
         return grid
 
     def _generate_elevation_map(self):
