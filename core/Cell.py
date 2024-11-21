@@ -21,8 +21,8 @@ class Cell:
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)
         elif self.cell_type == 1:  # Land
-            # self._update_land(neighbors)
-            return
+            self._update_land(neighbors)
+            # return
         elif self.cell_type == 2:  # Cloud
             self._update_cloud(neighbors, current_position, grid_size)
         elif self.cell_type == 3:  # Ice
