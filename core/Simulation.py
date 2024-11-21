@@ -2,7 +2,7 @@ import numpy as np
 from .State import State
 from .Cell import Cell
 import matplotlib.pyplot as plt
-
+import logging
 
 class Simulation:
     def __init__(self, grid_size, days,  initial_pollution, initial_temperature, initial_water_mass, initial_cities, initial_forests):
@@ -13,7 +13,12 @@ class Simulation:
         self.initial_water_mass = initial_water_mass,
         self.initial_cities = initial_cities,
         self.initial_forests = initial_forests
-
+        print("initial Simulation paramaters:")
+        print(f"grid_size : {grid_size}")
+        print(f"temperature : {initial_temperature}")
+        print(f"pollution : {initial_pollution}")
+        print(f"initial_cities : {initial_cities}")
+        print(f"initial_forests : {initial_forests}")
         self.days = days
         self.states = []
         # Initialize the first state
@@ -31,9 +36,15 @@ class Simulation:
     def precompute(self):
         """Precompute all states for the simulation."""
         print(f"self.states:{self.states[-1]}")
+
+        logging.info("Precomputing all states...")
+
         for day in range(1, self.days + 1):
             next_state = self.states[-1].next_state()
             self.states.append(next_state)
+
+        logging.info("Precomputed all states.")
+
 
     def run(self):
         """Run the simulation."""
@@ -58,38 +69,59 @@ class Simulation:
     def analyze(self):
         """
         Analyze the simulation data for trends over time.
+        Generates data for pollution, temperature, water mass, city population, and forests.
         """
+        logging.info("Analyzing simulation results...")
+
         pollution_over_time = []
         temperature_over_time = []
         water_mass_over_time = []
+        city_population_over_time = []
+        forest_count_over_time = []
 
         for state in self.states:
-            total_temperature = 0
-            total_pollution = 0
-            total_water_mass = 0
-            total_cells = 0
+            total_pollution, total_temperature, total_water_mass = 0, 0, 0
+            city_count, forest_count = 0, 0
 
-            for i in range(self.grid_size[0]):
-                for j in range(self.grid_size[1]):
-                    for k in range(self.grid_size[2]):
-                        cell = state.grid[i, j, k]
+            for x in range(state.grid.shape[0]):
+                for y in range(state.grid.shape[1]):
+                    for z in range(state.grid.shape[2]):
+                        cell = state.grid[x, y, z]
                         if cell.cell_type != 6:  # Exclude air cells
-                            total_temperature += cell.temperature
                             total_pollution += cell.pollution_level
+                            total_temperature += cell.temperature
                             total_water_mass += cell.water_mass
-                            total_cells += 1
 
-            # Compute averages
-            avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
+                            if cell.cell_type == 5:  # City
+                                city_count += 1
+                            elif cell.cell_type == 4:  # Forest
+                                forest_count += 1
+
+            # Compute averages and save for graphing
+            total_cells = state.grid.size
             avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
+            avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
             avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
 
-            temperature_over_time.append(avg_temperature)
             pollution_over_time.append(avg_pollution)
+            temperature_over_time.append(avg_temperature)
             water_mass_over_time.append(avg_water_mass)
+            city_population_over_time.append(city_count)  # Count of cities on this day
+            forest_count_over_time.append(forest_count)  # Count of forests on this day
+       
+        logging.debug("Pollution over time: %s", pollution_over_time)
+        logging.debug("Temperature over time: %s", temperature_over_time)
+        logging.debug("City population over time: %s", city_population_over_time)
+        logging.debug("Forest count over time: %s", forest_count)
+        logging.debug("Water mass over time: %s", water_mass_over_time)
 
-        return pollution_over_time, temperature_over_time, water_mass_over_time
-
+        return (
+            pollution_over_time,
+            temperature_over_time,
+            water_mass_over_time,
+            city_population_over_time,
+            forest_count_over_time,
+        )
 
     def visualize(self):
         """

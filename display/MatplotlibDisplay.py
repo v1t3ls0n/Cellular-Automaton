@@ -97,52 +97,30 @@ class MatplotlibDisplay:
         self.fig.canvas.draw_idle()
 
     def render_population_graph(self):
-        """Render the population (number of cities) graph over time."""
         self.ax_population.cla()
         self.ax_population.set_title("City Population Over Time")
         self.ax_population.set_xlabel("Day")
         self.ax_population.set_ylabel("Number of Cities")
 
         days = range(len(self.simulation.states))
-        city_counts = [
-            sum(
-                1
-                for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2])
-                if (cell := state.grid[x][y][z]).cell_type == 5  # City cell type
-            )
-            for state in self.simulation.states
-        ]
+        _, _, _, city_population, _ = self.simulation.analyze()
 
-        max_count = max(city_counts) if city_counts else 1
-        self.ax_population.plot(days, city_counts, color="purple", label="Cities")
-        self.ax_population.set_ylim(0, max_count * 1.1)
+        self.ax_population.plot(days, city_population, color="purple", label="Cities")
         self.ax_population.legend()
 
+
     def render_forests_graph(self):
-        """Render the forest count graph over time."""
         self.ax_forests.cla()
         self.ax_forests.set_title("Forest Count Over Time")
         self.ax_forests.set_xlabel("Day")
         self.ax_forests.set_ylabel("Number of Forests")
 
         days = range(len(self.simulation.states))
-        forest_counts = [
-            sum(
-                1
-                for x in range(state.grid.shape[0])
-                for y in range(state.grid.shape[1])
-                for z in range(state.grid.shape[2])
-                if (cell := state.grid[x][y][z]).cell_type == 4  # Forest cell type
-            )
-            for state in self.simulation.states
-        ]
+        _, _, _, _, forest_count = self.simulation.analyze()
 
-        max_count = max(forest_counts) if forest_counts else 1
-        self.ax_forests.plot(days, forest_counts, color="green", label="Forests")
-        self.ax_forests.set_ylim(0, max_count * 1.1)
+        self.ax_forests.plot(days, forest_count, color="green", label="Forests")
         self.ax_forests.legend()
+
 
     def render_temperature_graph(self):
         """Render the temperature graph over time."""

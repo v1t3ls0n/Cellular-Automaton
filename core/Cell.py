@@ -1,9 +1,12 @@
 import numpy as np
+import logging
 
 class Cell:
     def __init__(self, cell_type, temperature=0.0, water_mass=0.0, pollution_level=0.0, direction=(0, 0)):
-        self.cell_type = cell_type  # 0: Sea, 1: Land, 2: Cloud, 3: Ice, 4: Forest, 5: City, 6: Air
-        self.phase = self.determine_phase(cell_type)  # Automatically assign phase based on cell type
+        # 0: Sea, 1: Land, 2: Cloud, 3: Ice, 4: Forest, 5: City, 6: Air
+        self.cell_type = cell_type
+        # Automatically assign phase based on cell type
+        self.phase = self.determine_phase(cell_type)
         self.temperature = temperature
         self.water_mass = water_mass
         self.pollution_level = pollution_level
@@ -46,7 +49,7 @@ class Cell:
             if neighbor.cell_type == 5 or neighbor.pollution_level > 50:
                 self.cell_type = 1  # Forest turns into land
                 return
-            
+
             # Increase water mass from rainfall (clouds)
             if neighbor.cell_type == 2 and neighbor.water_mass > 0:  # Cloud neighbor
                 rain = min(0.1, neighbor.water_mass)
@@ -66,8 +69,6 @@ class Cell:
             if np.random.random() < recovery_chance:
                 self.cell_type = 4  # Land turns back into forest
 
-
-
     def _update_city(self, neighbors):
         """
         Update logic for cities. Cities generate pollution and can collapse.
@@ -78,11 +79,12 @@ class Cell:
         for neighbor in neighbors:
             # Spread pollution to neighboring cells
             pollution_spread = 0.1 * self.pollution_level
-            neighbor.pollution_level = min(100, neighbor.pollution_level + pollution_spread)
+            neighbor.pollution_level = min(
+                100, neighbor.pollution_level + pollution_spread)
 
             # Cause deforestation in neighboring forests
             if neighbor.cell_type == 4 and np.random.random() < 0.05:  # Forest
-                    neighbor.cell_type = 1  # Forest turns into land
+                neighbor.cell_type = 1  # Forest turns into land
 
         # Collapse into land if pollution is extreme
         if self.pollution_level > 80 and np.random.random() < 0.1:
@@ -105,38 +107,34 @@ class Cell:
             # Spread coldness to neighbors
             neighbor.temperature -= 0.1
 
-
     def _update_sea(self, neighbors):
         """
         Update the behavior of sea cells.
         Sea cells interact with clouds, temperature, and neighboring ice.
         """
-        evaporation_rate = 0.01 * max(0, self.temperature - 10)
+        evaporation_rate = max(0.01, 0.02 * (self.temperature - 15))
         self.water_mass = max(0, self.water_mass - evaporation_rate)
+        # Spread water currents
 
         for neighbor in neighbors:
-            # Transfer water mass to neighboring clouds
+            # Update temperature through diffusion
+            temp_diffusion = (self.temperature - neighbor.temperature) * 0.05
+            neighbor.temperature += temp_diffusion
+            self.temperature -= temp_diffusion / len(neighbors)
+
             if neighbor.cell_type == 2:  # Cloud
                 neighbor.water_mass += evaporation_rate / 2
 
-            # Spread water currents
             if neighbor.cell_type == 0:  # Another sea cell
                 water_diffusion = (self.water_mass - neighbor.water_mass) * 0.1
                 neighbor.water_mass += water_diffusion
                 self.water_mass -= water_diffusion
 
-        # Freezing and temperature diffusion
-        if self.temperature < -2.0 and self.water_mass > 0:
-            self.cell_type = 3  # Freeze to ice
-            self.water_mass = 0
+            # Freezing and temperature diffusion
+            if self.temperature < -2.0 and self.water_mass > 0:
+                self.cell_type = 3  # Freeze to ice
+                self.water_mass = 0
 
-        # Update temperature through diffusion
-        for neighbor in neighbors:
-            temp_diffusion = (self.temperature - neighbor.temperature) * 0.05
-            neighbor.temperature += temp_diffusion
-            self.temperature -= temp_diffusion / len(neighbors)
-
-            
     def _update_gas(self, neighbors):
         if self.cell_type == 6:  # Air
             self._update_air(neighbors)
@@ -148,8 +146,10 @@ class Cell:
             if neighbor.cell_type == 2 or neighbor.cell_type == 6:  # Cloud
                 neighbor.direction = self.direction  # Air influences Cloud direction
         for neighbor in neighbors:
-            neighbor.temperature += 0.4 * (self.temperature - neighbor.temperature)
-            neighbor.pollution_level += 0.5 * (self.pollution_level - neighbor.pollution_level)
+            neighbor.temperature += 0.4 * \
+                (self.temperature - neighbor.temperature)
+            neighbor.pollution_level += 0.5 * \
+                (self.pollution_level - neighbor.pollution_level)
 
     def _update_cloud(self, neighbors, current_position, grid_size):
         """
@@ -170,9 +170,8 @@ class Cell:
         for neighbor in neighbors:
             if neighbor.cell_type in [1, 4, 5]:  # Land, Forest, or City
                 pollution_spread = 0.05 * self.pollution_level
-                neighbor.pollution_level = min(100, neighbor.pollution_level + pollution_spread)
-
-
+                neighbor.pollution_level = min(
+                    100, neighbor.pollution_level + pollution_spread)
 
     def move(self, current_position, grid_size):
         """
@@ -198,18 +197,19 @@ class Cell:
             3: (0.0, 0.8, 1.0),  # Ice (vibrant cyan)
             4: (0.0, 0.5, 0.0),  # Forest (dark green)
             5: (0.5, 0.0, 0.5),  # City (purple)
-            6: (1.0, 1.0, 1.0),  # Air (white)
+            6: (1.0, 1.0, 1.0, 0.2),  # Air (white)
         }
 
         base_color = base_colors[self.cell_type]
 
         # Add red tint based on pollution level
-        pollution_intensity = min(1.0, self.pollution_level / 100.0)
+        pollution_intensity = min(1.0, self.pollution_level / 1000.0)
         red_tinted_color = (
             base_color[0] + pollution_intensity * (1.0 - base_color[0]),
             base_color[1] * (1.0 - pollution_intensity),
             base_color[2] * (1.0 - pollution_intensity),
         )
+
         return red_tinted_color
 
     def get_color_dynamic(self):
@@ -218,27 +218,42 @@ class Cell:
         Pollution affects the transparency (alpha) of the color.
         """
         base_colors = {
-            0: (0.0, 0.0, 1.0),  # Sea (blue)
-            1: (1.0, 1.0, 0.0),  # Land (yellow)
-            2: (0.5, 0.5, 0.5),  # Cloud (gray)
-            3: (0.0, 1.0, 1.0),  # Ice (cyan)
-            4: (0.0, 0.5, 0.0),  # Forest (dark green)
-            5: (0.5, 0.0, 0.5),  # City (purple)
-            6: (1.0, 1.0, 1.0, 0.2),  # Air (light white with low opacity)
+            0: (0.0, 0.0, 1.0, 1.0),  # Sea (blue)
+            1: (1.0, 1.0, 0.0, 1.0),  # Land (yellow)
+            2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
+            3: (0.0, 1.0, 1.0, 1.0),  # Ice (cyan)
+            4: (0.0, 0.5, 0.0, 1.0),  # Forest (dark green)
+            5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
+            6: (1.0, 1.0, 1.0, 0.02),  # Air (light white with low opacity)
         }
 
         # Base color for the current cell type
-        base_color = base_colors.get(self.cell_type, (0.0, 0.0, 0.0))  # Default to black if type is unknown
+        # Default to black if type is unknown
+        base_color = base_colors.get(self.cell_type, (0.0, 0.0, 0.0))
 
         if self.cell_type == 6:  # Air
-            pollution_factor = min(self.pollution_level / 100, 1.0)  # Scale pollution [0, 1]
+            # Scale pollution [0, 1]
+            pollution_factor = min(self.pollution_level / 100, 1.0)
             # Adjust the base white color to reflect pollution levels
-            adjusted_color = tuple(base * (1 - pollution_factor) for base in base_color[:3]) + (base_color[3],)
+            adjusted_color = tuple(base * (1 - pollution_factor)
+                                   for base in base_color[:3]) + (base_color[3],)
             return adjusted_color
 
         # For all other cell types, apply pollution transparency
-        alpha = 1.0 - min(self.pollution_level / 100, 1.0)  # More pollution = lower alpha
+        # More pollution = lower alpha
+        alpha = 1.0 - min(self.pollution_level / 100, 1.0)
         if len(base_color) == 3:  # If color doesn't have alpha, add it
             return base_color + (alpha,)
         else:
             return base_color[:3] + (alpha,)
+
+
+    def _update_ice(self, neighbors):
+        logging.debug("Updating ice cell at position with properties: %s", self.__dict__)
+        ...
+        logging.debug("Updated ice cell with new properties: %s", self.__dict__)
+
+    def _update_gas(self, neighbors):
+        logging.debug("Updating air/cloud cell at position with properties: %s", self.__dict__)
+        ...
+        logging.debug("Updated air/cloud cell with new properties: %s", self.__dict__)

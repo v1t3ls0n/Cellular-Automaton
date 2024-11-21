@@ -10,53 +10,35 @@ if "--compile" in sys.argv:
 # Import the updated simulation and display classes
 from core.Simulation import Simulation
 from display.MatplotlibDisplay import MatplotlibDisplay
+import logging
 
-def get_user_input(prompt, default, value_type=float):
-    """Helper function to get user input with a default value."""
-    user_input = input(f"{prompt} (default: {default}): ")
-    if user_input.strip() == "":
-        return default
-    try:
-        return value_type(user_input)
-    except ValueError:
-        print("Invalid input. Using default value.")
-        return default
-
-# Collect input from user with improved defaults
-print("Please enter the initial parameters for the simulation:")
-grid_dimension = get_user_input("Grid size (e.g., 10)", 10, int)
-days = get_user_input("Number of days to simulate (e.g., 365)", 365, int)
-initial_cities = get_user_input("Initial number of cities (e.g., 50)", 800, int)
-initial_forests = get_user_input("Initial number of forests (e.g., 50)", 10, int)
-initial_pollution = get_user_input("Initial pollution level (e.g., 10.0)", 30.0)
-initial_temperature = get_user_input("Initial temperature (e.g., 15.0)", 25.0)
-initial_water_mass = get_user_input("Initial water level (e.g., 1.0)", 1.0)
-
-
-
-grid_size =  (grid_dimension,grid_dimension,grid_dimension)
-# Initialize simulation with user-provided inputs
-simulation = Simulation(
-    grid_size = grid_size,
-    days=days,
-    initial_pollution=initial_pollution,
-    initial_temperature=initial_temperature,
-    initial_water_mass=initial_water_mass,
-    initial_cities=initial_cities,
-    initial_forests=initial_forests,
+# Configure logging
+logging.basicConfig(
+    filename="simulation.log", 
+    filemode="w", 
+    format="%(asctime)s - %(levelname)s - %(message)s", 
+    level=logging.DEBUG
 )
 
-# Precompute states
-print("Precomputing simulation states...")
+logging.info("Simulation started.")
+
+# Initialize and run the simulation
+simulation = Simulation(
+    grid_size=(10, 10, 10),
+    days=365,
+    initial_pollution=10.0,
+    initial_temperature=15.0,
+    initial_water_mass=1.0,
+    initial_cities=50,
+    initial_forests=50
+)
+
+logging.info("Initialized simulation with parameters: %s", simulation.__dict__)
 simulation.precompute()
-print("Precomputation complete.")
 
-# Run the simulation
-print("Running simulation...")
+logging.info("Simulation precomputed. Running simulation...")
 simulation.run()
-print("Simulation complete.")
 
-# Display the results using Matplotlib
-print("Displaying results...")
+logging.info("Simulation complete. Displaying results...")
 display = MatplotlibDisplay(simulation)
 display.plot_3d()
