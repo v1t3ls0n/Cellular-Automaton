@@ -75,7 +75,7 @@ class MatplotlibDisplay:
                                     for dz in np.linspace(-0.5, 0.5, 2):
                                         points.append((x + dx, y + dy, z + dz))
                                         colors.append(to_rgba(cell.get_color()))
-                                        sizes.append(50)  # Larger size for denser appearance
+                                        sizes.append(80)  # Larger size for denser appearance
 
             self.precomputed_data.append((points, colors, sizes))
         logging.info("3D Precomputation complete.")
@@ -90,16 +90,31 @@ class MatplotlibDisplay:
         # Clear the existing plot
         self.ax_3d.cla()
         self.ax_3d.set_title(f"Day {day}")
-        self.ax_3d.set_axis_off()  # Simplify visualization
+        self.ax_3d.set_axis_on()  # Simplify visualization
+
+        # Set axis limits based on the grid size
+        # x_limit, y_limit, z_limit = self.simulation.grid_size
+        # self.ax_3d.set_xlim(0, x_limit )
+        # self.ax_3d.set_ylim(0, y_limit )
+        # self.ax_3d.set_zlim(0, z_limit )
+
+        # Add axis labels
+        # self.ax_3d.set_xlabel("X-axis (Width)")
+        # self.ax_3d.set_ylabel("Y-axis (Depth)")
+        # self.ax_3d.set_zlabel("Z-axis (Height)")
+
+        # Add grid for spatial reference
+        self.ax_3d.grid(True)
 
         points, colors, sizes = self.precomputed_data[day]
         xs, ys, zs = zip(*points) if points else ([], [], [])
-        self.ax_3d.scatter(xs, ys, zs, c=colors, s=sizes, alpha=0.7)  # Adjust alpha for density
+        self.ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
 
         # Restore the saved viewing angles
         self.ax_3d.view_init(elev=self.current_elev, azim=self.current_azim)
 
         self.fig.canvas.draw_idle()
+
 
     def render_population_graph(self):
         """Render the city population graph over time."""
