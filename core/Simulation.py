@@ -34,12 +34,11 @@ class Simulation:
             prev_state_index=-1
         )
         initial_state.initialize_grid(
-            self.grid_size,
-            self.initial_temperature,
-            self.initial_pollution,
-            self.initial_water_mass,
-            self.initial_cities,
-            self.initial_forests
+            initial_temperature=self.initial_temperature,
+            initial_pollution=self.initial_pollution,
+            initial_water_mass=self.initial_water_mass,
+            initial_cities=self.initial_cities,
+            initial_forests=self.initial_forests
         )
 
         # Add initial state and aggregate its data
