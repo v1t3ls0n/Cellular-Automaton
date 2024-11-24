@@ -22,12 +22,12 @@ logging.basicConfig(
 
 logging.info("Simulation started.")
 
-days =int(input("Number Of Days To Track (e.g., 365 = year) (default: 5): ") or 20)
-initial_pollution = float(input("Initial pollution level (e.g., 10.0) (default: 30.0): ") or 5.0)
+days =int(input("Number Of Days To Track (e.g., 365 = year) (default: 5): ") or 50)
+initial_pollution = float(input("Initial pollution level (e.g., 10.0) (default: 30.0): ") or 0.0)
 initial_temperature = float(input("Initial temperature (e.g., 15.0) (default: 25.0): ") or 15.0)
 initial_water_mass = float(input("Initial water level (e.g., 1.0) (default: 1.0): ") or 1.0)
-initial_cities = int(input("Initial number of cities (e.g., 50) (default: 50): ") or 500)
-initial_forests = int(input("Initial number of forests (e.g., 50) (default: 50): ") or 800)
+initial_cities = int(input("Initial number of cities (e.g., 50) (default: 50): ") or 50)
+initial_forests = int(input("Initial number of forests (e.g., 50) (default: 50): ") or 50)
 grid_size = (10,10,10)
 
 simulation = Simulation(
@@ -50,8 +50,6 @@ simulation = Simulation(
 
 # logging.info("Simulation precomputed. Running simulation...")
 simulation.run()
-simulation._calculate_aggregates()  # Compute aggregates for analysis
-
 
 # logging.info("Simulation complete. Displaying results...")
 display = MatplotlibDisplay(simulation)

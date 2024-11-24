@@ -2,14 +2,35 @@ import numpy as np
 import logging
 
 class Cell:
-    def __init__(self, cell_type, temperature=0.0, water_mass=0.0, pollution_level=0.0, direction=(0, 0)):
+    def __init__(self, cell_type=6, temperature=0, water_mass=0, pollution_level=0, direction=(0, 0), elevation=None):
+        """
+        Initialize a Cell object.
+        :param cell_type: Integer representing the cell type.
+        :param temperature: Initial temperature of the cell.
+        :param water_mass: Initial water mass of the cell.
+        :param pollution_level: Initial pollution level of the cell.
+        :param direction: Tuple indicating the cell's movement direction.
+        :param elevation: Elevation of the cell (used for terrain cells).
+        """
         self.cell_type = cell_type
         self.temperature = temperature
         self.water_mass = water_mass
         self.pollution_level = pollution_level
         self.direction = direction
+        self.elevation = elevation  # Optional attribute for terrain-related logic
 
+    def clone(self):
+        return Cell(
+            cell_type=self.cell_type,
+            temperature=self.temperature,
+            water_mass=self.water_mass,
+            pollution_level=self.pollution_level,
+            direction=self.direction,
+            elevation=self.elevation,
+        )
+    
     def update(self, neighbors, current_position=None, grid_size=None):
+        self._apply_natural_decay()  # Apply natural decay to temperature and pollution
         self._adjust_temperature_with_pollution()
         if self.cell_type == 0:  # Sea
             self._update_sea(neighbors)
@@ -32,6 +53,23 @@ class Cell:
         self.temperature += min(pollution_effect, max_effect)
         if self.pollution_level < 10:
             self.temperature = max(0, self.temperature - 0.1)
+
+    def _apply_natural_decay(self):
+        """
+        Apply natural decay to temperature and pollution levels.
+        """
+        pollution_decay_rate = 0.01  # Rate at which pollution naturally decreases
+        temperature_decay_rate = 0.005  # Rate at which temperature naturally decreases
+
+        # Apply decay to pollution level
+        self.pollution_level = max(0, self.pollution_level - (self.pollution_level * pollution_decay_rate))
+
+        # Apply decay to temperature, reducing towards a baseline temperature
+        baseline_temperature = 15  # Assume a global baseline temperature
+        if self.temperature > baseline_temperature:
+            self.temperature -= (self.temperature - baseline_temperature) * temperature_decay_rate
+        elif self.temperature < baseline_temperature:
+            self.temperature += (baseline_temperature - self.temperature) * temperature_decay_rate
 
     def convert_to_city(self):
         if self.cell_type == 4:
@@ -63,9 +101,9 @@ class Cell:
                 self.water_mass += rain
                 neighbor.water_mass -= rain
 
-        if self.pollution_level > 80 and self.temperature > 50 and np.random.random() < 0.2:
+        if self.pollution_level > 80 and self.temperature > 50  and np.random.random() < 0.2:
             self.convert_to_land()
-        elif self.pollution_level == 0 and self.temperature <= 25 and np.random.random() < 0.05:
+        elif self.pollution_level == 0 and self.temperature <= 25 and np.random.random() < 0.2:
             self.convert_to_city()
 
     def _update_land(self, neighbors):
@@ -83,28 +121,47 @@ class Cell:
                 self.pollution_level = 0
 
     def _update_city(self, neighbors):
-        self.pollution_level += 0.2 * self.pollution_level
-        self.temperature += 0.2 * self.temperature
+        self.pollution_level += 0.02 * self.pollution_level
+        self.temperature += 0.02 * self.temperature
 
         for neighbor in neighbors:
-            pollution_spread = 0.1 * self.pollution_level
+            pollution_spread = 0.5 * self.pollution_level
             neighbor.pollution_level += pollution_spread
 
-        if self.temperature > 60 and self.pollution_level > 100 and np.random.random() < 0.2:
+        if self.temperature > 60 or self.pollution_level > 100:
             self.convert_to_land()
 
     def _update_ice(self, neighbors):
-        if self.temperature > 0:
-            self.cell_type = 0
-            self.water_mass += 1
+        """
+        Update the properties of an Ice cell.
+        Handles melting and cooling of neighboring cells.
+        """
+        freezing_point = 0  # Temperature threshold for melting ice
 
+        if self.temperature > freezing_point:
+            self.cell_type = 0  # Convert Ice to Sea (Water)
+            water_increase = 1.0  # Amount of water added when ice melts
+            self.water_mass += water_increase
+            logging.debug(f"Ice melted into Water: {self}")
+
+            # Spread water level increase to neighboring Sea cells
+            for neighbor in neighbors:
+                if neighbor.cell_type == 0:  # Neighbor is Sea
+                    water_share = water_increase / len(neighbors)
+                    neighbor.water_mass += water_share
+                    self.water_mass -= water_share
+
+        # Cooling effect for neighboring cells
         for neighbor in neighbors:
-            if neighbor.cell_type == 0 and neighbor.temperature < 0.0:
-                neighbor.cell_type = 3
-                neighbor.water_mass = 0
-            neighbor.temperature -= 0.1
+            if neighbor.cell_type in [0, 1]:  # Water or Land
+                neighbor.temperature -= 0.1  # Cooling effect
+
 
     def _update_sea(self, neighbors):
+        """
+        Update the properties of a Sea cell.
+        Handles evaporation, water diffusion, and conversion to ice.
+        """
         evaporation_rate = max(0.01, 0.02 * (self.temperature - 15))
         self.water_mass = max(0, self.water_mass - evaporation_rate)
 
@@ -121,14 +178,35 @@ class Cell:
                 neighbor.water_mass += water_diffusion
                 self.water_mass -= water_diffusion
 
-            if self.temperature < -2.0 and self.water_mass > 0:
-                self.cell_type = 3
-                self.water_mass = 0
+        # Convert to ice if temperature is below freezing and water is present
+        if self.temperature <= 0 and self.water_mass > 0:
+            self.cell_type = 3  # Convert to Ice
+            logging.debug(f"Sea converted to Ice at temperature {self.temperature}.")
 
     def _update_air(self, neighbors):
+        """
+        Update air cells. Convert to water if water mass exceeds the rain threshold.
+        """
+        rain_threshold = 0.1  # Threshold for water mass to trigger rain
+
+        if self.water_mass > rain_threshold:
+            self.cell_type = 0  # Convert Air to Sea (Water)
+            self.water_mass = 1.0  # Initial water mass for new water cell
+            self.pollution_level = 0  # Reset pollution for water cell
+            logging.debug(f"Air cell converted to Water due to rain: {self}")
+            return
+
+        # Spread temperature and pollution to neighbors
         for neighbor in neighbors:
-            neighbor.temperature += 0.4 * (self.temperature - neighbor.temperature)
-            neighbor.pollution_level += 0.5 * (self.pollution_level - neighbor.pollution_level)
+            # if neighbor.cell_type != 6:  # Skip Air cells
+                temp_diffusion = 0.4 * (self.temperature - neighbor.temperature)
+                neighbor.temperature += temp_diffusion
+                self.temperature -= temp_diffusion / len(neighbors)
+
+                pollution_diffusion = 0.5 * (self.pollution_level - neighbor.pollution_level)
+                neighbor.pollution_level += pollution_diffusion
+                self.pollution_level -= pollution_diffusion / len(neighbors)
+
 
     def _update_cloud(self, neighbors, current_position, grid_size):
         self.move(current_position, grid_size)
@@ -145,37 +223,40 @@ class Cell:
                 pollution_spread = 0.05 * self.pollution_level
                 neighbor.pollution_level = min(100, neighbor.pollution_level + pollution_spread)
 
+
     def move(self, current_position, grid_size):
-        if self.cell_type in [2, 6, 0, 3]:
+        if self.cell_type in [2, 6, 3]:
             x, y, z = current_position
             dx, dy = self.direction
             new_x = (x + dx) % grid_size[0]
             new_y = (y + dy) % grid_size[1]
             return new_x, new_y, z
         return current_position
-    
+
+
+
     def get_color(self):
         """Get the color of the cell."""
-
-        # if self.cell_type == 6: # Air (Transparent)
-        #     return None
-
         base_colors = {
             0: (0.0, 0.0, 1.0, 1.0),  # Sea (blue)
             1: (1.0, 0.84, 0.0, 1.0),  # Land (gold)
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
-            3: (0.0, 1.0, 1.0, 1.0),  # Ice (cyan)
+            3: (0.4, 0.8, 1.0, 1.0),  # Ice (enhanced cyan)
             4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
-            5: (1.0, 0.0, 0.0, 1.0),  # City (Red)
-            6: (1.0, 1.0, 1.0, 0.01),  # Air (White)
-
+            5: (1.0, 0.0, 0.0, 1.0),  # City (red)
+            6: (1.0, 1.0, 1.0, 0.01),  # Air (white, nearly transparent)
         }
 
         base_color = base_colors[self.cell_type]
+
         # Tint towards black based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(
-            base_color[i] * (1.0 - pollution_intensity) for i in range(4)
+            base_color[i] * (1.0 - pollution_intensity) for i in range(3)
         )
 
-        return black_tinted_color
+        # Maintain the alpha (transparency) value from the base color
+        alpha = base_color[3]
+
+        # Return the adjusted color with the original transparency
+        return (*black_tinted_color, alpha)
