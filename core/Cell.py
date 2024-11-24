@@ -36,6 +36,7 @@ class Cell:
         Compute the next state of the cell based on its neighbors and position.
         """
         next_cell = self.clone()
+        next_cell._adjust_temperature_with_pollution()
 
         # Call the appropriate update method based on cell type
         if self.cell_type == 0:  # Sea
@@ -68,10 +69,22 @@ class Cell:
             self.temperature += (baseline_temperature - self.temperature) * temperature_decay_rate
 
     def _adjust_temperature_with_pollution(self):
-        """Increase temperature based on pollution level."""
-        pollution_effect = self.pollution_level * 0.05
-        max_effect = 10
+        """
+        Adjust the temperature based on pollution level.
+        Higher pollution levels cause more noticeable temperature increases.
+        """
+        pollution_effect = self.pollution_level * 0.1  # Increased scaling factor
+        max_effect = 20  # Higher maximum effect to reflect significant pollution impact
         self.temperature += min(pollution_effect, max_effect)
+
+        # Stronger effect for very high pollution levels
+        if self.pollution_level > 50:
+            extra_effect = (self.pollution_level - 50) * 0.2  # Additional temperature increase
+            self.temperature += min(extra_effect, 10)  # Limit extra effect to 10 degrees
+
+        # Apply natural cooling if pollution is very low
+        if self.pollution_level < 10:
+            self.temperature = max(0, self.temperature - 0.1)
 
 
 
@@ -304,7 +317,7 @@ class Cell:
             return None
 
         # Tint based on pollution level
-        pollution_intensity = min(1.0, self.pollution_level / 1000.0)
+        pollution_intensity = min(1.0, self.pollution_level / 100.0)
         black_tinted_color = tuple(base_color[i] * (1.0 - pollution_intensity) for i in range(3))
         alpha = base_color[3]  # Keep the original alpha value
 
