@@ -2,7 +2,7 @@ import logging
 from core.State import State  # Import the State class
 
 class Simulation:
-    def __init__(self, initial_pollution, initial_temperature, initial_water_mass, initial_cities, initial_forests, grid_size=(10, 10, 10), days=5):
+    def __init__(self, initial_pollution, initial_temperature, initial_water_mass, initial_cities_ratio, initial_forests_ratio, grid_size=(10, 10, 10), days=5):
         """
         Initialize the Simulation class with initial conditions.
         """
@@ -10,8 +10,8 @@ class Simulation:
         self.initial_temperature = initial_temperature
         self.initial_pollution = initial_pollution
         self.initial_water_mass = initial_water_mass
-        self.initial_cities = initial_cities
-        self.initial_forests = initial_forests
+        self.initial_cities_ratio = initial_cities_ratio
+        self.initial_forests_ratio = initial_forests_ratio
         self.days = days
 
         self.states = []  # Store the history of State objects
@@ -51,18 +51,17 @@ class Simulation:
             initial_temperature=self.initial_temperature,
             initial_pollution=self.initial_pollution,
             initial_water_mass=self.initial_water_mass,
-            initial_cities=self.initial_cities,
-            initial_forests=self.initial_forests,
+            initial_cities_ratio=self.initial_cities_ratio,
+            initial_forests_ratio=self.initial_forests_ratio,
             prev_state_index=-1
         )
         initial_state.initialize_grid(
             initial_temperature=self.initial_temperature,
             initial_pollution=self.initial_pollution,
             initial_water_mass=self.initial_water_mass,
-            initial_cities=self.initial_cities,
-            initial_forests=self.initial_forests
+            initial_cities_ratio=self.initial_cities_ratio,
+            initial_forests_ratio=self.initial_forests_ratio
         )
-        
         self.states.append(initial_state)
         self._update_aggregates(initial_state)
 

@@ -33,8 +33,8 @@ class Cell:
         # Call the appropriate update method based on cell type
         if self.cell_type == 0:  # Sea
             next_cell._update_sea(neighbors)
-        elif self.cell_type == 1:  # Land
-            next_cell._update_land(neighbors)
+        elif self.cell_type == 1:  # desert
+            next_cell._update_desert(neighbors)
         elif self.cell_type == 2:  # Cloud
             next_cell._update_cloud(neighbors, current_position, grid_size)
         elif self.cell_type == 3:  # Ice
@@ -91,7 +91,7 @@ class Cell:
             self.water_mass = 0
             self.temperature += 2
 
-    def convert_to_land(self):
+    def convert_to_desert(self):
         if self.cell_type in [4, 5]:
             self.cell_type = 1
             self.pollution_level = 0
@@ -122,13 +122,13 @@ class Cell:
             # Reduce the temperature of neighbors
             neighbor.temperature -= (cooling_effect * self.pollution_level) if neighbor.temperature > 15 else 0
 
-        # Convert forest to land or city based on conditions
+        # Convert forest to desert or city based on conditions
         if self.pollution_level > 100 or (self.temperature > 50 or self.temperature < 0) and np.random.uniform() < 0.1:
-            self.convert_to_land()
+            self.convert_to_desert()
         elif self.pollution_level == 0 and self.temperature <= 25 and np.random.uniform() < 0.1:
             self.convert_to_city()
 
-    def _update_land(self, neighbors):
+    def _update_desert(self, neighbors):
         surrounding_sea_count = sum(
             1 for neighbor in neighbors if neighbor.cell_type == 0)
         if surrounding_sea_count > len(neighbors) * 0.6 and self.water_mass > 1.0:
@@ -162,9 +162,9 @@ class Cell:
             temperature_increase = 0.1 * self.temperature
             neighbor.temperature += temperature_increase
 
-        # Convert city to land if conditions are extreme
+        # Convert city to desert if conditions are extreme
         if (self.temperature > 60 or self.temperature <= 0) or self.pollution_level > 100:
-            self.convert_to_land()
+            self.convert_to_desert()
 
     def _update_ice(self, neighbors):
 
@@ -185,7 +185,7 @@ class Cell:
 
         # Cooling effect for neighboring cells
         for neighbor in neighbors:
-            if neighbor.cell_type in [0, 1]:  # Water or Land
+            if neighbor.cell_type in [0, 1]:  # Water or desert
                 neighbor.temperature -= 0.1  # Cooling effect
 
     def _update_sea(self, neighbors):
@@ -323,9 +323,8 @@ class Cell:
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
             3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
             4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
-            5: (0.5, 0.0, 0.5, 1.0),  # City (red)
+            5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
             6: (1.0, 1.0, 1.0, 0.01),  # Air (transparent white)
-            6: (1.0, 1.0, 1.0, 0.01),  # Pollution Level (Blackness)
         }
 
         # Get the base color for the cell type or default to transparent white
@@ -333,14 +332,12 @@ class Cell:
 
         # Ensure the base_color has exactly 4 components (RGBA)
         if len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {
-                          self.cell_type}: {base_color}")
+            logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
             return None
 
         # Tint based on pollution level
-        pollution_intensity = min(1.0, self.pollution_level / 10.0)
-        black_tinted_color = tuple(
-            base_color[i] * (max(0, max(0, 1.0 - pollution_intensity))) for i in range(3))
-        alpha = base_color[3]  # Keep the original alpha value
+        pollution_intensity = max(0.0, min(self.pollution_level / 100.0, 1.0))  # Ensure within 0-1 range
+        black_tinted_color = [max(0.0, min(base_color[i] * (1.0 - pollution_intensity), 1.0)) for i in range(3)]
+        alpha = max(0.0, min(base_color[3], 1.0))  # Ensure alpha is also within 0-1 range
 
         return (*black_tinted_color, alpha)

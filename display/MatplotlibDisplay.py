@@ -203,7 +203,7 @@ class MatplotlibDisplay:
         """Add a legend explaining the cell colors."""
         legend_elements = [
             plt.Line2D([0], [0], marker='o', color='w', label='Sea', markersize=10, markerfacecolor='blue'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Land', markersize=10, markerfacecolor='yellow'),
+            plt.Line2D([0], [0], marker='o', color='w', label='desert', markersize=10, markerfacecolor='yellow'),
             plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
             plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='lightcyan'),
             plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor='green'),
