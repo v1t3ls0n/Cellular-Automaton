@@ -44,9 +44,6 @@ class MatplotlibDisplay:
         self.render_forests_graph()
         self.render_water_mass_graph()
 
-        # Add legend for the simulation
-        self.add_legend()
-
         # Add keyboard navigation
         self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
 
@@ -112,6 +109,9 @@ class MatplotlibDisplay:
 
         # Restore the saved viewing angles
         self.ax_3d.view_init(elev=self.current_elev, azim=self.current_azim)
+
+        # Add legend for the simulation
+        self.add_legend()
 
         self.fig.canvas.draw_idle()
 
@@ -205,10 +205,11 @@ class MatplotlibDisplay:
             plt.Line2D([0], [0], marker='o', color='w', label='Sea', markersize=10, markerfacecolor='blue'),
             plt.Line2D([0], [0], marker='o', color='w', label='Land', markersize=10, markerfacecolor='yellow'),
             plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='darkcyan'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='lightcyan'),
             plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor='green'),
             plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor='purple'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor='lightblue'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor='ghostwhite'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Black-Tinted Color', markersize=10, markerfacecolor='black')
         ]
         self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))
 

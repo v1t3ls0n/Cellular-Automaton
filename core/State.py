@@ -18,11 +18,6 @@ class State:
         self.total_cities = initial_cities
         self.total_forests = initial_forests
 
-        # Initialize the grid if this is the first state
-        if prev_state_index == -1:
-            self.initialize_grid(initial_temperature, initial_pollution,
-                                 initial_water_mass, initial_cities, initial_forests)
-
     def clone(self):
         """
         Create a deep clone of the current state.
@@ -41,8 +36,7 @@ class State:
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
                     current_cell = self.grid[i, j, k]
-                    cloned_state.grid[i, j, k] = current_cell.clone(
-                    ) if current_cell else None
+                    cloned_state.grid[i, j, k] = current_cell.clone()
 
         return cloned_state
 
@@ -77,12 +71,23 @@ class State:
                             [6, 2], p=[0.8, 0.2])  # Air or Cloud
                     else:
                         cell_type = 6
-                    dx =np.random.choice([0, 1, -1])
-                    dy =np.random.choice([0, 1, -1])
-                    dz = np.random.choice([0, 1, -1])
-                    self.grid[i, j, k] = Cell(cell_type=cell_type, direction=(dx,dy,dz) if cell_type in {0, 2, 3, 6} else (0, 0, 0),
-                                              temperature=-10 if cell_type == 3 else (initial_temperature + np.random.uniform(-2, 2)),
-                                              water_mass=initial_water_mass if cell_type in {0, 3} else 0,
+
+                    if cell_type in {6, 2}:
+                        dx = np.random.choice([0, 1, -1])
+                        dy = np.random.choice([0, 1, -1])
+                        dz = np.random.choice([0, 1])
+                    elif cell_type in {0,3}:
+                        dx = np.random.choice([-1, 1, 0])
+                        dy = np.random.choice([-1, 1, 0])
+                        dz = 0
+                    else:
+                        dx = dy = dz = 0
+                    self.grid[i, j, k] = Cell(cell_type=cell_type, direction=(dx, dy, dz),
+                                              temperature=-
+                                              10 if cell_type == 3 else (
+                                                  initial_temperature + np.random.uniform(-2, 2)),
+                                              water_mass=initial_water_mass if cell_type in {
+                                                  0, 3} else 0,
                                               pollution_level=initial_pollution,
                                               elevation=elevation,
                                               )
@@ -114,20 +119,27 @@ class State:
 
     def update_cells_on_grid(self):
         x, y, z = self.grid_size
-        new_grid = np.empty_like(self.grid)
+        # Properly initialize new_grid
+        new_grid = np.empty((x, y, z), dtype=object)
+
+        # Initialize the new grid with Air cells
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
+                    new_grid[i, j, k] = self.grid[i,
+                                                  j, k].clone()  # Default to Air
         position_map = {}
 
         # Compute next states and positions
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    current_cell = self.grid[i, j, k]
-
-                    if current_cell:
-                        neighbors = self.get_neighbors(i, j, k)
-                        next_cell = current_cell.get_next_state(neighbors, (i, j, k), self.grid_size)
-                        next_position = next_cell.move((i, j, k), self.grid_size)
-                        position_map[next_position] = next_cell
+                    current_cell = new_grid[i, j, k]
+                    neighbors = self.get_neighbors(i, j, k)
+                    next_cell = current_cell.get_next_state(
+                        neighbors, (i, j, k), self.grid_size)
+                    next_position = next_cell.move((i, j, k), self.grid_size)
+                    position_map[next_position] = next_cell
 
         # Fill new grid and resolve collisions
         for (ni, nj, nk), updated_cell in position_map.items():
@@ -136,49 +148,46 @@ class State:
         self.grid = new_grid
         self._recalculate_global_attributes()
 
-
-
     def move_cells_on_grid(self):
         """
         Move cells in the grid based on their direction property.
         This modifies the grid in place, ensuring all cells, including air, are moved.
         """
         x, y, z = self.grid_size
+        # Properly initialize new_grid
         new_grid = np.empty((x, y, z), dtype=object)
 
         # Initialize the new grid with Air cells
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = self.grid[i, j, k].clone()
-
-        # Track original and new positions
-        position_map = {}
+                    new_grid[i, j, k] = self.grid[i,
+                                                  j, k].clone()  # Default to Air
 
         # Step 1: Compute new positions for each cell
+        position_map = {}
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    # Use the original grid here
                     current_cell = self.grid[i, j, k]
 
                     if current_cell:
-                        # Determine the new position based on the cell's direction
+                        # Compute new position
                         new_position = current_cell.move(
                             (i, j, k), self.grid_size)
                         ni, nj, nk = new_position
 
-                        # Map the original and new positions
-                        if new_position in position_map:
-                            # Resolve collision by prioritizing non-air cells
-                            position_map[new_position] = self.resolve_collision(
-                                position_map[new_position], current_cell)
+                        # Resolve collisions if needed
+                        if (ni, nj, nk) in position_map:
+                            position_map[(ni, nj, nk)] = self.resolve_collision(
+                                position_map[(ni, nj, nk)], current_cell
+                            )
                         else:
-                            position_map[new_position] = current_cell
+                            position_map[(ni, nj, nk)] = current_cell
 
         # Step 2: Update the new grid with computed positions
         for (ni, nj, nk), cell in position_map.items():
-            new_grid[ni % x, nj % y, nk % z] = cell
+            new_grid[ni, nj, nk] = cell
 
         # Step 3: Replace the grid with the updated one
         self.grid = new_grid

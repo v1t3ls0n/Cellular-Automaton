@@ -23,27 +23,6 @@ class Simulation:
         self.city_population_over_time = []
         self.forest_count_over_time = []
 
-        # Initialize the first state
-        initial_state = State(
-            grid_size=self.grid_size,
-            initial_temperature=self.initial_temperature,
-            initial_pollution=self.initial_pollution,
-            initial_water_mass=self.initial_water_mass,
-            initial_cities=self.initial_cities,
-            initial_forests=self.initial_forests,
-            prev_state_index=-1
-        )
-        initial_state.initialize_grid(
-            initial_temperature=self.initial_temperature,
-            initial_pollution=self.initial_pollution,
-            initial_water_mass=self.initial_water_mass,
-            initial_cities=self.initial_cities,
-            initial_forests=self.initial_forests
-        )
-
-        # Add initial state and aggregate its data
-        self.states.append(initial_state)
-        self._update_aggregates(initial_state)
 
     def _update_aggregates(self, state):
         """
@@ -65,11 +44,33 @@ class Simulation:
         Run the simulation for the specified number of days.
         """
         logging.info("Simulation started.")
+        
+        # Initialize the first state
+        initial_state = State(
+            grid_size=self.grid_size,
+            initial_temperature=self.initial_temperature,
+            initial_pollution=self.initial_pollution,
+            initial_water_mass=self.initial_water_mass,
+            initial_cities=self.initial_cities,
+            initial_forests=self.initial_forests,
+            prev_state_index=-1
+        )
+        initial_state.initialize_grid(
+            initial_temperature=self.initial_temperature,
+            initial_pollution=self.initial_pollution,
+            initial_water_mass=self.initial_water_mass,
+            initial_cities=self.initial_cities,
+            initial_forests=self.initial_forests
+        )
+        
+        self.states.append(initial_state)
+        self._update_aggregates(initial_state)
+
         for day in range(self.days):
             logging.info(f"Simulating day {day + 1}...")
 
             # Get the current state
-            current_state = self.states[-1]
+            current_state = self.states[-1].clone()
             logging.debug(f"Current state (Day {day + 1}): {current_state}")
 
             # Compute the next state by cloning and updating
