@@ -42,11 +42,11 @@ class State:
 
     def initialize_grid(self, initial_temperature, initial_pollution, initial_water_mass, initial_cities_ratio, initial_forests_ratio):
         """
-        Initialize the grid with cells to create isdeserts surrounded by the sea.
+        Initialize the grid with cells to create isdeserts surrounded by the water.
         """
         x, y, z = self.grid_size
         elevation_map = self._generate_elevation_map()
-        sea_level = z // 8  # Define sea level
+        water_level = z // 8  # Define water level
         desert_prob = 1 - (initial_cities_ratio+initial_forests_ratio)
 
         for i in range(x):
@@ -56,10 +56,10 @@ class State:
 
                     if k < elevation_map[i, j]:
                         cell_type = 0
-                        # cell_type = np.random.choice([0, 3], p=[0.8, 0.2])  # Sea or Ice
+                        # cell_type = np.random.choice([0, 3], p=[0.8, 0.2])  # water or Ice
                     elif k == elevation_map[i, j]:
                         cell_type = np.random.choice(
-                            [0, 3], p=[0.8, 0.2])  # Sea or Ice
+                            [0, 3], p=[0.8, 0.2])  # water or Ice
 
                     elif k == elevation_map[i, j] + 1:
                         cell_type = np.random.choice([0, 1, 4, 5], p=[
