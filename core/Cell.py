@@ -212,138 +212,79 @@ class Cell:
                 neighbor.temperature -= 0.1  # Cooling effect
 
     def _update_sea(self, neighbors):
-        """
-        Update Sea cells:
-        - Evaporate water into nearby air cells.
-        - Adjust temperature and water mass.
-        """
         evaporation_rate = max(0.01, 0.02 * (self.temperature - 15))
         self.water_mass = max(0, self.water_mass - evaporation_rate)
+
         if self.temperature >= 100:
-            self.direction =  (neighbor.direction[0], neighbor.direction[1], 1)
+            # Transform to Air and move upward
             self.cell_type = 6
-        for neighbor in neighbors:
-            if neighbor.temperature >= 100 and neighbor.cell_type == 0:
-                self.direction =  (neighbor.direction[0], neighbor.direction[1], 1)
-                self.cell_type = 2
-            if neighbor.cell_type == 6:  # Neighbor is Air
-                # Transfer evaporated water to air cells
-                neighbor.water_mass += evaporation_rate * 0.5
-                neighbor.temperature += 0.1 * \
-                    (self.temperature - neighbor.temperature)
-                # Pass some pollution to the air
-                neighbor.pollution_level += 0.05 * self.pollution_level
+            self.water_mass = evaporation_rate * 0.5  # Carry evaporated water
+            self.direction = (self.direction[0], self.direction[1], 1)  # Move up
+        else:
+            for neighbor in neighbors:
+                if neighbor.cell_type == 6:  # Neighbor is Air
+                    neighbor.water_mass += evaporation_rate * 0.5
+                    neighbor.temperature += 0.1 * (self.temperature - neighbor.temperature)
+                    neighbor.pollution_level += 0.05 * self.pollution_level
 
-    def _update_air(self, neighbors):
-        rain_threshold = 1.0  # Threshold for water mass to trigger conversion to cloud
-        pollution_diffusion_rate = 0.05
-        temperature_diffusion_rate = 0.05
-        
 
-        # Convert to cloud if enough water mass is present and neighbors include clouds
-        if self.water_mass > rain_threshold:
-            self.direction =  (self.direction[0], self.direction[1], -1)
-            self.cell_type = 0
-            # for neighbor in neighbors:
-            #     if neighbor.cell_type == 2:  # Neighbor is a Cloud
-            #         self.cell_type = 2  # Convert to Cloud
-            #         self.pollution_level = neighbor.pollution_level  # Inherit pollution
-            #         # Stabilize initial cloud water mass
-            #         self.water_mass = self.water_mass + neighbor.water_mass
-            #         logging.debug(
-            #             "Air cell converted to Cloud due to nearby cloud and sufficient water mass.")
-            #         return
-
-        # Diffuse pollution and temperature with neighbors
-        for neighbor in neighbors:
-            temp_diffusion = temperature_diffusion_rate * \
-                (self.temperature - neighbor.temperature)
-            self.temperature -= temp_diffusion
-            neighbor.temperature += temp_diffusion
-
-            pollution_diffusion = pollution_diffusion_rate * \
-                (self.pollution_level - neighbor.pollution_level)
-            self.pollution_level -= pollution_diffusion
-            neighbor.pollution_level += pollution_diffusion
-            if neighbor.water_mass > rain_threshold:
-                neighbor.direction =  (self.direction[0], self.direction[1], -1)
-                self.cell_type = 0
-
-        # Gradually evaporate water mass if not near clouds
-        # Reduced evaporation rate
-        self.water_mass = max(0, self.water_mass - 0.005)
 
     def _update_cloud(self, neighbors, current_position, grid_size):
         rain_threshold = 1.0
-        cloud_threshold = 0.2
-        minimum_water_mass = 0.1  # Adjusted threshold for stable clouds
-        evaporation_to_air_rate = 0.002  # Slower evaporation rate
+        minimum_water_mass = 0.2
 
-        # Distribute rainwater to neighbors
+        # Rain logic: distribute water to below cells
         for neighbor in neighbors:
-            if neighbor.cell_type == 6:
-                rain =  self.water_mass  # Controlled rain rate
-                neighbor.water_mass += rain/len(neighbors)
-                neighbor.temperature -= self.temperature/len(neighbors)
-                self.water_mass -=  rain/len(neighbors)
-                self.temperature+=neighbor.temperature
-                logging.debug(f"Cloud rained on {
-                              neighbor.cell_type}. Water mass: {self.water_mass}")
-            if  neighbor.water_mass > rain_threshold:
-                    neighbor.cell_type = 0
-                    neighbor.direction = (neighbor.direction[0], neighbor.direction[1], -1)
-            elif neighbor.water_mass > cloud_threshold:
-                    neighbor.cell_type = 6
-                    neighbor.direction = (neighbor.direction[0], neighbor.direction[1], 1)
+            if neighbor.cell_type in {0, 1, 4}:  # Sea, Land, or Forest
+                if self.water_mass > rain_threshold:
+                    rain = min(0.1, self.water_mass)
+                    neighbor.water_mass += rain
+                    self.water_mass -= rain
+
+        # Transform back to air when water mass is depleted
+        if self.water_mass < minimum_water_mass:
+            self.cell_type = 6
+            self.water_mass = 0.1
 
 
+    def _update_air(self, neighbors):
+        rain_threshold = 0.8
+        cloud_threshold = 1.5
 
-            # Transfer temperature and pollution to air cells
-            # if neighbor.cell_type == 6:  # Air
-            #     temp_diffusion = 0.05 * \
-            #         (self.temperature - neighbor.temperature)
-            #     self.temperature -= temp_diffusion
-            #     neighbor.temperature += temp_diffusion
+        # Accumulate water mass and transform into a cloud when sufficient
+        if self.water_mass > rain_threshold:
+            self.cell_type = 2  # Transform to Cloud
+            self.direction = (self.direction[0], self.direction[1], 0)  # Neutral movement
+        else:
+            for neighbor in neighbors:
+                if neighbor.cell_type == 2:  # Neighbor is Cloud
+                    neighbor.water_mass += self.water_mass * 0.1
+                    self.water_mass = max(0, self.water_mass - 0.1)
 
-            #     pollution_diffusion = 0.03 * \
-            #         (self.pollution_level - neighbor.pollution_level)
-            #     self.pollution_level -= pollution_diffusion
-            #     neighbor.pollution_level += pollution_diffusion
+        # Spread temperature and pollution
+        for neighbor in neighbors:
+            temp_diffusion = 0.05 * (self.temperature - neighbor.temperature)
+            self.temperature -= temp_diffusion
+            neighbor.temperature += temp_diffusion
 
-            #     # Transfer water vapor to neighboring air cells
-            #     water_diffusion = evaporation_to_air_rate
-            #     # Prevent excessive loss
-            #     self.water_mass = max(
-            #         self.water_mass - water_diffusion, minimum_water_mass)
-            #     neighbor.water_mass += water_diffusion
-            
-            # if self.water_mass < cloud_threshold:
-            #     self.cell_type = 6
-            #     self.water_mass = min(self.water_mass, 0)
+            pollution_diffusion = 0.05 * (self.pollution_level - neighbor.pollution_level)
+            self.pollution_level -= pollution_diffusion
+            neighbor.pollution_level += pollution_diffusion
+
                 
 
 
     def move(self, current_position, grid_size):
-        """
-        Compute the new position for the cell based on its direction.
-        Wraps around the grid if necessary.
-        """
-        if self.direction == (0, 0, 0):  # No movement for static cells
-            return current_position
-
         x, y, z = current_position
         dx, dy, dz = self.direction
-        new_z = z + dz
-        
-        if new_z <= 0:
-            new_z = 0
-        elif new_z >= grid_size[2]:
-            new_z = grid_size[2] - 1
-        
+
         new_x = (x + dx) % grid_size[0]
         new_y = (y + dy) % grid_size[1]
-
+        new_z = max(0, min(grid_size[2] - 1, z + dz))   # Keep within vertical bounds
+        if new_z >= grid_size[2] : 
+            new_z = grid_size[2]-1
         return new_x, new_y, new_z
+
 
     def get_color(self):
         """Get the color of the cell."""

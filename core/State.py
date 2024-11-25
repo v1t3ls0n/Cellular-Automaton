@@ -113,49 +113,30 @@ class State:
         return elevation_map
 
     def update_cells_on_grid(self):
-        """
-        Update cells in the grid based on their interactions with neighbors.
-        First, compute new positions and states, then apply changes to the grid.
-        """
         x, y, z = self.grid_size
         new_grid = np.empty_like(self.grid)
         position_map = {}
 
-        # Step 1: Compute next states and store new positions
+        # Compute next states and positions
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     current_cell = self.grid[i, j, k]
 
-                    if current_cell is not None:
-                        # Get neighbors and compute next state
+                    if current_cell:
                         neighbors = self.get_neighbors(i, j, k)
-                        next_cell = current_cell.get_next_state(
-                            neighbors, (i, j, k), self.grid_size)
-
-                        # Determine the next position
-                        next_position = next_cell.move(
-                            (i, j, k), self.grid_size)
+                        next_cell = current_cell.get_next_state(neighbors, (i, j, k), self.grid_size)
+                        next_position = next_cell.move((i, j, k), self.grid_size)
                         position_map[next_position] = next_cell
 
-        # Step 2: Populate the new grid with computed states
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    # Fill with air cells by default
-                    new_grid[i, j, k] = Cell(cell_type=6)
-
-        # Step 3: Place updated cells into the new grid
+        # Fill new grid and resolve collisions
         for (ni, nj, nk), updated_cell in position_map.items():
-            # Handle collisions if needed
-            # if new_grid[ni, nj, nk].cell_type == 6:  # If the position is air
-            new_grid[ni % x, nj % y, nk % z] = updated_cell
-            # else:
-            # new_grid[ni, nj, nk] = self.resolve_collision(new_grid[ni, nj, nk], updated_cell)
+            new_grid[ni, nj, nk] = updated_cell
 
-        # Step 4: Replace the grid and recalculate global attributes
         self.grid = new_grid
         self._recalculate_global_attributes()
+
+
 
     def move_cells_on_grid(self):
         """
