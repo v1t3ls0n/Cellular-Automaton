@@ -32,7 +32,7 @@ class Cell:
         Compute the next state of the cell based on its neighbors and position.
         """
         next_cell = self.clone()
-        next_cell._apply_natural_decay()
+        # next_cell._apply_natural_decay()
         # next_cell.adjust_temperature_with_pollution()
 
         # Call the appropriate update method based on cell type
@@ -57,42 +57,6 @@ class Cell:
         return next_cell
 
 
-    def is_surrounded_by_clouds(self, neighbors):
-        return sum(1 for neighbor in neighbors if neighbor.cell_type == 2) >= 0.9 * len(neighbors)
-
-    def sink_if_surrounded_by_sea_or_ice(self, neighbors):
-        if sum(1 for neighbor in neighbors if neighbor.cell_type in {0, 3}) >= 0.9 * len(neighbors):
-            if self.temperature <= freezing_point:
-                self.convert_to_ice()
-            else:
-                self.convert_to_sea()
-            return True
-
-        return False
-
-    def calc_neighbors_avg_temperature(self, neighbors):
-        return sum(neighbor.temperature for neighbor in neighbors)/len(neighbors)
-
-    def calc_neighbors_avg_pollution(self, neighbors):
-        return sum(neighbor.temperature for neighbor in neighbors)/len(neighbors)
-
-    def adjust_cell_temperature_to_neighbors(self, neighbors):
-        self.temperature = (self.temperature +
-                            self.calc_neighbors_avg_temperature(neighbors))/2
-
-    def adjust_cell_pollution_to_neighbors(self, neighbors):
-        self.pollution_level = (self.pollution_level +
-                                self.calc_neighbors_avg_pollution(neighbors))/2
-
-    def forest_absorb(self):
-        pollution_absorption_rate = 0.2
-        cooling_effect = 0.2
-        self.pollution_level = max(
-            0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
-        self.temperature = max(
-            self.temperature - self.temperature * cooling_effect, baseline_temperature)
-        
-
     
     def _update_forest(self, neighbors):
         if not self.sink_if_surrounded_by_sea_or_ice(neighbors):
@@ -106,12 +70,18 @@ class Cell:
                     self.convert_to_city()
 
     def _update_desert(self, neighbors):
+        for neighbor in neighbors:
+            if neighbor.cell_type == 7:
+                self.water_mass += neighbor.water_mass
+                neighbor.water_mass = 0
+
         if not self.sink_if_surrounded_by_sea_or_ice(neighbors):
             if self.pollution_level == 0 and self.temperature < 30 and np.random.uniform() < 0.5:
                 self.convert_to_forest()
 
     def _update_city(self, neighbors):
-
+        self.adjust_cell_temperature_to_neighbors(neighbors)
+        self.adjust_cell_pollution_to_neighbors(neighbors)
         if not self.sink_if_surrounded_by_sea_or_ice(neighbors):
             # Pollution and temperature increase rates for cities
             pollution_increase_rate = 0.3
@@ -121,7 +91,6 @@ class Cell:
             self.pollution_level += pollution_increase_rate * self.pollution_level
             self.temperature += temperature_increase_rate * self.temperature
 
-            self.adjust_cell_temperature_to_neighbors(neighbors)
 
             # Convert city to desert if conditions are extreme
             if ((self.temperature > 60 or self.temperature <= 0) or self.pollution_level > 100) and np.random.uniform() < 0.5:
@@ -144,11 +113,17 @@ class Cell:
     def _update_air(self, neighbors):
         self.adjust_cell_temperature_to_neighbors(neighbors)
         self.adjust_cell_pollution_to_neighbors(neighbors)
-        self.adjust_air_z_direction(neighbors)
+        # self.adjust_air_z_direction(neighbors)
 
         for neighbor in neighbors:
             if neighbor.cell_type == 4:
-                self.forest_absorb()
+                self.forest_pollution_absorb()
+        
+        if self.is_surrounded_by_clouds(neighbors):
+            self.convert_to_cloud()
+        
+    
+
             
 
     def _update_cloud(self, neighbors, current_position, grid_size):
@@ -159,9 +134,9 @@ class Cell:
 
     
     def _update_rain(self, neighbors):
-        sea_cells_neighbors_count = sum(1 if neighbor.cell_type in {0,3} else 0 for neighbor in neighbors)
-        if sea_cells_neighbors_count == len(neighbors):
-            self.convert_to_sea()
+        if self.water_mass == 0:
+            self.convert_to_air()
+            return
 
     def adjust_air_z_direction(self, neighbors):
         neighbors_avg_temp = self.calc_neighbors_avg_temperature(neighbors)
@@ -206,6 +181,55 @@ class Cell:
             self.temperature += (baseline_temperature -
                                  self.temperature) * temperature_decay_rate
 
+
+
+
+    def absorb_rain_water_mass(self, neighbors):
+        land_cells_count = sum(1 for neighbor in neighbors if neighbor.cell_type in {1,4,5}) 
+        water_mass_to_absorb = self.water_mass
+        for neighbor in neighbors:
+            if neighbor.cell_type in {1,4,5}:
+                neighbor.water_mass += water_mass_to_absorb/2
+
+
+    def is_surrounded_by_clouds(self, neighbors):
+        return sum(1 for neighbor in neighbors if neighbor.cell_type == 2) >= 0.5 * len(neighbors)
+
+    def sink_if_surrounded_by_sea_or_ice(self, neighbors):
+        if sum(1 for neighbor in neighbors if neighbor.cell_type in {0, 3}) >= 0.5 * len(neighbors):
+            if self.temperature <= freezing_point:
+                self.convert_to_ice()
+            else:
+                self.convert_to_sea()
+            return True
+
+        return False
+
+
+
+    def calc_neighbors_avg_temperature(self, neighbors):
+        return sum(neighbor.temperature for neighbor in neighbors)/len(neighbors)
+
+    def calc_neighbors_avg_pollution(self, neighbors):
+        return sum(neighbor.temperature for neighbor in neighbors)/len(neighbors)
+
+    def adjust_cell_temperature_to_neighbors(self, neighbors):
+        self.temperature = (self.temperature +
+                            self.calc_neighbors_avg_temperature(neighbors))/2
+
+    def adjust_cell_pollution_to_neighbors(self, neighbors):
+        self.pollution_level = (self.pollution_level +
+                                self.calc_neighbors_avg_pollution(neighbors))/2
+
+    def forest_pollution_absorb(self):
+        pollution_absorption_rate = 0.2
+        cooling_effect = 0.2
+        self.pollution_level = max(
+            0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
+        self.temperature = max(
+            self.temperature - self.temperature * cooling_effect, baseline_temperature)
+
+
     def convert_to_city(self):
         self.cell_type = 5
         self.water_mass = 0
@@ -231,7 +255,8 @@ class Cell:
 
     def convert_to_air(self, neighbors):
         self.cell_type = 6
-        self.adjust_air_z_direction(neighbors)
+        self.direction = (self.direction[0], self.direction[1], 1)
+        # self.adjust_air_z_direction(neighbors)
     
     def convert_to_rain(self):
         self.cell_type = 7
@@ -242,7 +267,13 @@ class Cell:
         self.direction = (0, 0, 0)
         self.temperature = baseline_temperature
         self.pollution_level = 0
-        self.water_mass = 0
+        # self.water_mass = 0
+    
+    def convert_to_cloud(self):
+        self.cell_type = 2
+        self.direction = (self.direction[0], self.direction[1], 0)
+
+
 
 
     
