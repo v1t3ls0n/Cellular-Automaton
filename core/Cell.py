@@ -3,7 +3,7 @@ import logging
 
 
 class Cell:
-    def __init__(self, cell_type=6, temperature=0, water_mass=0, pollution_level=0, direction=(0, 0), elevation=None):
+    def __init__(self, cell_type=6, temperature=0, water_mass=0, pollution_level=0, direction=(0, 0, 0), elevation=None):
         """
         Initialize a Cell object.
         :param cell_type: Integer representing the cell type.
@@ -30,13 +30,12 @@ class Cell:
             elevation=self.elevation,
         )
 
-
     def get_next_state(self, neighbors, current_position=None, grid_size=None):
         """
         Compute the next state of the cell based on its neighbors and position.
         """
         next_cell = self.clone()
-        next_cell._adjust_temperature_with_pollution()
+        next_cell._apply_natural_decay()
 
         # Call the appropriate update method based on cell type
         if self.cell_type == 0:  # Sea
@@ -54,19 +53,9 @@ class Cell:
         elif self.cell_type == 6:  # Air
             next_cell._update_air(neighbors)
 
+        # next_cell._adjust_temperature_with_pollution()
+
         return next_cell
-
-    def _apply_natural_decay(self):
-        """Apply natural decay to pollution and temperature levels."""
-        pollution_decay_rate = 0.01
-        temperature_decay_rate = 0.005
-        baseline_temperature = 15
-
-        self.pollution_level = max(0, self.pollution_level - self.pollution_level * pollution_decay_rate)
-        if self.temperature > baseline_temperature:
-            self.temperature -= (self.temperature - baseline_temperature) * temperature_decay_rate
-        elif self.temperature < baseline_temperature:
-            self.temperature += (baseline_temperature - self.temperature) * temperature_decay_rate
 
     def _adjust_temperature_with_pollution(self):
         """
@@ -74,39 +63,26 @@ class Cell:
         Higher pollution levels cause more noticeable temperature increases.
         """
         pollution_effect = self.pollution_level * 0.1  # Increased scaling factor
-        max_effect = 20  # Higher maximum effect to reflect significant pollution impact
+        max_effect = 5  # Higher maximum effect to reflect significant pollution impact
         self.temperature += min(pollution_effect, max_effect)
 
         # Stronger effect for very high pollution levels
         if self.pollution_level > 50:
-            extra_effect = (self.pollution_level - 50) * 0.2  # Additional temperature increase
-            self.temperature += min(extra_effect, 10)  # Limit extra effect to 10 degrees
+            extra_effect = (self.pollution_level - 50) * \
+                0.2  # Additional temperature increase
+            # Limit extra effect to 10 degrees
+            self.temperature += min(extra_effect, 3)
 
         # Apply natural cooling if pollution is very low
         if self.pollution_level < 10:
-            self.temperature = max(0, self.temperature - 0.1)
-
-
-
-    def elevate_and_update(self, elevation_limit):
-        """
-        Update the cell state based on its elevation.
-        Convert water to clouds if elevation is beyond the threshold.
-        """
-        if self.cell_type == 0 and self.elevation is not None and self.elevation >= elevation_limit:
-            # Convert water to cloud
-            self.cell_type = 2  # Cloud
-            self.pollution_level = 0  # Reset pollution
-            self.water_mass = 0.2  # Initial water mass for cloud
-            logging.debug(f"Water at elevation {self.elevation} converted to Cloud.")
-
+            self.temperature = max(0, self.temperature - 0.2)
 
     def _apply_natural_decay(self):
         """
         Apply natural decay to temperature and pollution levels.
         """
-        pollution_decay_rate = 0.01  # Rate at which pollution naturally decreases
-        temperature_decay_rate = 0.005  # Rate at which temperature naturally decreases
+        pollution_decay_rate = 0.5  # Rate at which pollution naturally decreases
+        temperature_decay_rate = 0.5  # Rate at which temperature naturally decreases
 
         # Apply decay to pollution level
         self.pollution_level = max(
@@ -136,25 +112,37 @@ class Cell:
             self.temperature -= 1
 
     def _update_forest(self, neighbors):
+        """
+        Update the forest cell:
+        - Reduces pollution from itself and nearby cells.
+        - Cools the temperature of itself and nearby cells.
+        """
+        # Pollution reduction rate for forests
+        pollution_absorption_rate = 0.5
+        cooling_effect = 0.5  # Cooling effect proportional to pollution
+
+        # Reduce forest pollution
         self.pollution_level = max(
-            0, self.pollution_level - 0.02 * self.pollution_level)
-        cooling_effect = self.pollution_level * 0.02
-        self.temperature -= cooling_effect
+            0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
 
+        # Cool the forest temperature
+        self.temperature -= self.pollution_level * cooling_effect
+
+        # Interact with neighboring cells
         for neighbor in neighbors:
+            # Absorb pollution from neighbors
             if neighbor.pollution_level > 0:
-                absorbed_pollution = min(0.1, neighbor.pollution_level * 0.1)
+                absorbed_pollution = min(
+                    0.2, pollution_absorption_rate * neighbor.pollution_level)
                 neighbor.pollution_level -= absorbed_pollution
-                self.pollution_level += absorbed_pollution
 
-            if neighbor.cell_type == 2 and neighbor.water_mass > 0:
-                rain = min(0.1, neighbor.water_mass)
-                self.water_mass += rain
-                neighbor.water_mass -= rain
+            # Reduce the temperature of neighbors
+            neighbor.temperature -= cooling_effect * self.pollution_level
 
-        if (self.pollution_level > 100 or (self.temperature > 50 or self.temperature <= 0)) and np.random.random() < 0.2:
+        # Convert forest to land or city based on conditions
+        if self.pollution_level > 100 or (self.temperature > 50 or self.temperature <= 0) and np.random.uniform() < 0.1:
             self.convert_to_land()
-        elif self.pollution_level == 0 and self.temperature <= 25 and np.random.random() < 0.2:
+        elif self.pollution_level == 0 and self.temperature <= 25 and np.random.uniform() < 0.1:
             self.convert_to_city()
 
     def _update_land(self, neighbors):
@@ -166,21 +154,36 @@ class Cell:
             self.pollution_level = 0
             return
 
-        if self.pollution_level == 0 and self.temperature in range(25):
-            recovery_chance = 0.1
-            if np.random.random() < recovery_chance:
-                self.cell_type = 4
-                self.pollution_level = 0
+        if self.pollution_level == 0 and self.temperature < 30 and np.random.uniform() < 0.2:
+            self.cell_type = 4
+            self.pollution_level = 0
+            self.water_mass = 0
 
     def _update_city(self, neighbors):
-        self.pollution_level += 0.02 * self.pollution_level
-        self.temperature += 0.02 * self.temperature
+        """
+        Update the city cell:
+        - Increases pollution and temperature of itself and nearby cells.
+        """
+        # Pollution and temperature increase rates for cities
+        pollution_increase_rate = 0.1
+        temperature_increase_rate = 0.1
 
+        # Increase city pollution and temperature
+        self.pollution_level += pollution_increase_rate * self.pollution_level
+        self.temperature += temperature_increase_rate * self.temperature
+
+        # Interact with neighboring cells
         for neighbor in neighbors:
+            # Spread pollution to neighbors
             pollution_spread = 0.1 * self.pollution_level
             neighbor.pollution_level += pollution_spread
 
-        if self.temperature > 60 or self.temperature <= 0 or self.pollution_level > 100:
+            # Increase temperature of neighbors
+            temperature_increase = 0.1 * self.temperature
+            neighbor.temperature += temperature_increase
+
+        # Convert city to land if conditions are extreme
+        if (self.temperature > 60 or self.temperature <= 0) or self.pollution_level > 100:
             self.convert_to_land()
 
     def _update_ice(self, neighbors):
@@ -188,11 +191,11 @@ class Cell:
         Update the properties of an Ice cell.
         Handles melting and cooling of neighboring cells.
         """
-        freezing_point = 0  # Temperature threshold for melting ice
+        freezing_point = 40  # Temperature threshold for melting ice
 
         if self.temperature > freezing_point:
             self.cell_type = 0  # Convert Ice to Sea (Water)
-            water_increase = 1.0  # Amount of water added when ice melts
+            water_increase = 5.0  # Amount of water added when ice melts
             self.water_mass += water_increase
             logging.debug(f"Ice melted into Water: {self}")
 
@@ -216,86 +219,132 @@ class Cell:
         """
         evaporation_rate = max(0.01, 0.02 * (self.temperature - 15))
         self.water_mass = max(0, self.water_mass - evaporation_rate)
-
+        if self.temperature >= 100:
+            self.direction =  (neighbor.direction[0], neighbor.direction[1], 1)
+            self.cell_type = 6
         for neighbor in neighbors:
+            if neighbor.temperature >= 100 and neighbor.cell_type == 0:
+                self.direction =  (neighbor.direction[0], neighbor.direction[1], 1)
+                self.cell_type = 2
             if neighbor.cell_type == 6:  # Neighbor is Air
                 # Transfer evaporated water to air cells
                 neighbor.water_mass += evaporation_rate * 0.5
-                neighbor.temperature += 0.1 * (self.temperature - neighbor.temperature)
-                neighbor.pollution_level += 0.05 * self.pollution_level  # Pass some pollution to the air
+                neighbor.temperature += 0.1 * \
+                    (self.temperature - neighbor.temperature)
+                # Pass some pollution to the air
+                neighbor.pollution_level += 0.05 * self.pollution_level
 
     def _update_air(self, neighbors):
-        rain_threshold = 0.2  # Threshold for water mass to trigger conversion to cloud
+        rain_threshold = 1.0  # Threshold for water mass to trigger conversion to cloud
         pollution_diffusion_rate = 0.05
         temperature_diffusion_rate = 0.05
+        
 
         # Convert to cloud if enough water mass is present and neighbors include clouds
         if self.water_mass > rain_threshold:
-            for neighbor in neighbors:
-                if neighbor.cell_type == 2:  # Neighbor is a Cloud
-                    self.cell_type = 2  # Convert to Cloud
-                    self.pollution_level = neighbor.pollution_level  # Inherit pollution
-                    self.water_mass = max(self.water_mass, 0.2)  # Stabilize initial cloud water mass
-                    logging.debug("Air cell converted to Cloud due to nearby cloud and sufficient water mass.")
-                    return
+            self.direction =  (self.direction[0], self.direction[1], -1)
+            self.cell_type = 0
+            # for neighbor in neighbors:
+            #     if neighbor.cell_type == 2:  # Neighbor is a Cloud
+            #         self.cell_type = 2  # Convert to Cloud
+            #         self.pollution_level = neighbor.pollution_level  # Inherit pollution
+            #         # Stabilize initial cloud water mass
+            #         self.water_mass = self.water_mass + neighbor.water_mass
+            #         logging.debug(
+            #             "Air cell converted to Cloud due to nearby cloud and sufficient water mass.")
+            #         return
 
         # Diffuse pollution and temperature with neighbors
         for neighbor in neighbors:
-            temp_diffusion = temperature_diffusion_rate * (self.temperature - neighbor.temperature)
+            temp_diffusion = temperature_diffusion_rate * \
+                (self.temperature - neighbor.temperature)
             self.temperature -= temp_diffusion
             neighbor.temperature += temp_diffusion
 
-            pollution_diffusion = pollution_diffusion_rate * (self.pollution_level - neighbor.pollution_level)
+            pollution_diffusion = pollution_diffusion_rate * \
+                (self.pollution_level - neighbor.pollution_level)
             self.pollution_level -= pollution_diffusion
             neighbor.pollution_level += pollution_diffusion
+            if neighbor.water_mass > rain_threshold:
+                neighbor.direction =  (self.direction[0], self.direction[1], -1)
+                self.cell_type = 0
 
         # Gradually evaporate water mass if not near clouds
-        self.water_mass = max(0, self.water_mass - 0.005)  # Reduced evaporation rate
-
+        # Reduced evaporation rate
+        self.water_mass = max(0, self.water_mass - 0.005)
 
     def _update_cloud(self, neighbors, current_position, grid_size):
-        rain_threshold = 0.1
+        rain_threshold = 1.0
+        cloud_threshold = 0.2
         minimum_water_mass = 0.1  # Adjusted threshold for stable clouds
         evaporation_to_air_rate = 0.002  # Slower evaporation rate
 
         # Distribute rainwater to neighbors
         for neighbor in neighbors:
-            if neighbor.cell_type in {0, 1, 4} and self.water_mass > rain_threshold:
-                rain = min(0.05, self.water_mass)  # Controlled rain rate
-                neighbor.water_mass += rain
-                self.water_mass -= rain
-                logging.debug(f"Cloud rained on {neighbor.cell_type}. Water mass: {self.water_mass}")
+            if neighbor.cell_type == 6:
+                rain =  self.water_mass  # Controlled rain rate
+                neighbor.water_mass += rain/len(neighbors)
+                neighbor.temperature -= self.temperature/len(neighbors)
+                self.water_mass -=  rain/len(neighbors)
+                self.temperature+=neighbor.temperature
+                logging.debug(f"Cloud rained on {
+                              neighbor.cell_type}. Water mass: {self.water_mass}")
+            if  neighbor.water_mass > rain_threshold:
+                    neighbor.cell_type = 0
+                    neighbor.direction = (neighbor.direction[0], neighbor.direction[1], -1)
+            elif neighbor.water_mass > cloud_threshold:
+                    neighbor.cell_type = 6
+                    neighbor.direction = (neighbor.direction[0], neighbor.direction[1], 1)
+
+
 
             # Transfer temperature and pollution to air cells
-            if neighbor.cell_type == 6:  # Air
-                temp_diffusion = 0.05 * (self.temperature - neighbor.temperature)
-                self.temperature -= temp_diffusion
-                neighbor.temperature += temp_diffusion
+            # if neighbor.cell_type == 6:  # Air
+            #     temp_diffusion = 0.05 * \
+            #         (self.temperature - neighbor.temperature)
+            #     self.temperature -= temp_diffusion
+            #     neighbor.temperature += temp_diffusion
 
-                pollution_diffusion = 0.03 * (self.pollution_level - neighbor.pollution_level)
-                self.pollution_level -= pollution_diffusion
-                neighbor.pollution_level += pollution_diffusion
+            #     pollution_diffusion = 0.03 * \
+            #         (self.pollution_level - neighbor.pollution_level)
+            #     self.pollution_level -= pollution_diffusion
+            #     neighbor.pollution_level += pollution_diffusion
 
-                # Transfer water vapor to neighboring air cells
-                water_diffusion = evaporation_to_air_rate
-                self.water_mass = max(self.water_mass - water_diffusion, minimum_water_mass)  # Prevent excessive loss
-                neighbor.water_mass += water_diffusion
-
-        if self.water_mass < minimum_water_mass:
-            logging.debug(f"Cloud converted to Air due to low water mass: {self.water_mass}")
-            self.cell_type = 6  # Convert back to Air
-            self.water_mass = 0.1  # Leave a small initial water mass for air
+            #     # Transfer water vapor to neighboring air cells
+            #     water_diffusion = evaporation_to_air_rate
+            #     # Prevent excessive loss
+            #     self.water_mass = max(
+            #         self.water_mass - water_diffusion, minimum_water_mass)
+            #     neighbor.water_mass += water_diffusion
+            
+            # if self.water_mass < cloud_threshold:
+            #     self.cell_type = 6
+            #     self.water_mass = min(self.water_mass, 0)
+                
 
 
     def move(self, current_position, grid_size):
-        if self.cell_type in [2, 6, 3]:
-            x, y, z = current_position
-            dx, dy = self.direction
-            new_x = (x + dx) % grid_size[0]
-            new_y = (y + dy) % grid_size[1]
-            return new_x, new_y, z
-        return current_position
-    
+        """
+        Compute the new position for the cell based on its direction.
+        Wraps around the grid if necessary.
+        """
+        if self.direction == (0, 0, 0):  # No movement for static cells
+            return current_position
+
+        x, y, z = current_position
+        dx, dy, dz = self.direction
+        new_z = z + dz
+        
+        if new_z <= 0:
+            new_z = 0
+        elif new_z >= grid_size[2]:
+            new_z = grid_size[2] - 1
+        
+        new_x = (x + dx) % grid_size[0]
+        new_y = (y + dy) % grid_size[1]
+
+        return new_x, new_y, new_z
+
     def get_color(self):
         """Get the color of the cell."""
         base_colors = {
@@ -313,12 +362,14 @@ class Cell:
 
         # Ensure the base_color has exactly 4 components (RGBA)
         if len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
+            logging.error(f"Invalid color definition for cell_type {
+                          self.cell_type}: {base_color}")
             return None
 
         # Tint based on pollution level
         pollution_intensity = min(1.0, self.pollution_level / 100.0)
-        black_tinted_color = tuple(base_color[i] * (1.0 - pollution_intensity) for i in range(3))
+        black_tinted_color = tuple(
+            base_color[i] * (max(0, 1.0 - pollution_intensity)) for i in range(3))
         alpha = base_color[3]  # Keep the original alpha value
 
         return (*black_tinted_color, alpha)

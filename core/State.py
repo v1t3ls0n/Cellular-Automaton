@@ -20,7 +20,8 @@ class State:
 
         # Initialize the grid if this is the first state
         if prev_state_index == -1:
-            self.initialize_grid(initial_temperature, initial_pollution, initial_water_mass, initial_cities, initial_forests)
+            self.initialize_grid(initial_temperature, initial_pollution,
+                                 initial_water_mass, initial_cities, initial_forests)
 
     def clone(self):
         """
@@ -40,7 +41,8 @@ class State:
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
                     current_cell = self.grid[i, j, k]
-                    cloned_state.grid[i, j, k] = current_cell.clone() if current_cell else None
+                    cloned_state.grid[i, j, k] = current_cell.clone(
+                    ) if current_cell else None
 
         return cloned_state
 
@@ -56,26 +58,38 @@ class State:
             for j in range(y):
                 for k in range(z):
                     cell_type = 6  # Default to air
-                    elevation = elevation_map[i, j] if k <= elevation_map[i, j] else None
+                    elevation = elevation_map[i,
+                                              j] if k <= elevation_map[i, j] else None
 
-                    if k <= sea_level:
-                        cell_type = np.random.choice([0, 3], p=[0.9, 0.1])  # Sea or Ice
+                    if k < elevation_map[i, j]:
+                        cell_type = 0
+                        # cell_type = np.random.choice([0, 3], p=[0.8, 0.2])  # Sea or Ice
+                    elif k == elevation_map[i, j]:
+                        cell_type = np.random.choice(
+                            [0, 3], p=[0.8, 0.2])  # Sea or Ice
+
                     elif k == elevation_map[i, j] + 1:
-                        cell_type = np.random.choice([0, 4, 5], p=[1 - (initial_cities + initial_forests) / (z ** 2), initial_forests / (z ** 2), initial_cities / (z ** 2)])  # City, Forest, Land
+                        cell_type = np.random.choice([0, 4, 5], p=[1 - (initial_cities + initial_forests) / (
+                            # City, Forest, Land
+                            z ** 2), initial_forests / (z ** 2), initial_cities / (z ** 2)])
                     elif k > (z - 2):
-                        cell_type = np.random.choice([6, 2], p=[0.8, 0.2])  # Air or Cloud
-
-                    self.grid[i, j, k] = Cell(
-                        cell_type=cell_type,
-                        direction=(np.random.choice([1, -1]), np.random.choice([1, -1])) if cell_type in {6, 2} else (0, 0),
-                        temperature=-10 if cell_type == 3 else (initial_temperature + np.random.uniform(-2, 2)),
-                        water_mass=initial_water_mass if cell_type in {0, 3} else 0,
-                        pollution_level=initial_pollution if cell_type == 6 else 0,
-                        elevation=elevation,
-                    )
+                        cell_type = np.random.choice(
+                            [6, 2], p=[0.8, 0.2])  # Air or Cloud
+                    else:
+                        cell_type = 6
+                    dx =np.random.choice([0, 1, -1])
+                    dy =np.random.choice([0, 1, -1])
+                    dz = np.random.choice([0, 1, -1])
+                    self.grid[i, j, k] = Cell(cell_type=cell_type, direction=(dx,dy,dz) if cell_type in {0, 2, 3, 6} else (0, 0, 0),
+                                              temperature=-10 if cell_type == 3 else (initial_temperature + np.random.uniform(-2, 2)),
+                                              water_mass=initial_water_mass if cell_type in {0, 3} else 0,
+                                              pollution_level=initial_pollution,
+                                              elevation=elevation,
+                                              )
 
         self._recalculate_global_attributes()
-        logging.debug(f"Grid initialized successfully with dimensions: {self.grid_size}")
+        logging.debug(f"Grid initialized successfully with dimensions: {
+                      self.grid_size}")
 
     def _generate_elevation_map(self):
         """
@@ -101,27 +115,52 @@ class State:
     def update_cells_on_grid(self):
         """
         Update cells in the grid based on their interactions with neighbors.
+        First, compute new positions and states, then apply changes to the grid.
         """
         x, y, z = self.grid_size
         new_grid = np.empty_like(self.grid)
+        position_map = {}
 
+        # Step 1: Compute next states and store new positions
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     current_cell = self.grid[i, j, k]
-                    if current_cell is None:
-                        continue
-                    neighbors = self.get_neighbors(i, j, k)
-                    new_grid[i, j, k] = current_cell.get_next_state(neighbors, (i, j, k), self.grid_size)
 
+                    if current_cell is not None:
+                        # Get neighbors and compute next state
+                        neighbors = self.get_neighbors(i, j, k)
+                        next_cell = current_cell.get_next_state(
+                            neighbors, (i, j, k), self.grid_size)
+
+                        # Determine the next position
+                        next_position = next_cell.move(
+                            (i, j, k), self.grid_size)
+                        position_map[next_position] = next_cell
+
+        # Step 2: Populate the new grid with computed states
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
+                    # Fill with air cells by default
+                    new_grid[i, j, k] = Cell(cell_type=6)
+
+        # Step 3: Place updated cells into the new grid
+        for (ni, nj, nk), updated_cell in position_map.items():
+            # Handle collisions if needed
+            # if new_grid[ni, nj, nk].cell_type == 6:  # If the position is air
+            new_grid[ni % x, nj % y, nk % z] = updated_cell
+            # else:
+            # new_grid[ni, nj, nk] = self.resolve_collision(new_grid[ni, nj, nk], updated_cell)
+
+        # Step 4: Replace the grid and recalculate global attributes
         self.grid = new_grid
         self._recalculate_global_attributes()
-
 
     def move_cells_on_grid(self):
         """
         Move cells in the grid based on their direction property.
-        This modifies the grid in place.
+        This modifies the grid in place, ensuring all cells, including air, are moved.
         """
         x, y, z = self.grid_size
         new_grid = np.empty((x, y, z), dtype=object)
@@ -130,41 +169,50 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = Cell(cell_type=6)  # Default to Air
+                    new_grid[i, j, k] = self.grid[i, j, k].clone()
 
-        elevation_limit = z * 0.8  # Define the sky layer threshold for cloud formation
+        # Track original and new positions
+        position_map = {}
 
+        # Step 1: Compute new positions for each cell
         for i in range(x):
             for j in range(y):
                 for k in range(z):
+                    # Use the original grid here
                     current_cell = self.grid[i, j, k]
-                    if current_cell is None:
-                        continue
 
-                    # Let the cell handle elevation logic
-                    current_cell.elevate_and_update(elevation_limit)
+                    if current_cell:
+                        # Determine the new position based on the cell's direction
+                        new_position = current_cell.move(
+                            (i, j, k), self.grid_size)
+                        ni, nj, nk = new_position
 
-                    # Determine the new position for movement
-                    new_position = current_cell.move((i, j, k), self.grid_size)
-                    ni, nj, nk = new_position
+                        # Map the original and new positions
+                        if new_position in position_map:
+                            # Resolve collision by prioritizing non-air cells
+                            position_map[new_position] = self.resolve_collision(
+                                position_map[new_position], current_cell)
+                        else:
+                            position_map[new_position] = current_cell
 
-                    # Resolve potential collisions in the new grid
-                    new_grid[ni, nj, nk] = self.resolve_collision(new_grid[ni, nj, nk], current_cell)
+        # Step 2: Update the new grid with computed positions
+        for (ni, nj, nk), cell in position_map.items():
+            new_grid[ni % x, nj % y, nk % z] = cell
 
+        # Step 3: Replace the grid with the updated one
         self.grid = new_grid
+        self._recalculate_global_attributes()
 
     def resolve_collision(self, existing_cell, incoming_cell):
         """
         Resolve collision when two cells occupy the same position.
-        Currently, prioritizes the incoming cell if the existing cell is Air.
+        Prefer non-air cells, or prioritize based on specific rules.
         """
         if existing_cell.cell_type == 6:  # If the existing cell is Air
-            return incoming_cell  # Replace Air with the incoming cell
-        if existing_cell.cell_type == 0 and incoming_cell.cell_type == 2:
-            # Clouds replace Sea in elevated positions
             return incoming_cell
-        return existing_cell  # Default: keep the original cell
-
+        if incoming_cell.cell_type == 6:  # If the incoming cell is Air
+            return existing_cell
+        return existing_cell  # Default: Keep the original cell
 
     def get_neighbors(self, i, j, k):
         """
@@ -213,4 +261,5 @@ class State:
         self.total_cities = total_cities
         self.total_forests = total_forests
 
-        logging.debug(f"Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={self.avg_pollution}, Avg Water Mass={self.avg_water_mass}")
+        logging.debug(f"Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={
+                      self.avg_pollution}, Avg Water Mass={self.avg_water_mass}")
