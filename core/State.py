@@ -5,7 +5,7 @@ import random
 
 
 class State:
-    def __init__(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities_ratio, initial_forests_ratio, prev_state_index=-1):
+    def __init__(self, grid_size, initial_temperature, initial_pollution, initial_sea_mass, initial_cities_ratio, initial_forests_ratio, prev_state_index=-1):
         """
         Initialize the State class.
         """
@@ -14,7 +14,7 @@ class State:
         self.prev_state_index = prev_state_index
         self.avg_temperature = initial_temperature
         self.avg_pollution = initial_pollution
-        self.avg_water_mass = initial_water_mass
+        self.avg_sea_mass = initial_sea_mass
         self.total_cities = initial_cities_ratio
         self.total_forests = initial_forests_ratio
 
@@ -26,7 +26,7 @@ class State:
             grid_size=self.grid_size,
             initial_temperature=self.avg_temperature,
             initial_pollution=self.avg_pollution,
-            initial_water_mass=self.avg_water_mass,
+            initial_sea_mass=self.avg_sea_mass,
             initial_cities_ratio=self.total_cities,
             initial_forests_ratio=self.total_forests,
             prev_state_index=self.prev_state_index,
@@ -40,13 +40,13 @@ class State:
 
         return cloned_state
 
-    def initialize_grid(self, initial_temperature, initial_pollution, initial_water_mass, initial_cities_ratio, initial_forests_ratio):
+    def initialize_grid(self, initial_temperature, initial_pollution, initial_sea_mass, initial_cities_ratio, initial_forests_ratio):
         """
-        Initialize the grid with cells to create isdeserts surrounded by the water.
+        Initialize the grid with cells to create isdeserts surrounded by the sea.
         """
         x, y, z = self.grid_size
         elevation_map = self._generate_elevation_map()
-        water_level = z // 8  # Define water level
+        water_level = z // 8  # Define sea level
         desert_prob = 1 - (initial_cities_ratio+initial_forests_ratio)
 
         for i in range(x):
@@ -56,10 +56,10 @@ class State:
 
                     if k < elevation_map[i, j]:
                         cell_type = 0
-                        # cell_type = np.random.choice([0, 3], p=[0.8, 0.2])  # water or Ice
+                        # cell_type = np.random.choice([0, 3], p=[0.8, 0.2])  # sea or Ice
                     elif k == elevation_map[i, j]:
                         cell_type = np.random.choice(
-                            [0, 3], p=[0.8, 0.2])  # water or Ice
+                            [0, 3], p=[0.8, 0.2])  # sea or Ice
 
                     elif k == elevation_map[i, j] + 1:
                         cell_type = np.random.choice([0, 1, 4, 5], p=[
@@ -85,9 +85,9 @@ class State:
 
                     if cell_type == 3:
                         temperature = np.random.uniform(-50, -1)
-                        water_mass = initial_water_mass * 2
+                        water_mass = initial_sea_mass * 2
                     elif cell_type == 0:
-                        water_mass = initial_water_mass
+                        water_mass = initial_sea_mass
 
 
                     self.grid[i, j, k] = Cell(
@@ -227,7 +227,7 @@ class State:
         """
         total_temperature = 0
         total_pollution = 0
-        total_water_mass = 0
+        total_sea_mass = 0
         total_cities = 0
         total_forests = 0
         total_cells = 0
@@ -239,7 +239,7 @@ class State:
                     if cell and cell.cell_type != 6:  # Exclude air cells
                         total_temperature += cell.temperature
                         total_pollution += cell.pollution_level
-                        total_water_mass += cell.water_mass
+                        total_sea_mass += cell.water_mass
                         if cell.cell_type == 5:  # City
                             total_cities += 1
                         elif cell.cell_type == 4:  # Forest
@@ -248,9 +248,9 @@ class State:
 
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
         self.avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
-        self.avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
+        self.avg_sea_mass = total_sea_mass / total_cells if total_cells > 0 else 0
         self.total_cities = total_cities
         self.total_forests = total_forests
 
         logging.debug(f"Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={
-                      self.avg_pollution}, Avg Water Mass={self.avg_water_mass}")
+                      self.avg_pollution}, Avg Water Mass={self.avg_sea_mass}")

@@ -29,8 +29,8 @@ initial_pollution = float(
     input("Initial pollution level (e.g., 10.0) (default: 0.0): ") or 0.0)
 initial_temperature = float(
     input("Initial temperature (e.g., 15.0) (default: 25.0): ") or 25.0)
-initial_water_mass = float(
-    input("Initial water level (e.g., 1.0) (default: 1.0): ") or 1.0)
+initial_sea_mass = float(
+    input("Initial sea level (e.g., 1.0) (default: 1.0): ") or 1.0)
 initial_cities_ratio = float(input("Initial city:land ratio (e.g., 50% = 0.5) (default: 0.3): ") or 0.3) 
 initial_forests_ratio = float(input("Initial forests:land ratio (e.g., 50% = 0.5) (default: 0.3): ") or 0.3) 
 
@@ -39,7 +39,7 @@ initial_forests_ratio = float(input("Initial forests:land ratio (e.g., 50% = 0.5
 simulation = Simulation(
     initial_pollution=initial_pollution,
     initial_temperature=initial_temperature,
-    initial_water_mass=initial_water_mass,
+    initial_sea_mass=initial_sea_mass,
     initial_cities_ratio=initial_cities_ratio,
     initial_forests_ratio=initial_forests_ratio,
     grid_size=grid_size,

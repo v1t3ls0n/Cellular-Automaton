@@ -15,7 +15,7 @@ class MatplotlibDisplay:
         self.ax_temperature = None
         self.ax_population = None
         self.ax_forests = None
-        self.ax_water_mass = None
+        self.ax_sea_mass = None
         self.ax_ice_coverage = None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
         self.current_elev = 20  # Default elevation
@@ -32,7 +32,7 @@ class MatplotlibDisplay:
         self.ax_temperature = self.fig.add_subplot(233)  # Temperature graph
         self.ax_population = self.fig.add_subplot(234)  # Population graph
         self.ax_forests = self.fig.add_subplot(235)  # Forest graph
-        self.ax_water_mass = self.fig.add_subplot(236)  # Water Mass graph
+        self.ax_sea_mass = self.fig.add_subplot(236)  # Water Mass graph
 
         # Precompute 3D visualizations
         self.precompute_visualizations()
@@ -42,7 +42,7 @@ class MatplotlibDisplay:
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
-        self.render_water_mass_graph()
+        self.render_sea_mass_graph()
 
         # Add keyboard navigation
         self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
@@ -183,34 +183,36 @@ class MatplotlibDisplay:
         else:
             logging.error("Data length mismatch in pollution graph.")
 
-    def render_water_mass_graph(self):
-        """Render the water mass graph over time."""
-        self.ax_water_mass.cla()
-        self.ax_water_mass.set_title("Water Mass Over Time")
-        self.ax_water_mass.set_xlabel("Day")
-        self.ax_water_mass.set_ylabel("Average Water Mass")
+    def render_sea_mass_graph(self):
+        """Render the sea mass graph over time."""
+        self.ax_sea_mass.cla()
+        self.ax_sea_mass.set_title("Water Mass Over Time")
+        self.ax_sea_mass.set_xlabel("Day")
+        self.ax_sea_mass.set_ylabel("Average Water Mass")
 
         days = range(len(self.simulation.water_mass_over_time))
-        avg_water_mass = self.simulation.water_mass_over_time
+        avg_sea_mass = self.simulation.water_mass_over_time
 
-        if len(days) == len(avg_water_mass):
-            self.ax_water_mass.plot(days, avg_water_mass, color="cyan", label="Water Mass")
-            self.ax_water_mass.legend()
+        if len(days) == len(avg_sea_mass):
+            self.ax_sea_mass.plot(days, avg_sea_mass, color="cyan", label="Water Mass")
+            self.ax_sea_mass.legend()
         else:
-            logging.error("Data length mismatch in water mass graph.")
+            logging.error("Data length mismatch in sea mass graph.")
 
     def add_legend(self):
         """Add a legend explaining the cell colors."""
         legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', label='water', markersize=10, markerfacecolor='blue'),
-            plt.Line2D([0], [0], marker='o', color='w', label='desert', markersize=10, markerfacecolor='yellow'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
+            plt.Line2D([0], [0], marker='o', color='w', label='sea', markersize=10, markerfacecolor='blue'),
             plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='lightcyan'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Rain', markersize=10, markerfacecolor=(0.2, 0.3, 0.5, 1.0)),  
+            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
+            plt.Line2D([0], [0], marker='o', color='w', label='desert', markersize=10, markerfacecolor='yellow'),
             plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor='green'),
             plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor='purple'),
             plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor='ghostwhite'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Black-Tinted Color', markersize=10, markerfacecolor='black')
+            plt.Line2D([0], [0], marker='o', color='w', label='Black-Tinted Color', markersize=10, markerfacecolor='black'),
         ]
+
         self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))
 
     def handle_key_press(self, event):
