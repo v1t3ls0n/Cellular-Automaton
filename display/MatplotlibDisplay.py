@@ -3,6 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
 import numpy as np
 import logging
+from core.Cell import base_colors
 
 class MatplotlibDisplay:
     def __init__(self, simulation):
@@ -184,15 +185,15 @@ class MatplotlibDisplay:
     def add_legend(self):
         """Add a legend explaining the cell colors."""
         legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', label='water', markersize=10, markerfacecolor='blue'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor='lightcyan'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Rain', markersize=10, markerfacecolor=(0.2, 0.3, 0.5, 1.0)),  
-            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor='gray'),
-            plt.Line2D([0], [0], marker='o', color='w', label='desert', markersize=10, markerfacecolor='yellow'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor='green'),
-            plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor='purple'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor='ghostwhite'),
-            plt.Line2D([0], [0], marker='o', color='w', label='Black-Tinted Color', markersize=10, markerfacecolor='black'),
+            plt.Line2D([0], [0], marker='o', color='w', label='Ocean', markersize=10, markerfacecolor=base_colors[0]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor=base_colors[3]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Rain', markersize=10, markerfacecolor=base_colors[7]),  
+            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor=base_colors[2]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Desert', markersize=10, markerfacecolor=base_colors[1]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor=base_colors[4]),
+            plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor=base_colors[5]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor=base_colors[6]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Black-Tinted Color', markersize=10, markerfacecolor=(0,0,0,0.1)),
         ]
 
         self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))

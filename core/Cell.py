@@ -4,6 +4,16 @@ import logging
 # (0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air  | 7: Rain)
 baseline_temperature = [15, 25, 5, -10, 20, 30, 10, 12]
 
+base_colors = {
+            6: (1.0, 1.0, 1.0, 0.01), # Air (transparent white)
+            2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
+            0: (0.4, 0.8, 1.0, 1.0),  # Ocean (blue)
+            3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
+            7: (0.4, 0.8, 1.0, 0.1),  # Rain (light ctan)
+            1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
+            4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
+            5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
+            }
 
 freezing_point = -10  # Temperature that cause ocean freeze and convert into ice
 melting_point = 35  # Temperature threshold for melting ice
@@ -345,22 +355,11 @@ class Cell:
 
     def get_color(self):
         """Get the color of the cell."""
-        base_colors = {
-            6: (1.0, 1.0, 1.0, 0.01),  # Air (transparent white)
-            2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
-            0: (0.0, 0.0, 1.0, 1.0),  # Ocean (blue)
-            3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
-            7: (0.2, 0.3, 0.5, 1.0),  # Rain (gray blue)
-            1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
-            4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
-            5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
-        }
-
         # Get the base color for the cell type or default to transparent white
         base_color = base_colors.get(self.cell_type)
         # Ensure the base_color has exactly 4 components (RGBA)
 
-        # return base_color
+        return base_color
 
         if len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type {
