@@ -395,7 +395,7 @@ class Cell:
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
             0: (0.0, 0.0, 1.0, 1.0),  # Water (blue)
             3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
-            7: (0.0, 0.0, 1.0, 1.0),  # Rain (Dark Blue-Grey)
+            7: (1.0, 0.0, 0.0, 1.0),  # Rain (Red)
             1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
             4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
             5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
@@ -404,7 +404,7 @@ class Cell:
         # Get the base color for the cell type or default to transparent white
         base_color = base_colors.get(self.cell_type)
         # Ensure the base_color has exactly 4 components (RGBA)
-        
+        return base_color
         if len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type {
                           self.cell_type}: {base_color}")
