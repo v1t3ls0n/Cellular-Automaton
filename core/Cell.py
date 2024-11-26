@@ -300,7 +300,10 @@ class Cell:
     def elevate_air(self, neighbors):
         if self.temperature > evaporation_point:
             self.elevate_to_clouds_height(neighbors)
-        elif self.temperature <
+        else:
+            dx, dy, _ = self.direction
+            dz = np.random.choice([1,-1,0])
+            self.direction = (dx,dy,dz)
 
 
 
