@@ -238,8 +238,8 @@ class Cell:
         self.equilibrate_pollution_level(neighbors)
 
     def _update_rain(self, neighbors):
-        self.equilibrate_temperature(neighbors)
-        self.equilibrate_pollution_level(neighbors)
+        # self.equilibrate_temperature(neighbors)
+        # self.equilibrate_pollution_level(neighbors)
         if self.is_below_sea_level(neighbors):
             self.convert_to_ocean(neighbors)
 
