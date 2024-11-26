@@ -7,7 +7,7 @@ baseline_temperature = [15, 25, 5, -10, 20, 30, 10, 12]
 base_colors = {
             6: (1.0, 1.0, 1.0, 0.01), # Air (transparent white)
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
-            0: (0.4, 0.8, 1.0, 1.0),  # Ocean (blue)
+            0: (0.0, 0.0, 1.0, 1.0),  # Ocean (blue)
             3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
             7: (0.4, 0.8, 1.0, 0.1),  # Rain (light ctan)
             1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)

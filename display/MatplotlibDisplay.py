@@ -193,7 +193,7 @@ class MatplotlibDisplay:
             plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor=base_colors[4]),
             plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor=base_colors[5]),
             plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor=base_colors[6]),
-            plt.Line2D([0], [0], marker='o', color='w', label='Black-Tinted Color', markersize=10, markerfacecolor=(0,0,0,0.1)),
+            plt.Line2D([0], [0], marker='o', color='w', label='Black-Tinted Color', markersize=10, markerfacecolor=(0,0,0,0.9)),
         ]
 
         self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))
