@@ -83,12 +83,6 @@ class State:
                     if cell_type in {6, 2}:
                         pollution_level = initial_pollution + np.random.uniform(-2, 2)
 
-                    if cell_type == 3:
-                        temperature = np.random.uniform(-50, -1)
-                        water_mass = initial_water_mass * 2
-                    elif cell_type == 0:
-                        water_mass = initial_water_mass
-
 
                     self.grid[i, j, k] = Cell(
                         cell_type, temperature, water_mass, pollution_level, (dx, dy, dz), elevation)

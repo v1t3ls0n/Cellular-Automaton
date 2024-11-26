@@ -26,9 +26,9 @@ grid_size = (10, 10, 10)
 days = int(
     input("Number Of Days To Track (e.g., 365 = year) (default: 50): ") or 50)
 initial_pollution = float(
-    input("Initial pollution level (e.g., 10.0) (default: 0.0): ") or 0.0)
+    input("Initial pollution level (e.g., 10.0) (default: 0.0): ") or 15.0)
 initial_temperature = float(
-    input("Initial temperature (e.g., 15.0) (default: 25.0): ") or 25.0)
+    input("Initial temperature (e.g., 15.0) (default: 25.0): ") or 15.0)
 initial_water_mass = float(
     input("Initial water level (e.g., 1.0) (default: 1.0): ") or 1.0)
 initial_cities_ratio = float(input("Initial city:land ratio (e.g., 50% = 0.5) (default: 0.3): ") or 0.3) 
