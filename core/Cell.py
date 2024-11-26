@@ -150,9 +150,8 @@ class Cell:
         return non_air_nor_rain_cells_count == 0
 
     def is_at_sea_level(self, neighbors):
-        sea_cells = [
-            neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
-        return sum(1 for cell in sea_cells if self.elevation >= cell.elevation) == len(sea_cells)
+        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
+        return sum(1 for cell in sea_cells if self.elevation <= cell.elevation) == len(sea_cells)
 
     def is_above_ground_level(self, neighbors):
         ground_cells = [
@@ -227,19 +226,25 @@ class Cell:
         self.equilibrate_pollution_level(neighbors)
 
     def _update_ocean(self, neighbors):
-        if self.temperature <= freezing_point:
-            if self.is_below_sea_level(neighbors):
-                self.convert_to_ice(neighbors)
-            else:
-                self.sink_to_ocean(neighbors)
+        if not self.is_at_sea_level(neighbors):
+            self.convert_to_air(neighbors)
+        else:
+            if self.temperature <= freezing_point:
+                if self.is_below_sea_level(neighbors):
+                    self.convert_to_ice(neighbors)
+                else:
+                    self.sink_to_ocean(neighbors)
 
-        elif self.temperature >= evaporation_point:
-            if self.is_at_sea_level(neighbors):
-                self.convert_to_air(neighbors)
-            else:
-                self.elevate_to_sea_surface(neighbors)
+            elif self.temperature >= evaporation_point:
+                if self.is_at_sea_level(neighbors):
+                    self.convert_to_air(neighbors)
+                else:
+                    self.elevate_to_sea_surface(neighbors)
+
         self.equilibrate_temperature(neighbors)
         self.equilibrate_pollution_level(neighbors)
+
+
 
     def _update_air(self, neighbors):
 
