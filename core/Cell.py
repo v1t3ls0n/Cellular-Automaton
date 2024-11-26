@@ -354,8 +354,11 @@ class Cell:
 
         if new_z <= 0:
             new_z = 0
+            self.direction = (dx,dy,0)
         elif new_z >= grid_size[2] - 1:
             new_z = grid_size[2] - 1
+            self.direction = (dx,dy,0)
+
 
         self.elevation = new_z
 
