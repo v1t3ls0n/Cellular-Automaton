@@ -85,23 +85,6 @@ class Cell:
                                  self.temperature) * temperature_decay_rate
 
 
-    def adjust_temperature_with_pollution(self):
-
-        pollution_effect = self.pollution_level * 0.1  # Increased scaling factor
-        max_effect = 50  # Higher maximum effect to reflect significant pollution impact
-        self.temperature += min(pollution_effect, max_effect)
-
-        # Stronger effect for very high pollution levels
-        if self.pollution_level > 50:
-            extra_effect = self.pollution_level  *  0.2  # Additional temperature increase
-            # Limit extra effect to 10 degrees
-            self.temperature += min(extra_effect, 3)
-
-        # Apply natural cooling if pollution is very low
-        if self.pollution_level < 10:
-            self.temperature = max(0, self.temperature - 1)
-
-
 ####################################################################################################################
 ######################################  CELL's NEIGHBORS EFFECTS: ##################################################
 ####################################################################################################################
@@ -257,15 +240,8 @@ class Cell:
 ###################################### CELL_TYPE CONVERSIONS ##########################################################
 ####################################################################################################################
     def sink_to_ocean(self,neighbors):
-        if self.cell_type == 1:
-            self.direction = (0, 0, -1)
-        elif self.cell_type in {4,5}:
-            self.convert_to_desert(neighbors)
-            self.direction = (0, 0, -1)
-        elif self.cell_type == 6:
-            self.convert_to_water(neighbors)
-            self.temperature = evaporation_point
-        elif self.temperature <= freezing_point:
+
+        if self.temperature <= freezing_point:
             self.convert_to_ice(neighbors)
         else:
             self.convert_to_water(neighbors)
@@ -286,28 +262,28 @@ class Cell:
     def convert_to_water(self,neighbors):
         self.cell_type = 0
         self.water_mass = 1.0
-        self.direction[2] = np.random.choice([0,-1])
-
-
+        dx,dy, _ = self.direction
+        self.direction = (dx,dy,-1)
     def convert_to_ice(self,neighbors):
         self.cell_type = 3
         self.water_mass = 1.0
-        self.direction = (0,0, -1)
+        dx,dy, _ = self.direction
+        self.direction = (dx,dy,-1)
+    def convert_to_rain(self,neighbors):
+        self.cell_type = 7
+        dx,dy, _ = self.direction
+        self.direction = (dx,dy,-1)
 
 
     def convert_to_air(self,neighbors):
         self.cell_type = 6
-        self.direction[2] = 1 if self.temperature > baseline_temperature else np.random.choice([0,1])
-    
-    def convert_to_rain(self,neighbors):
-        self.cell_type = 7
-        self.direction[2] = -1
+        dx,dy, _ = self.direction
+        self.direction = (dx,dy,1)
 
-
-    
     def convert_to_cloud(self,neighbors):
         self.cell_type = 2
-        self.direction[2] = 1 if self.temperature > baseline_temperature else np.random.choice([0,1])
+        dx,dy, _ = self.direction
+        self.direction = (dx,dy,1)
 
 
 
@@ -325,17 +301,17 @@ class Cell:
         x, y, z = current_position
         dx, dy, dz = self.direction
 
-        if z + dz <= 0:
-            dz = 0
-        elif z + dz >= grid_size[2] - 1:
-            dz = 0
-
-
         new_x = (x + dx) % grid_size[0]
         new_y = (y + dy) % grid_size[1]
-        new_z = (z + dz) % grid_size[2]
+        new_z = (z + dz) 
+
+        if new_z <= 0:
+            new_z = 0
+        elif new_z >= grid_size[2] - 1:
+            new_z = grid_size[2] - 1
 
         self.elevation = new_z
+
         return new_x, new_y, new_z
 
     def get_color(self):
