@@ -58,7 +58,7 @@ class State:
                     elif k < elevation_map[i, j] + 1:
                         cell_type = np.random.choice([0,1,3], p=[0.3,0.6, 0.1])  # water or Ice
                     elif  k == elevation_map[i, j] + 1:
-                        cell_type = np.random.choice([1, 4, 5], p=[desert_prob, initial_forests_ratio, initial_cities_ratio])
+                        cell_type = np.random.choice([6, 4, 5], p=[desert_prob, initial_forests_ratio, initial_cities_ratio])
                     elif k > (z - 2):
                         cell_type = np.random.choice(
                             [6, 2], p=[0.8, 0.2])  # Air or Cloud
