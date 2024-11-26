@@ -370,7 +370,7 @@ class Cell:
     def get_color(self):
         """Get the color of the cell."""
         base_colors = {
-            6: (1.0, 1.0, 1.0, 0.1), # Air (transparent white)
+            6: (1.0, 1.0, 1.0, 0.01), # Air (transparent white)
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
             0: (0.0, 0.0, 1.0, 1.0),  # Water (blue)
             3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
@@ -384,7 +384,6 @@ class Cell:
         base_color = base_colors.get(self.cell_type)
         # Ensure the base_color has exactly 4 components (RGBA)
         
-        return base_color
         if len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type {
                           self.cell_type}: {base_color}")
@@ -392,7 +391,7 @@ class Cell:
 
         # Tint based on pollution level
         # Ensure within 0-1 range
-        pollution_intensity = max(0.0, min(self.pollution_level / 100.0, 1.0))
+        pollution_intensity = max(0.0, min(self.pollution_level / 10.0, 0.5))
         black_tinted_color = [
             max(0.0, min(base_color[i] * (1.0 - pollution_intensity), 1.0)) for i in range(3)]
         # Ensure alpha is also within 0-1 range

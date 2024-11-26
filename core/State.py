@@ -46,19 +46,25 @@ class State:
         """
         x, y, z = self.grid_size
         elevation_map = self._generate_elevation_map()
-        desert_prob = 1 - (initial_cities_ratio+initial_forests_ratio)
+        initial_cities_ratio/=3
+        initial_forests_ratio/=3
+        desert_prob = (1/10) * (1 - (initial_cities_ratio+initial_forests_ratio))
+        air_prob = (9/10) * (1 - (initial_cities_ratio+initial_forests_ratio))
 
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     cell_type = 6  # Default to air
 
-                    if  k < elevation_map[i, j] - 1:
-                        cell_type = np.random.choice([0, 3], p=[0.8, 0.2]) 
+                    if k < elevation_map[i, j] - 2:
+                        cell_type = 0
+                    if k < elevation_map[i, j] - 1:
+                        cell_type = np.random.choice([0, 3], p=[0.9,0.1])
                     elif k < elevation_map[i, j]:
-                        cell_type = np.random.choice([0,3,6], p=[0.4,0.1, 0.5])  
-                    elif  k == elevation_map[i, j]:
-                        cell_type = np.random.choice([6, 1,  4, 5], p=[desert_prob/4,desert_prob * 3/4, initial_forests_ratio, initial_cities_ratio])
+                        cell_type = np.random.choice([0, 3], p=[0.8,0.2])
+                    elif k == elevation_map[i, j]:
+                        cell_type = np.random.choice([6, 1,  4, 5], p=[
+                                                     air_prob, desert_prob, initial_forests_ratio, initial_cities_ratio])
                     elif k > (z - 2):
                         cell_type = np.random.choice(
                             [6, 2], p=[0.8, 0.2])  # Air or Cloud
@@ -75,7 +81,7 @@ class State:
                         dz = np.random.choice([0, 1])
                         temperature = initial_temperature + \
                             np.random.uniform(0, 15)
-                    elif cell_type in {5, 6}:
+                    elif cell_type in {6,2}:
                         dz = -1
                         pollution_level = initial_pollution + \
                             np.random.uniform(-2, 2)
