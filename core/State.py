@@ -66,8 +66,10 @@ class State:
                     cell_type = 6  # Default to air
 
                     # Assign cell types based on elevation and probabilities
-                    if k < elevation_map[i, j] - 2:
-                        cell_type = 0  # Sea
+                    if k == 0:
+                        cell_type = 1 # Land
+                    elif k < elevation_map[i, j] - 2:
+                        cell_type = np.random.choice([0, 1], p=[0.9, 0.1]) # Mostly see, some land/sand
                     elif k < elevation_map[i, j] - 1:
                         cell_type = np.random.choice([0, 3], p=[0.9, 0.1])  # Mostly sea, some ice
                     elif k < elevation_map[i, j]:
