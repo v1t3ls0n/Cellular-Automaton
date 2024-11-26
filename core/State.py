@@ -74,7 +74,7 @@ class State:
                         0, 2, 3, 7} else 0
                     temperature = (
                         initial_temperature + np.random.uniform(-2, 2)) if cell_type != 3 else -10
-                    pollution_level = initial_pollution
+                    pollution_level = initial_pollution if cell_type in {1,4,5,6} else 0
                     if cell_type in {2, 6, 4, 5}:
                         dx = np.random.choice([0, 1, -1])
                         dy = np.random.choice([0, 1, -1])

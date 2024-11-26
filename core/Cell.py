@@ -166,13 +166,30 @@ class Cell:
     
     def is_above_ground_level(self, neighbors):
         ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5}]
-        return sum(1 for cell in neighbors if self.elevation > cell.elevation)  > len(ground_cells)
+        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
+        above_count = 0
+        for sea_cell in sea_cells:
+            for ground_cell in ground_cells:
+                if ground_cell.elevation > sea_cell.elevation:
+                    above_count+=1
+        return above_count == len(ground_cell)
     
     def is_below_ground_level(self, neighbors):
+        
         return not self.is_above_ground_level(neighbors)
 
     def is_above_sea_level(self, neighbors):
+        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5}]
         sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
+        above_count = 0
+
+        for sea_cell in sea_cells:
+            for ground_cell in ground_cells:
+                if sea_cell.elevation > ground_cell.elevation:
+                    above_count+=1
+        
+        return above_count == len(sea_cells)
+            
         return sum(1 for cell in neighbors if self.elevation > cell.elevation)  > len(sea_cells)
 
     def is_below_sea_level(self, neighbors):
@@ -218,7 +235,7 @@ class Cell:
         self.pollution_level += max(self.pollution_level * pollution_increase_rate,1)
         self.temperature = self.temperature + max(self.temperature * warming_effect, 0.1)
 
-        if self.is_below_sea_level(neighbors) self.:
+        if self.is_below_sea_level(neighbors):
             self.sink_to_ocean(neighbors)
         elif self.pollution_level > 100 or abs(self.temperature) >= evaporation_point:
             self.convert_to_desert(neighbors)
@@ -378,7 +395,7 @@ class Cell:
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
             0: (0.0, 0.0, 1.0, 1.0),  # Water (blue)
             3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
-            7: (0.0, 0.0, 1.0, 0.1),  # Rain (Dark Blue-Grey)
+            7: (0.0, 0.0, 1.0, 1.0),  # Rain (Dark Blue-Grey)
             1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
             4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
             5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
@@ -395,7 +412,7 @@ class Cell:
 
         # Tint based on pollution level
         # Ensure within 0-1 range
-        pollution_intensity = max(0.0, min(self.pollution_level / 10.0, 0.8))
+        pollution_intensity = max(0.0, min(self.pollution_level / 100.0, 0.8))
         black_tinted_color = [
             max(0.0, min(base_color[i] * (1.0 - pollution_intensity), 1.0)) for i in range(3)]
         # Ensure alpha is also within 0-1 range
