@@ -263,12 +263,12 @@ class Cell:
     def convert_to_water(self,neighbors):
         self.cell_type = 0
         self.water_mass = 1.0
-        self.adjust_air_elevation_by_neighbors(neighbors)
+        # self.adjust_air_elevation_by_neighbors(neighbors)
 
     def convert_to_ice(self,neighbors):
         self.cell_type = 3
         self.water_mass = 1.0
-        self.adjust_air_elevation_by_neighbors(neighbors)
+        # self.adjust_air_elevation_by_neighbors(neighbors)
         
 
     def convert_to_air(self,neighbors):
