@@ -33,13 +33,6 @@ class Cell:
         Compute the next state of the cell based on its neighbors and position.
         """
         
-        # self._apply_natural_decay()
-        # self.increase_cell_temperature_by_neighbors_avg(neighbors)
-        # self.increase_cell_pollution_by_neighbors_avg(neighbors)
-        # self.adjust_temperature_with_pollution()
-
-        # Call the appropriate update method based on cell type
-        # if self.pollution_level == 0:
         self._apply_natural_decay()
 
         if self.cell_type == 0:  # Water
@@ -113,6 +106,8 @@ class Cell:
 ######################################  CELL's NEIGHBORS EFFECTS: ##################################################
 ####################################################################################################################
 
+############################## Calc Neighbors Attributes's Average ######################################################
+
     def calc_neighbors_avg_temperature(self, neighbors):
         return (sum(neighbor.temperature for neighbor in neighbors)) / len(neighbors)
 
@@ -122,35 +117,7 @@ class Cell:
     def calc_neighbors_avg_water_mass(self, neighbors):
         return (sum(neighbor.water_mass for neighbor in neighbors)) / len(neighbors)
     
-    def increase_cell_temperature_by_neighbors_avg(self, neighbors):
-        nei_avg_temp = self.calc_neighbors_avg_temperature(neighbors)
-        if nei_avg_temp > self.temperature:
-            self.temperature+= (nei_avg_temp-self.temperature)
 
-    def increase_cell_pollution_by_neighbors_avg(self, neighbors):
-        nei_avg_pollution = self.calc_neighbors_avg_pollution(neighbors)
-        if  nei_avg_pollution > self.pollution_level:
-           self.pollution_level+= (nei_avg_pollution - self.pollution_level) 
-
-
-    
-    def increase_water_mass_by_neighbors_avg(self, neighbors):
-        nei_avg_water_mass= self.calc_neighbors_avg_water_mass(neighbors)
-        if nei_avg_water_mass > self.water_mass:
-            self.water_mass += (nei_avg_water_mass - self.water_mass)
-
-
-
-    def adjust_air_elevation_by_neighbors(self, neighbors):
-        neighbors_avg_temp = self.calc_neighbors_avg_temperature(neighbors)
-
-        if self.temperature > neighbors_avg_temp:
-            self.direction = (self.direction[0], self.direction[1], 1)
-        elif self.temperature <  neighbors_avg_temp:
-            self.direction = (self.direction[0], self.direction[1], -1)
-        else:
-            self.direction = (self.direction[0], self.direction[1], 0)
-    
     ############################## Surrounded By ######################################################
 
     def is_surrounded_by_sky_cells(self, neighbors):
@@ -266,7 +233,7 @@ class Cell:
                 self.sink_to_ocean(neighbors)
 
         # else:
-        #     self.adjust_air_elevation_by_neighbors(neighbors)
+        #     (neighbors)
         
                   
     def _update_rain(self, neighbors):
@@ -278,7 +245,7 @@ class Cell:
         for neighbor in neighbors:
             self.temperature += (neighbor.temperature -self.temperature) 
 
-        # self.adjust_air_elevation_by_neighbors(neighbors)
+        # (neighbors)
         if self.water_mass == 1.0 and self.is_surrounded_by_sky_cells(neighbors):
             self.convert_to_rain(neighbors)
         
@@ -303,21 +270,23 @@ class Cell:
         else:
             self.convert_to_water(neighbors)
 
+    def convert_to_forest(self,neighbors):
+        self.cell_type = 4
+        self.direction = (0, 0, 0)
+        self.temperature = baseline_temperature
     def convert_to_city(self,neighbors):
         self.cell_type = 5
-        self.water_mass = 0
         self.direction = (0, 0, 0)
-
     def convert_to_desert(self,neighbors):
         self.cell_type = 1
         self.water_mass = 0
-        # self.temperature -= self.temperature * 0.2
+        self.temperature -= self.temperature * 0.2
         self.direction = (0, 0, 0)
 
     def convert_to_water(self,neighbors):
         self.cell_type = 0
         self.water_mass = 1.0
-        self.direction = (self.direction[0], self.direction[1], -1)
+        self.direction[2] = np.random.choice([0,-1])
 
 
     def convert_to_ice(self,neighbors):
@@ -325,31 +294,22 @@ class Cell:
         self.water_mass = 1.0
         self.direction = (0,0, -1)
 
-        
 
     def convert_to_air(self,neighbors):
         self.cell_type = 6
-        self.direction = (self.direction[0], self.direction[1], 1)
-
-        # self.adjust_air_elevation_by_neighbors(neighbors)
+        self.direction[2] = 1 if self.temperature > baseline_temperature else np.random.choice([0,1])
     
     def convert_to_rain(self,neighbors):
         self.cell_type = 7
-        self.water_mass = 1.0
-        self.direction = (0,0, -1)
+        self.direction[2] = -1
 
-    def convert_to_forest(self,neighbors):
-        self.cell_type = 4
-        self.direction = (0, 0, 0)
-        # self.temperature = baseline_temperature
-        # self.pollution_level = 0
-        self.water_mass = 0
+
     
     def convert_to_cloud(self,neighbors):
         self.cell_type = 2
-        self.direction = (self.direction[0], self.direction[1], np.random.choise([0,1]))
+        self.direction[2] = 1 if self.temperature > baseline_temperature else np.random.choice([0,1])
 
-        # self.adjust_air_elevation_by_neighbors(neighbors)
+
 
 
 
@@ -365,9 +325,9 @@ class Cell:
         x, y, z = current_position
         dx, dy, dz = self.direction
 
-        if z <= 0:
+        if z + dz <= 0:
             dz = 0
-        elif z >= grid_size[2]-1:
+        elif z + dz >= grid_size[2] - 1:
             dz = 0
 
 
@@ -385,7 +345,7 @@ class Cell:
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
             0: (0.0, 0.0, 1.0, 1.0),  # Water (blue)
             3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
-            7: (1.0, 0.0, 0.0, 1.0),  # Rain (Red)
+            7: (0.2, 0.3, 0.5, 1.0),  # Rain (gray blue)
             1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
             4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
             5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
@@ -394,7 +354,9 @@ class Cell:
         # Get the base color for the cell type or default to transparent white
         base_color = base_colors.get(self.cell_type)
         # Ensure the base_color has exactly 4 components (RGBA)
+
         return base_color
+    
         if len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type {
                           self.cell_type}: {base_color}")
