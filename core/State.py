@@ -74,8 +74,8 @@ class State:
                         0, 2, 3, 7} else 0
                     temperature = (
                         initial_temperature + np.random.uniform(-2, 2)) if cell_type != 3 else -10
-                    pollution_level = 0
-                    if cell_type in {2, 6}:
+                    pollution_level = initial_pollution
+                    if cell_type in {2, 6, 4, 5}:
                         dx = np.random.choice([0, 1, -1])
                         dy = np.random.choice([0, 1, -1])
                         dz = np.random.choice([0, 1])
@@ -83,8 +83,6 @@ class State:
                             np.random.uniform(0, 15)
                     elif cell_type in {6,2}:
                         dz = -1
-                        pollution_level = initial_pollution + \
-                            np.random.uniform(-2, 2)
 
                     self.grid[i, j, k] = Cell(
                         cell_type, temperature, water_mass, pollution_level, (dx, dy, dz), elevation_map[i, j])

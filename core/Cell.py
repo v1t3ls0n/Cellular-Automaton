@@ -208,10 +208,10 @@ class Cell:
             self.convert_to_forest(neighbors)
 
     def _update_city(self, neighbors):
-        pollution_increase_rate = 0.5
-        warming_effect = 0.5
+        pollution_increase_rate = 0.4
+        warming_effect = 0.4
         
-        self.pollution_level = max(0, self.pollution_level + max(pollution_increase_rate * self.pollution_level, 1.0))
+        self.pollution_level = max(0, self.pollution_level + max(pollution_increase_rate * self.pollution_level, 5.0))
         self.temperature = self.temperature + max(self.temperature * warming_effect, 0.1)
 
         if self.is_below_sea_level(neighbors):
@@ -391,7 +391,7 @@ class Cell:
 
         # Tint based on pollution level
         # Ensure within 0-1 range
-        pollution_intensity = max(0.0, min(self.pollution_level / 10.0, 0.5))
+        pollution_intensity = max(0.0, min(self.pollution_level / 10.0, 0.8))
         black_tinted_color = [
             max(0.0, min(base_color[i] * (1.0 - pollution_intensity), 1.0)) for i in range(3)]
         # Ensure alpha is also within 0-1 range
