@@ -150,7 +150,8 @@ class Cell:
             self.direction = (self.direction[0], self.direction[1], -1)
         else:
             self.direction = (self.direction[0], self.direction[1], 0)
-
+    
+    ############################## Surrounded By ######################################################
 
     def is_surrounded_by_sky_cells(self, neighbors):
         sky_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {2,6,7}]
@@ -160,41 +161,30 @@ class Cell:
         sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
         return len(neighbors) == len(sea_cells)
 
-    def is_at_ground_level(self, neighbors):
+    def is_surrounded_by_ground(self, neighbors):
         ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5,6}]
         return len(neighbors) == len(ground_cells)
     
+    ############################## Above level ######################################################
+
     def is_above_ground_level(self, neighbors):
         ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5}]
-        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
-        above_count = 0
-        for sea_cell in sea_cells:
-            for ground_cell in ground_cells:
-                if ground_cell.elevation > sea_cell.elevation:
-                    above_count+=1
-        return above_count == len(ground_cell)
-    
-    def is_below_ground_level(self, neighbors):
-        
-        return not self.is_above_ground_level(neighbors)
+        return sum(1 for cell in ground_cells if self.elevation > cell.elevation)  == len(ground_cells)
 
     def is_above_sea_level(self, neighbors):
-        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5}]
         sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
-        above_count = 0
+        return sum(1 for cell in sea_cells if self.elevation > cell.elevation)  == len(sea_cells)
 
-        for sea_cell in sea_cells:
-            for ground_cell in ground_cells:
-                if sea_cell.elevation > ground_cell.elevation:
-                    above_count+=1
-        
-        return above_count == len(sea_cells)
-            
-        return sum(1 for cell in neighbors if self.elevation > cell.elevation)  > len(sea_cells)
+
+    ############################## Below level ######################################################
 
     def is_below_sea_level(self, neighbors):
-        return not self.is_above_sea_level(neighbors)
+        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
+        return sum(1 for cell in sea_cells if self.elevation < cell.elevation)  == len(sea_cells)
 
+    def is_below_ground_level(self, neighbors):
+        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5}]
+        return sum(1 for cell in ground_cells if self.elevation < cell.elevation)  == len(ground_cells)
 
 
         
