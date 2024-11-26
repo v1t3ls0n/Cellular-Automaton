@@ -9,13 +9,14 @@ rain_threshold = 1.0
 cloud_threshold = 1.0
 
 class Cell:
-    def __init__(self, cell_type=6, temperature=0, water_mass=0, pollution_level=0, direction=(0, 0, 0), elevation=None):
+    def __init__(self, cell_type, temperature, water_mass, pollution_level, direction, elevation):
 
         self.cell_type = cell_type
         self.temperature = temperature
         self.water_mass = water_mass
         self.pollution_level = pollution_level
         self.direction = direction
+        self.elevation = elevation
 
     def clone(self):
         return Cell(
@@ -24,6 +25,7 @@ class Cell:
             water_mass=self.water_mass,
             pollution_level=self.pollution_level,
             direction=self.direction,
+            elevation = self.elevation
         )
 
     def update_state(self, neighbors , current_position, grid_size):
@@ -31,12 +33,13 @@ class Cell:
         Compute the next state of the cell based on its neighbors and position.
         """
         
-        self._apply_natural_decay()
-        self.increase_cell_temperature_by_neighbors_avg(neighbors)
-        self.increase_cell_pollution_by_neighbors_avg(neighbors)
+        # self._apply_natural_decay()
+        # self.increase_cell_temperature_by_neighbors_avg(neighbors)
+        # self.increase_cell_pollution_by_neighbors_avg(neighbors)
         # self.adjust_temperature_with_pollution()
 
         # Call the appropriate update method based on cell type
+        self._apply_natural_decay()
         if self.cell_type == 0:  # Water
             self._update_water(neighbors)
 
@@ -103,20 +106,6 @@ class Cell:
         if self.pollution_level < 10:
             self.temperature = max(0, self.temperature - 1)
 
-    def pollution_absorb(self):
-        if self.cell_type == 4:
-            pollution_absorption_rate = 0.1
-            cooling_effect = 0.1
-            self.pollution_level = max(
-                0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
-            self.temperature = self.temperature - self.temperature * cooling_effect
-    
-    def create_city_pollution(self):
-        if self.cell_type == 5:
-            pollution_increase_rate = 0.5
-            warming_effect = 0.5
-            self.pollution_level =  self.pollution_level + max(pollution_increase_rate * self.pollution_level, 1.0)
-            self.temperature = self.temperature + max(self.temperature * warming_effect, 0.1)
 
 ####################################################################################################################
 ######################################  CELL's NEIGHBORS EFFECTS: ##################################################
@@ -161,12 +150,31 @@ class Cell:
             self.direction = (self.direction[0], self.direction[1], 0)
 
 
-    def is_surrounded_by_clouds(self, neighbors):
-        return sum(1 for neighbor in neighbors if neighbor.cell_type == 2) >= 0.8 * len(neighbors)
+    def is_surrounded_by_sky_cells(self, neighbors):
+        sky_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {2,6,7}]
+        return len(neighbors) == len(sky_cells)
+    
+    def is_surrounded_by_sea_cells(self, neighbors):
+        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
+        return len(neighbors) == len(sea_cells)
 
-    def is_surrounded_by_water_or_ice(self, neighbors):
-        return sum(1 for neighbor in neighbors if neighbor.cell_type in {0, 3}) == len(neighbors)
+    def is_at_ground_level(self, neighbors):
+        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5,6}]
+        return len(neighbors) == len(ground_cells)
+    
+    def is_above_ground_level(self, neighbors):
+        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5}]
+        return sum(1 for cell in ground_cells if self.elevation > cell.elevation)  > len(ground_cells)
+    
+    def is_below_ground_level(self, neighbors):
+        return not self.is_above_ground_level(neighbors)
 
+    def is_above_sea_level(self, neighbors):
+        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
+        return sum(1 for cell in sea_cells if self.elevation > cell.elevation)  > len(sea_cells)
+
+    def is_below_sea_level(self, neighbors):
+        return not self.is_above_sea_level(neighbors)
 
 
 
@@ -178,63 +186,90 @@ class Cell:
 
 
     def _update_forest(self, neighbors):
-        if self.is_surrounded_by_water_or_ice(neighbors):
+        pollution_absorption_rate = 0.5
+        cooling_effect = 0.5
+        self.pollution_level = max(
+                0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
+        self.temperature = self.temperature - self.temperature * cooling_effect
+
+        if self.is_below_sea_level(neighbors):
             self.sink_to_ocean(neighbors)
-            return
-        self.pollution_absorb()
-        if self.temperature >= abs(evaporation_point) or self.pollution_level >= 100:
+    
+        elif self.temperature >= abs(evaporation_point) or self.pollution_level >= 100:
             self.convert_to_desert(neighbors)
 
         elif self.pollution_level == 0 and 0 < self.temperature <= baseline_temperature:
             self.convert_to_city(neighbors)
 
     def _update_desert(self, neighbors):
-        if self.is_surrounded_by_water_or_ice(neighbors):
+        if self.is_below_sea_level(neighbors):
             self.sink_to_ocean(neighbors)
         elif self.pollution_level == 0 and self.temperature <= baseline_temperature:
             self.convert_to_forest(neighbors)
 
     def _update_city(self, neighbors):
-        self.create_city_pollution()
-        if self.is_surrounded_by_water_or_ice(neighbors):
+        pollution_increase_rate = 0.5
+        warming_effect = 0.5
+        
+        self.pollution_level = max(0, self.pollution_level + max(pollution_increase_rate * self.pollution_level, 1.0))
+        self.temperature = self.temperature + max(self.temperature * warming_effect, 0.1)
+
+        if self.is_below_sea_level(neighbors):
             self.sink_to_ocean(neighbors)
         elif self.pollution_level > 100 or abs(self.temperature) >= evaporation_point:
             self.convert_to_desert(neighbors)
 
     def _update_ice(self, neighbors):
+        new_temperature = (self.calc_neighbors_avg_temperature(neighbors) + self.temperature)/2
+        self.temperature = new_temperature
+
+        for neighbor in neighbors:
+            self.temperature += (neighbor.temperature -self.temperature) 
+
         if self.temperature > melting_point:
             self.convert_to_water(neighbors)
 
     def _update_water(self, neighbors):
+        new_temperature = (self.calc_neighbors_avg_temperature(neighbors) + self.temperature)/2
+        self.temperature = new_temperature
+
         if self.temperature <= freezing_point:
             self.convert_to_ice(neighbors)
         elif self.temperature >= evaporation_point:
+            self.temperature -= 0.5 * self.temperature
+            self.water_mass = 1.0
             self.convert_to_air(neighbors)
 
-    def _update_air(self, neighbors):    
-        self.adjust_air_elevation_by_neighbors(neighbors)
-        if self.water_mass >= 1.0 and self.is_surrounded_by_clouds(neighbors):
-            self.convert_to_cloud(neighbors)
+    def _update_air(self, neighbors):   
+        new_temperature = (self.calc_neighbors_avg_temperature(neighbors) + self.temperature)/2
+        new_pollution_level = (self.calc_neighbors_avg_pollution(neighbors) + self.pollution_level)/2
+        self.temperature = new_temperature
+        self.pollution_level = new_pollution_level
+
+        # if self.water_mass == 1.0 and self.is_below_ground_level(neighbors):
+        #     self.sink_to_ocean(neighbors)
+        if self.water_mass > 0: 
+            if self.is_surrounded_by_sky_cells(neighbors):
+                self.convert_to_cloud(neighbors)
+            elif self.is_below_sea_level(neighbors):
+                self.sink_to_ocean(neighbors)
+
+        # else:
+        #     self.adjust_air_elevation_by_neighbors(neighbors)
+        
                   
     def _update_rain(self, neighbors):
-        # for neighbor in neighbors:
-        #     if neighbor.cell_type in {0, 1, 3, 4, 5, 6}:
-        #         self.water_mass += neighbor.water_mass
-
-        # self.water_mass = max(1.0,self.water_mass)
-
-        if self.is_surrounded_by_water_or_ice(neighbors):
+        if self.is_below_ground_level(neighbors):
             self.sink_to_ocean(neighbors)
-        # elif self.water_mass == 0:
-        #     self.convert_to_air(neighbors)
+
 
     def _update_cloud(self, neighbors):
-        # self.adjust_air_elevation_by_neighbors(neighbors)
-        if self.is_surrounded_by_clouds(neighbors):
-            self.convert_to_rain(neighbors)
-        if self.temperature < baseline_temperature:
-            self.convert_to_rain(neighbors)
+        for neighbor in neighbors:
+            self.temperature += (neighbor.temperature -self.temperature) 
 
+        # self.adjust_air_elevation_by_neighbors(neighbors)
+        if self.water_mass == 1.0 and self.is_surrounded_by_sky_cells(neighbors):
+            self.convert_to_rain(neighbors)
         
 
 
@@ -244,7 +279,15 @@ class Cell:
 ###################################### CELL_TYPE CONVERSIONS ##########################################################
 ####################################################################################################################
     def sink_to_ocean(self,neighbors):
-        if self.temperature <= freezing_point:
+        if self.cell_type == 1:
+            self.direction = (0, 0, -1)
+        elif self.cell_type in {4,5}:
+            self.convert_to_desert(neighbors)
+            self.direction = (0, 0, -1)
+        elif self.cell_type == 6:
+            self.convert_to_water(neighbors)
+            self.temperature = evaporation_point
+        elif self.temperature <= freezing_point:
             self.convert_to_ice(neighbors)
         else:
             self.convert_to_water(neighbors)
@@ -257,44 +300,44 @@ class Cell:
     def convert_to_desert(self,neighbors):
         self.cell_type = 1
         self.water_mass = 0
-        self.temperature -= self.temperature * 0.2
+        # self.temperature -= self.temperature * 0.2
         self.direction = (0, 0, 0)
 
     def convert_to_water(self,neighbors):
         self.cell_type = 0
         self.water_mass = 1.0
-        # self.adjust_air_elevation_by_neighbors(neighbors)
+        self.direction = (self.direction[0], self.direction[1], -1)
+
 
     def convert_to_ice(self,neighbors):
         self.cell_type = 3
         self.water_mass = 1.0
-        # self.adjust_air_elevation_by_neighbors(neighbors)
+        self.direction = (0,0, -1)
+
         
 
     def convert_to_air(self,neighbors):
         self.cell_type = 6
         self.direction = (self.direction[0], self.direction[1], 1)
-        # self.water_mass = 0
-        self.temperature = evaporation_point
+
         # self.adjust_air_elevation_by_neighbors(neighbors)
     
     def convert_to_rain(self,neighbors):
         self.cell_type = 7
-        self.direction = (self.direction[0], self.direction[1], -1)
-        # self.adjust_air_elevation_by_neighbors(neighbors)
-
-
+        self.water_mass = 1.0
+        self.direction = (0,0, -1)
 
     def convert_to_forest(self,neighbors):
         self.cell_type = 4
         self.direction = (0, 0, 0)
-        self.temperature = baseline_temperature
-        self.pollution_level = 0
+        # self.temperature = baseline_temperature
+        # self.pollution_level = 0
         self.water_mass = 0
     
     def convert_to_cloud(self,neighbors):
         self.cell_type = 2
-        self.direction = (self.direction[0], self.direction[1], 0)
+        self.direction = (self.direction[0], self.direction[1], np.random.choise([0,1]))
+
         # self.adjust_air_elevation_by_neighbors(neighbors)
 
 
@@ -310,16 +353,18 @@ class Cell:
 
         x, y, z = current_position
         dx, dy, dz = self.direction
-        new_z = z + dz
 
-        if new_z <= 0:
-            new_z = 0
-        elif new_z >= grid_size[2]:
-            new_z = grid_size[2] - 1
+        if z <= 0:
+            dz = 0
+        elif z >= grid_size[2]-1:
+            dz = 0
+
 
         new_x = (x + dx) % grid_size[0]
         new_y = (y + dy) % grid_size[1]
+        new_z = (z + dz) % grid_size[2]
 
+        self.elevation = new_z
         return new_x, new_y, new_z
 
     def get_color(self):
@@ -329,7 +374,7 @@ class Cell:
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
             0: (0.0, 0.0, 1.0, 1.0),  # Water (blue)
             3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
-            7: (0.0, 0.0, 1.0, 1.0),  # Rain (Dark Blue-Grey)
+            7: (0.0, 0.0, 1.0, 0.1),  # Rain (Dark Blue-Grey)
             1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
             4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
             5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
@@ -338,6 +383,8 @@ class Cell:
         # Get the base color for the cell type or default to transparent white
         base_color = base_colors.get(self.cell_type)
         # Ensure the base_color has exactly 4 components (RGBA)
+        
+        
         if len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type {
                           self.cell_type}: {base_color}")

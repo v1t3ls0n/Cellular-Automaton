@@ -28,7 +28,7 @@ days = int(
 initial_pollution = float(
     input("Initial pollution level (e.g., 10.0) (default: 0.0): ") or 30.0)
 initial_temperature = float(
-    input("Initial temperature (e.g., 15.0) (default: 25.0): ") or 25.0)
+    input("Initial temperature (e.g., 15.0) (default: 15.0): ") or 15.0)
 initial_water_mass = float(
     input("Initial water level (e.g., 1.0) (default: 1.0): ") or 1.0)
 initial_cities_ratio = float(input("Initial city:land ratio (e.g., 50% = 0.5) (default: 0.3): ") or 0.5) 

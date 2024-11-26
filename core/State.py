@@ -46,7 +46,6 @@ class State:
         """
         x, y, z = self.grid_size
         elevation_map = self._generate_elevation_map()
-        water_level = z // 8  # Define water level
         desert_prob = 1 - (initial_cities_ratio+initial_forests_ratio)
 
         for i in range(x):
@@ -54,38 +53,37 @@ class State:
                 for k in range(z):
                     cell_type = 6  # Default to air
 
-                    if k < elevation_map[i, j]:
-                        cell_type = 0
-                        # cell_type = np.random.choice([0, 3], p=[0.8, 0.2])  # water or Ice
+                    if  k < elevation_map[i, j]:
+                        cell_type = np.random.choice([0, 3], p=[0.8, 0.2])  # water or Ice
                     elif k == elevation_map[i, j]:
-                        cell_type = np.random.choice(
-                            [0, 3], p=[0.8, 0.2])  # water or Ice
-
-                    elif k == elevation_map[i, j] + 1:
-                        cell_type = np.random.choice([0, 1, 4, 5], p=[
-                                                     desert_prob/2, desert_prob/2, initial_forests_ratio, initial_cities_ratio])
+                        cell_type = np.random.choice([0,1], p=[0.5,0.5])  # water or Ice
+                    elif elevation_map[i, j] < k < elevation_map[i, j] + 1:
+                        cell_type = 1
+                    elif  k == elevation_map[i, j] + 1:
+                        cell_type = np.random.choice([1, 4, 5], p=[desert_prob, initial_forests_ratio, initial_cities_ratio])
                     elif k > (z - 2):
                         cell_type = np.random.choice(
                             [6, 2], p=[0.8, 0.2])  # Air or Cloud
-                    else:
-                        cell_type = 6
 
-                    elevation = elevation_map[i, j]
                     dx, dy, dz = 0, 0, 0
-                    water_mass = 0
-                    temperature = initial_temperature + np.random.uniform(-2, 2)
+                    water_mass = initial_water_mass if cell_type in {
+                        0, 2, 3, 7} else 0
+                    temperature = (
+                        initial_temperature + np.random.uniform(-2, 2)) if cell_type != 3 else -10
                     pollution_level = 0
-                    if cell_type in {0, 2, 3, 6}:
+                    if cell_type in {2, 6}:
                         dx = np.random.choice([0, 1, -1])
                         dy = np.random.choice([0, 1, -1])
-                        dz = np.random.choice([0, 1]) if cell_type in {
-                            6, 2} else 0
-                    if cell_type in {6, 2}:
-                        pollution_level = initial_pollution + np.random.uniform(-2, 2)
-
+                        dz = np.random.choice([0, 1])
+                        temperature = initial_temperature + \
+                            np.random.uniform(0, 15)
+                    elif cell_type in {5, 6}:
+                        dz = -1
+                        pollution_level = initial_pollution + \
+                            np.random.uniform(-2, 2)
 
                     self.grid[i, j, k] = Cell(
-                        cell_type, temperature, water_mass, pollution_level, (dx, dy, dz), elevation)
+                        cell_type, temperature, water_mass, pollution_level, (dx, dy, dz), elevation_map[i, j])
 
         self._recalculate_global_attributes()
         logging.debug(f"Grid initialized successfully with dimensions: {
@@ -121,7 +119,8 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = self.grid[i,j, k].clone()  # Default to Air
+                    new_grid[i, j, k] = self.grid[i,
+                                                  j, k].clone()  # Default to Air
         position_map = {}
 
         # Compute next states and positions
@@ -130,7 +129,8 @@ class State:
                 for k in range(z):
                     current_cell = new_grid[i, j, k]
                     neighbors = self.get_neighbors(i, j, k)
-                    next_cell = current_cell.update_state(neighbors, (i,j,k), self.grid_size)
+                    next_cell = current_cell.update_state(
+                        neighbors, (i, j, k), self.grid_size)
                     next_position = next_cell.move((i, j, k), self.grid_size)
                     position_map[next_position] = next_cell
 
@@ -154,7 +154,8 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = self.grid[i,j, k].clone()  # Default to Air
+                    new_grid[i, j, k] = self.grid[i,
+                                                  j, k].clone()  # Default to Air
 
         # Step 1: Compute new positions for each cell
         position_map = {}
