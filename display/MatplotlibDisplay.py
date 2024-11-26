@@ -15,7 +15,6 @@ class MatplotlibDisplay:
         self.ax_temperature = None
         self.ax_population = None
         self.ax_forests = None
-        self.ax_water_mass = None
         self.ax_ice_coverage = None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
         self.current_elev = 20  # Default elevation
@@ -32,7 +31,6 @@ class MatplotlibDisplay:
         self.ax_temperature = self.fig.add_subplot(233)  # Temperature graph
         self.ax_population = self.fig.add_subplot(234)  # Population graph
         self.ax_forests = self.fig.add_subplot(235)  # Forest graph
-        self.ax_water_mass = self.fig.add_subplot(236)  # Water Mass graph
 
         # Precompute 3D visualizations
         self.precompute_visualizations()
@@ -42,7 +40,6 @@ class MatplotlibDisplay:
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
-        self.render_water_mass_graph()
 
         # Add keyboard navigation
         self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
@@ -67,9 +64,9 @@ class MatplotlibDisplay:
                         cell = state.grid[x][y][z]
                         if cell.get_color() is not None:
                             # Interpolate multiple points for "densification"
-                            for dx in np.linspace(-0.5, 0.5, 2):  # Fine-tune interpolation
-                                for dy in np.linspace(-0.5, 0.5, 2):
-                                    for dz in np.linspace(-0.5, 0.5, 2):
+                            for dx in np.linspace(-0.1, 0.1, 2):  # Fine-tune interpolation
+                                for dy in np.linspace(-0.1, 0.1, 2):
+                                    for dz in np.linspace(-0.1, 0.1, 2):
                                         points.append((x + dx, y + dy, z + dz))
                                         colors.append(to_rgba(cell.get_color()))
                                         sizes.append(80)  # Larger size for denser appearance
@@ -183,21 +180,6 @@ class MatplotlibDisplay:
         else:
             logging.error("Data length mismatch in pollution graph.")
 
-    def render_water_mass_graph(self):
-        """Render the water mass graph over time."""
-        self.ax_water_mass.cla()
-        self.ax_water_mass.set_title("Water Mass Over Time")
-        self.ax_water_mass.set_xlabel("Day")
-        self.ax_water_mass.set_ylabel("Average Water Mass")
-
-        days = range(len(self.simulation.water_mass_over_time))
-        avg_water_mass = self.simulation.water_mass_over_time
-
-        if len(days) == len(avg_water_mass):
-            self.ax_water_mass.plot(days, avg_water_mass, color="cyan", label="Water Mass")
-            self.ax_water_mass.legend()
-        else:
-            logging.error("Data length mismatch in water mass graph.")
 
     def add_legend(self):
         """Add a legend explaining the cell colors."""

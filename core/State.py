@@ -5,91 +5,107 @@ import random
 
 
 class State:
-    def __init__(self, grid_size, initial_temperature, initial_pollution, initial_water_mass, initial_cities_ratio, initial_forests_ratio, prev_state_index=-1):
+    def __init__(self, grid_size = (10,10,10), initial_cities_ratio = 0.3, initial_forests_ratio = 0.3, initial_deserts_ratio = 0.4, state_index = 0):
         """
         Initialize the State class.
         """
         self.grid_size = grid_size
         self.grid = np.empty(grid_size, dtype=object)
-        self.prev_state_index = prev_state_index
-        self.avg_temperature = initial_temperature
-        self.avg_pollution = initial_pollution
-        self.avg_water_mass = initial_water_mass
-        self.total_cities = initial_cities_ratio
-        self.total_forests = initial_forests_ratio
+        self.initial_cities_ratio = initial_cities_ratio
+        self.initial_forests_ratio = initial_forests_ratio
+        self.state_index = state_index
+        self.initial_deserts_ratio = initial_deserts_ratio
 
     def clone(self):
         """
         Create a deep clone of the current state.
         """
         cloned_state = State(
-            grid_size=self.grid_size,
-            initial_temperature=self.avg_temperature,
-            initial_pollution=self.avg_pollution,
-            initial_water_mass=self.avg_water_mass,
-            initial_cities_ratio=self.total_cities,
-            initial_forests_ratio=self.total_forests,
-            prev_state_index=self.prev_state_index,
+            grid_size = self.grid_size, 
+            initial_cities_ratio = self.initial_cities_ratio,
+            initial_forests_ratio = self.initial_forests_ratio,
+            initial_deserts_ratio = self.initial_deserts_ratio,
+            state_index = self.state_index
         )
 
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
-                    current_cell = self.grid[i, j, k]
-                    cloned_state.grid[i, j, k] = current_cell.clone()
+                    cloned_state.grid[i, j, k] = self.grid[i, j, k].clone()
 
         return cloned_state
 
-    def initialize_grid(self, initial_temperature, initial_pollution, initial_water_mass, initial_cities_ratio, initial_forests_ratio):
+    def initialize_grid(self, initial_cities_ratio, initial_forests_ratio, initial_deserts_ratio):
         """
-        Initialize the grid with cells to create isdeserts surrounded by the water.
+        Initialize the grid with a realistic distribution of oceans, forests, cities, deserts, and other elements.
         """
         x, y, z = self.grid_size
         elevation_map = self._generate_elevation_map()
-        initial_cities_ratio/=3
-        initial_forests_ratio/=3
-        desert_prob = (1/10) * (1 - (initial_cities_ratio+initial_forests_ratio))
-        air_prob = (9/10) * (1 - (initial_cities_ratio+initial_forests_ratio))
+
+        # Adjust the ratios for realistic distributions
+        total_land_ratio = initial_cities_ratio + initial_forests_ratio + initial_deserts_ratio
+        initial_cities_ratio /= total_land_ratio
+        initial_forests_ratio /= total_land_ratio
+        initial_deserts_ratio /= total_land_ratio
+        air_prob = 1 - total_land_ratio
+
+        # Define temperature and pollution levels for each cell type
+        cell_properties = {
+            0: {"temperature": 15, "pollution": 0},  # Sea
+            1: {"temperature": 25, "pollution": 5},  # Desert
+            2: {"temperature": 5, "pollution": 0},   # Cloud
+            3: {"temperature": -10, "pollution": 0}, # Ice
+            4: {"temperature": 20, "pollution": 0},  # Forest
+            5: {"temperature": 30, "pollution": 20}, # City
+            6: {"temperature": 10, "pollution": 5},  # Air
+        }
 
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     cell_type = 6  # Default to air
 
+                    # Assign cell types based on elevation and probabilities
                     if k < elevation_map[i, j] - 2:
-                        cell_type = 0
-                    if k < elevation_map[i, j] - 1:
-                        cell_type = np.random.choice([0, 3], p=[0.9,0.1])
+                        cell_type = 0  # Sea
+                    elif k < elevation_map[i, j] - 1:
+                        cell_type = np.random.choice([0, 3], p=[0.9, 0.1])  # Mostly sea, some ice
                     elif k < elevation_map[i, j]:
-                        cell_type = np.random.choice([0, 3], p=[0.8,0.2])
+                        cell_type = np.random.choice([0, 3], p=[0.8, 0.2])  # Mostly sea, some ice
                     elif k == elevation_map[i, j]:
-                        cell_type = np.random.choice([6, 1,  4, 5], p=[
-                                                     air_prob, desert_prob, initial_forests_ratio, initial_cities_ratio])
-                    elif k > (z - 2):
                         cell_type = np.random.choice(
-                            [6, 2], p=[0.8, 0.2])  # Air or Cloud
+                            [1, 4, 5, 6],  # Desert, Forest, City, Air
+                            p=[
+                                initial_deserts_ratio,
+                                initial_forests_ratio,
+                                initial_cities_ratio,
+                                air_prob,
+                            ],
+                        )
+                    elif k > (z - 2):
+                        cell_type = np.random.choice([6, 2], p=[0.8, 0.2])  # Air or Cloud
 
-                    dx, dy, dz = 0, 0, 0
-                    water_mass = initial_water_mass if cell_type in {
-                        0, 2, 3, 7} else 0
-                    temperature = (
-                        initial_temperature + np.random.uniform(-2, 2)) if cell_type != 3 else -10
-                    pollution_level = initial_pollution if cell_type in {1,4,5,6} else 0
-                    if cell_type in {2, 6, 4, 5}:
-                        dx = np.random.choice([0, 1, -1])
-                        dy = np.random.choice([0, 1, -1])
-                        dz = np.random.choice([0, 1])
-                        temperature = initial_temperature + \
-                            np.random.uniform(0, 15)
-                    elif cell_type in {6,2}:
-                        dz = -1
+                    # Retrieve properties for the assigned cell type
+                    temperature = cell_properties[cell_type]["temperature"] + np.random.uniform(-2, 2)
+                    pollution = cell_properties[cell_type]["pollution"]
+
+                    # Adjust movement direction and other dynamic properties
+                    dx = dy = dz = 0
+                    if cell_type in {6, 2}:  # Air or Cloud
+                        dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])
+                        dz = -1 if cell_type == 6 else 1  # Clouds rise, air falls
 
                     self.grid[i, j, k] = Cell(
-                        cell_type, temperature, water_mass, pollution_level, (dx, dy, dz), elevation_map[i, j])
+                        cell_type=cell_type,
+                        temperature=temperature,
+                        water_mass=1 if cell_type in {0, 2, 3} else 0,
+                        pollution_level=pollution,
+                        direction=(dx, dy, dz),
+                        elevation=elevation_map[i, j],
+                    )
 
         self._recalculate_global_attributes()
-        logging.debug(f"Grid initialized successfully with dimensions: {
-                      self.grid_size}")
+        logging.debug(f"Grid initialized successfully with dimensions: {self.grid_size}")
 
     def _generate_elevation_map(self):
         """
