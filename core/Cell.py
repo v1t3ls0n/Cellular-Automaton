@@ -162,7 +162,7 @@ class Cell:
 
 
     def is_surrounded_by_clouds(self, neighbors):
-        return sum(1 for neighbor in neighbors if neighbor.cell_type == 2) >= 0.2 * len(neighbors)
+        return sum(1 for neighbor in neighbors if neighbor.cell_type == 2) >= 0.8 * len(neighbors)
 
     def is_surrounded_by_water_or_ice(self, neighbors):
         return sum(1 for neighbor in neighbors if neighbor.cell_type in {0, 3}) == len(neighbors)
@@ -217,16 +217,16 @@ class Cell:
             self.convert_to_cloud(neighbors)
                   
     def _update_rain(self, neighbors):
-        for neighbor in neighbors:
-            if neighbor.cell_type in {0, 1, 3, 4, 5, 6}:
-                self.water_mass += neighbor.water_mass
+        # for neighbor in neighbors:
+        #     if neighbor.cell_type in {0, 1, 3, 4, 5, 6}:
+        #         self.water_mass += neighbor.water_mass
 
-        self.water_mass = max(1.0,self.water_mass)
+        # self.water_mass = max(1.0,self.water_mass)
 
         if self.is_surrounded_by_water_or_ice(neighbors):
             self.sink_to_ocean(neighbors)
-        elif self.water_mass == 0:
-            self.convert_to_air(neighbors)
+        # elif self.water_mass == 0:
+        #     self.convert_to_air(neighbors)
 
     def _update_cloud(self, neighbors):
         # self.adjust_air_elevation_by_neighbors(neighbors)
@@ -329,7 +329,7 @@ class Cell:
             2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
             0: (0.0, 0.0, 1.0, 1.0),  # Water (blue)
             3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
-            7: (0.0, 0.0, 1.0, 0.2),  # Rain (Dark Blue-Grey)
+            7: (0.0, 0.0, 1.0, 1.0),  # Rain (Dark Blue-Grey)
             1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
             4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
             5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
