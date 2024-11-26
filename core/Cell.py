@@ -226,9 +226,8 @@ class Cell:
         self.equilibrate_pollution_level(neighbors)
 
     def _update_ocean(self, neighbors):
-        if not self.is_below_ground_level(neighbors):
-            self.sink_to_ocean(neighbors)
-            # self.convert_to_air(neighbors)
+        if not self.is_below_ground_level(neighbors) and self.temperature  < evaporation_point:
+            self.convert_to_rain
         else:
             if self.temperature <= freezing_point:
                 if self.is_below_sea_level(neighbors):
@@ -237,7 +236,7 @@ class Cell:
                     self.sink_to_ocean(neighbors)
 
             elif self.temperature >= evaporation_point:
-                if self.is_at_sea_level(neighbors):
+                if not self.is_below_ground_level(neighbors):
                     self.convert_to_air(neighbors)
                 else:
                     self.elevate_to_sea_surface(neighbors)
@@ -263,7 +262,9 @@ class Cell:
     def _update_rain(self, neighbors):
         # self.equilibrate_temperature(neighbors)
         # self.equilibrate_pollution_level(neighbors)
-        if self.is_below_sea_level(neighbors):
+        if not self.is_below_ground_level:
+            self.sink_to_ocean(neighbors)
+        else:
             self.convert_to_ocean(neighbors)
 
     def _update_cloud(self, neighbors):
@@ -282,7 +283,7 @@ class Cell:
 
     def sink_to_ocean(self, neighbors):
         dx, dy, _ = self.direction
-        dz = -1 if self.is_above_sea_level(neighbors) else 0
+        dz = 0 if self.is_below_ground_level(neighbors) else -1
         self.direction = (dx, dy, dz)
 
     def elevate_to_clouds_height(self, neighbors):
@@ -297,8 +298,9 @@ class Cell:
         self.direction = (dx, dy, dz)
 
     def elevate_air(self, neighbors):
-        if self.temperature > baseline_temperature[self.cell_type]:
+        if self.temperature > evaporation_point:
             self.elevate_to_clouds_height(neighbors)
+        elif self.temperature <
 
 
 
@@ -323,7 +325,7 @@ class Cell:
     def convert_to_ocean(self, neighbors):
         self.cell_type = 0
         self.water_mass = 1.0
-        self.temperature -= 0.2 * self.temperature
+        self.temperature = baseline_temperature[self.cell_type]
         self.sink_to_ocean(neighbors)
 
     def convert_to_ice(self, neighbors):
@@ -335,7 +337,7 @@ class Cell:
     def convert_to_rain(self, neighbors):
         self.cell_type = 7
         self.water_mass = 1.0
-        self.temperature = baseline_temperature[self.cell_type]
+        # self.temperature = baseline_temperature[self.cell_type]
         self.sink_to_ocean(neighbors)
 
     def convert_to_air(self, neighbors):
