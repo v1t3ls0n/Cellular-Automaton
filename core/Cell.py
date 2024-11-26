@@ -40,7 +40,7 @@ class Cell:
 
         # Call the appropriate update method based on cell type
         # if self.pollution_level == 0:
-        #     self._apply_natural_decay()
+        self._apply_natural_decay()
 
         if self.cell_type == 0:  # Water
             self._update_water(neighbors)
