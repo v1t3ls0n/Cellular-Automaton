@@ -294,7 +294,8 @@ class Cell:
     
     def convert_to_cloud(self,neighbors):
         self.cell_type = 2
-        self.adjust_air_elevation_by_neighbors(neighbors)
+        self.direction = (self.direction[0], self.direction[1], 0)
+        # self.adjust_air_elevation_by_neighbors(neighbors)
 
 
 
