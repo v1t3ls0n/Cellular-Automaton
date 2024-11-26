@@ -149,6 +149,11 @@ class Cell:
             neighbor for neighbor in neighbors if neighbor.cell_type in {0, 1, 2, 3, 4, 5}]
         return non_air_nor_rain_cells_count == 0
 
+    def is_at_sea_level(self, neighbors):
+        sea_cells = [
+            neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
+        return sum(1 for cell in sea_cells if self.elevation >= cell.elevation) == len(sea_cells)
+
     def is_above_ground_level(self, neighbors):
         ground_cells = [
             neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5}]
@@ -222,17 +227,19 @@ class Cell:
         self.equilibrate_pollution_level(neighbors)
 
     def _update_ocean(self, neighbors):
-        self.equilibrate_temperature(neighbors)
-
         if self.temperature <= freezing_point:
-            self.convert_to_ice(neighbors)
+            if self.is_below_sea_level(neighbors):
+                self.convert_to_ice(neighbors)
+            else:
+                self.sink_to_ocean(neighbors)
+
         elif self.temperature >= evaporation_point:
-            self.temperature -= 0.5 * self.temperature
-            self.water_mass = 1.0
-            self.convert_to_air(neighbors)
-        elif self.temperature > melting_point and self.is_below_sea_level(neighbors):
-            dx, dy, _ = self.direction
-            self.direction = (dx, dy, 1)
+            if self.is_at_sea_level(neighbors):
+                self.convert_to_air(neighbors)
+            else:
+                self.elevate_to_sea_surface(neighbors)
+        self.equilibrate_temperature(neighbors)
+        self.equilibrate_pollution_level(neighbors)
 
     def _update_air(self, neighbors):
 
@@ -276,10 +283,18 @@ class Cell:
         dx, dy, _ = self.direction
         dz = 1 if not self.is_at_clouds_level(neighbors) else 0
         self.direction = (dx, dy, dz)
+    
+    
+    def elevate_to_sea_surface(self,neighbors):
+        dx, dy, _ = self.direction
+        dz = 1 if not self.is_at_sea_level(neighbors) else 0
+        self.direction = (dx, dy, dz)
 
     def elevate_air(self, neighbors):
         if self.temperature > baseline_temperature[self.cell_type]:
             self.elevate_to_clouds_height(neighbors)
+
+
 
     def convert_to_forest(self, neighbors):
         self.cell_type = 4
