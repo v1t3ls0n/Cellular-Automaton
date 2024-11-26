@@ -39,7 +39,9 @@ class Cell:
         # self.adjust_temperature_with_pollution()
 
         # Call the appropriate update method based on cell type
-        self._apply_natural_decay()
+        # if self.pollution_level == 0:
+        #     self._apply_natural_decay()
+
         if self.cell_type == 0:  # Water
             self._update_water(neighbors)
 
@@ -164,14 +166,14 @@ class Cell:
     
     def is_above_ground_level(self, neighbors):
         ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1,4,5}]
-        return sum(1 for cell in ground_cells if self.elevation > cell.elevation)  > len(ground_cells)
+        return sum(1 for cell in neighbors if self.elevation > cell.elevation)  > len(ground_cells)
     
     def is_below_ground_level(self, neighbors):
         return not self.is_above_ground_level(neighbors)
 
     def is_above_sea_level(self, neighbors):
         sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0,3}]
-        return sum(1 for cell in sea_cells if self.elevation > cell.elevation)  > len(sea_cells)
+        return sum(1 for cell in neighbors if self.elevation > cell.elevation)  > len(sea_cells)
 
     def is_below_sea_level(self, neighbors):
         return not self.is_above_sea_level(neighbors)
@@ -186,8 +188,8 @@ class Cell:
 
 
     def _update_forest(self, neighbors):
-        pollution_absorption_rate = 0.5
-        cooling_effect = 0.5
+        pollution_absorption_rate = 0.1
+        cooling_effect = 0.1
         self.pollution_level = max(
                 0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
         self.temperature = self.temperature - self.temperature * cooling_effect
@@ -210,11 +212,13 @@ class Cell:
     def _update_city(self, neighbors):
         pollution_increase_rate = 0.4
         warming_effect = 0.4
+        self.pollution_level = max(self.pollution_level, 2.0)
         
-        self.pollution_level = max(0, self.pollution_level + max(pollution_increase_rate * self.pollution_level, 5.0))
+        # self.pollution_level = max(0, self.pollution_level + max(pollution_increase_rate * self.pollution_level, 5.0))
+        self.pollution_level += max(self.pollution_level * pollution_increase_rate,1)
         self.temperature = self.temperature + max(self.temperature * warming_effect, 0.1)
 
-        if self.is_below_sea_level(neighbors):
+        if self.is_below_sea_level(neighbors) self.:
             self.sink_to_ocean(neighbors)
         elif self.pollution_level > 100 or abs(self.temperature) >= evaporation_point:
             self.convert_to_desert(neighbors)

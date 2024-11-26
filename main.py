@@ -32,7 +32,7 @@ initial_temperature = float(
 initial_water_mass = float(
     input("Initial water level (e.g., 1.0) (default: 1.0): ") or 1.0)
 initial_cities_ratio = float(input("Initial city:land ratio (e.g., 50% = 0.5) (default: 0.3): ") or 0.5) 
-initial_forests_ratio = float(input("Initial forests:land ratio (e.g., 50% = 0.5) (default: 0.3): ") or 0.1) 
+initial_forests_ratio = float(input("Initial forests:land ratio (e.g., 50% = 0.5) (default: 0.3): ") or 0) 
 
 
 
