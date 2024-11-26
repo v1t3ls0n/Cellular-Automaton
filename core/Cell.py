@@ -172,7 +172,7 @@ class Cell:
 
     def is_below_ground_level(self, neighbors):
         ground_cells = [
-            neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5}]
+            neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5, 6}]
         return sum(1 for cell in ground_cells if self.elevation < cell.elevation) == len(ground_cells)
 
 
@@ -226,8 +226,9 @@ class Cell:
         self.equilibrate_pollution_level(neighbors)
 
     def _update_ocean(self, neighbors):
-        if not self.is_at_sea_level(neighbors):
-            self.convert_to_air(neighbors)
+        if not self.is_below_ground_level(neighbors):
+            self.sink_to_ocean(neighbors)
+            # self.convert_to_air(neighbors)
         else:
             if self.temperature <= freezing_point:
                 if self.is_below_sea_level(neighbors):
@@ -292,7 +293,7 @@ class Cell:
     
     def elevate_to_sea_surface(self,neighbors):
         dx, dy, _ = self.direction
-        dz = 1 if not self.is_at_sea_level(neighbors) else 0
+        dz = 1 if not self.is_b(neighbors) else 0
         self.direction = (dx, dy, dz)
 
     def elevate_air(self, neighbors):
