@@ -211,49 +211,58 @@ class World:
 
         return elevation_map
 
+
+
+
+
+
+
+
+
+
+
+
     def update_cells_on_grid(self):
-        """
-        Update the cells on the grid to compute their next states and resolve collisions.
-        """
         x, y, z = self.grid_size
-        # Properly initialize a new grid to hold the updated state
         new_grid = np.empty((x, y, z), dtype=object)
 
-        # Clone the current grid to initialize new cells
+        # Initialize the new grid with clones of the current grid
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     new_grid[i, j, k] = self.grid[i, j, k].clone()
 
-        position_map = {}
-
-        # First pass: Compute the next state for all cells
+        # Phase 1: Collect transfer data
+        transfer_map = {}  # Dictionary to hold water transfers
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    cell = self.grid[i, j, k]  # Use original grid for neighbor lookup
-                    neighbors = self.get_neighbors(i, j, k)  # Retrieve neighbors
-                    new_grid[i, j, k].update_state(neighbors)  # Update state of the cell
+                    cell = new_grid[i, j, k]
+                    neighbors = self.get_neighbors(i, j, k)
+                    transfers = cell.calculate_water_transfer(neighbors)
+                    for neighbor, transfer_amount in transfers.items():
+                        if neighbor not in transfer_map:
+                            transfer_map[neighbor] = 0
+                        transfer_map[neighbor] += transfer_amount
 
-        # Second pass: Determine new positions and resolve collisions
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    cell = new_grid[i, j, k]  # Use updated grid for next position calculation
-                    next_position = cell.get_next_position((i, j, k), self.grid_size)
-                    if next_position not in position_map:
-                        position_map[next_position] = cell
-                    else:
-                        # Handle collision by averaging attributes (e.g., water_mass, temperature)
-                        other_cell = position_map[next_position]
-                        self.resolve_collision(cell, other_cell)
+        # Phase 2: Apply transfers
+        for (i, j, k), transfer_amount in transfer_map.items():
+            new_grid[i, j, k].water_mass += transfer_amount
 
-        # Populate the new grid with updated cells
-        for (ni, nj, nk), updated_cell in position_map.items():
-            new_grid[ni, nj, nk] = updated_cell
-
-        self.grid = new_grid  # Replace the current grid with the updated one
+        # Update the grid
+        self.grid = new_grid
         self._recalculate_global_attributes()
+
+
+
+
+
+
+
+
+
+
+
 
     def resolve_collision(self, cell1, cell2):
         """

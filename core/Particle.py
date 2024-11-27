@@ -433,13 +433,27 @@ class Particle:
     def calc_neighbors_avg_water_mass(self, neighbors):
         return (sum(neighbor.water_mass for neighbor in neighbors)) / len(neighbors)
 
+    def calculate_water_transfer(self, neighbors):
+        """
+        Calculate water transfer amounts for neighboring cells.
+        Returns a dictionary with positions as keys and transfer amounts as values.
+        """
+        transfer_data = {}
+        for neighbor in neighbors:
+            if neighbor.cell_type in {2, 6}:  # Cloud or Air
+                # Calculate water mass transfer rate
+                water_transfer = (neighbor.water_mass - self.water_mass) * 0.05
+                if water_transfer != 0:
+                    transfer_data[neighbor] = water_transfer  # Store transfer amount for the neighbor
+        return transfer_data
+
 
 ######################################  SURROUNDINGS: ##############################################################
 
 
 
 
-    def contains_land(neighbors_below):
+    def contains_land(self,neighbors_below):
         """
         Check if any neighboring cells below are land (desert, forest, or city).
         """
@@ -447,7 +461,7 @@ class Particle:
         logging.debug(f"Neighbors below contain land: {result}")
         return result
 
-    def contains_sea(neighbors_below):
+    def contains_sea(self,neighbors_below):
         """
         Check if any neighboring cells below are sea (ocean or ice).
         """
