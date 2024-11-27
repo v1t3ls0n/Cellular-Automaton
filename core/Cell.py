@@ -221,8 +221,10 @@ class Cell:
             return False
         # Count cloud neighbors
         clouds_cells_count = sum(1 for nei in neighbors if nei.cell_type == 2)
+        air_cells_count = sum(1 for nei in neighbors if nei.cell_type == 6)
         # Strict majority clouds
-        return clouds_cells_count >= len(neighbors) / 2
+        # return clouds_cells_count > len(neighbors) / 2
+        return  clouds_cells_count > 2 and clouds_cells_count > air_cells_count
 
     def is_above_sea_level(self, neighbors):
         """
@@ -329,18 +331,19 @@ class Cell:
     def _update_cloud(self, neighbors):
         # Clouds should form at specific heights and stabilize
 
-        self.randomize_z_direction()
+
         self.randomize_xy_direction()
+        self.randomize_z_direction()
 
         if self.is_at_clouds_level(neighbors):
             # Convert to rain if conditions for rain are met
-            if self.water_mass > 0.5:  # Threshold for rain formation
+            if self.water_mass == 1.0:  # Threshold for rain formation
                 self.convert_to_rain(neighbors)
-                self.water_mass -= 0.5
+                # self.water_mass -= 0.5
             else:
-                self.stop_elevation_change(neighbors)  # Stabilize cloud
+                # self.stop_elevation_change(neighbors)  # Stabilize cloud
                 self.convert_to_air(neighbors)
-                self.water_mass += 0.5
+                # self.water_mass += 0.5
         else:
             self.elevate_to_clouds_height(neighbors)  # Move upward to stabilize
 
