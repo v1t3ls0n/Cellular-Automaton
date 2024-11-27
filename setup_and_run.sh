@@ -18,6 +18,6 @@ cd .. || { echo "Failed to navigate back to the root directory."; exit 1; }
 
 # Run the main script
 echo "Running main.py..."
-python main.py || { echo "Failed to run main.py."; exit 1; }
+python main.py || { echo "Failed to precompute main.py."; exit 1; }
 
 echo "Script execution complete."

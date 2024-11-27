@@ -31,11 +31,10 @@ class Simulation:
 
 
 
-    def run(self):
+    def precompute(self):
         """
         Run the simulation for the specified number of days.
         """
-        logging.info("Simulation started.")
         
         # Initialize the first state
         initial_state = World(
@@ -56,7 +55,7 @@ class Simulation:
         self._update_aggregates(initial_state)
 
         for day in range(self.days):
-            logging.info(f"Simulating day {day + 1}...")
+            logging.info(f"Day {day + 1}...")
             # Compute the next state by cloning and updating
             next_state = self.states[-1].clone()
             next_state.day_number += 1
@@ -65,7 +64,6 @@ class Simulation:
             self._update_aggregates(next_state)
             logging.debug(f"Next state (Day {day + 1}) added.")
 
-        logging.info("Simulation complete.")
 
     def analyze(self):
         """
