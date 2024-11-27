@@ -219,11 +219,8 @@ class Cell:
         """
         if not neighbors:  # Handle cases with no neighbors
             return False
-        # Count cloud neighbors
-        clouds_cells_count = sum(1 for nei in neighbors if nei.cell_type == 2)
-        air_cells_count = sum(1 for nei in neighbors if nei.cell_type == 6)
-        # Strict majority clouds
-        return (clouds_cells_count + air_cells_count) == len(neighbors) and clouds_cells_count > len(neighbors) / 4
+        clouds_cells_count = sum(1 for nei in neighbors if nei.cell_type == 2)  # Count cloud neighbors
+        return clouds_cells_count >= len(neighbors) / 2  # Strict majority clouds
 
     def is_above_sea_level(self, neighbors):
         """
@@ -290,10 +287,20 @@ class Cell:
         elif self.pollution_level > 100 or abs(self.temperature) >= evaporation_point:
             self.convert_to_desert(neighbors)
 
+
+
+
+
+
+
     def _update_ice(self, neighbors):
         # Ice melts into ocean if temperature exceeds melting point
         if self.temperature > melting_point:
             self.convert_to_ocean(neighbors)
+
+
+
+
 
     def _update_ocean(self, neighbors):
         # Ocean freezes if temperature is below freezing point
@@ -303,14 +310,22 @@ class Cell:
         elif self.temperature >= evaporation_point:
             self.convert_to_air(neighbors)
 
+
+
+
+
+
     def _update_rain(self, neighbors):
         logging.debug(f"Rain cell at elevation {self.elevation} updating...")
-        if self.is_below_ground_level(neighbors):
+        if self.is_above_ground_level(neighbors):
+            if self.is_above_sea_level(neighbors):
                 logging.debug("Rain converting to ocean...")
-                self.sink_to_ocean(neighbors)
-        elif self.is_at_clouds_level(neighbors):
-            self.convert_to_cloud(neighbors)
-        else:
+                self.convert_to_ocean(neighbors)
+            else:
+                logging.debug("Rain evaporating to desert...")
+                self.convert_to_desert(neighbors)
+        elif self.is_below_ground_level(neighbors):
+            logging.debug("Rain sinking to ocean...")
             self.sink_to_ocean(neighbors)
                 
             # else:
@@ -320,32 +335,29 @@ class Cell:
         #     logging.debug("Rain sinking to ocean...")
         #     self.sink_to_ocean(neighbors)
 
+
+
+
+
+
     def _update_air(self, neighbors):
         # If air is at cloud level, attempt conversion to cloud
         if self.is_at_clouds_level(neighbors):
             self.convert_to_cloud(neighbors)
         elif self.water_mass > 0.2:  # Threshold for cloud formation
-            # Move upward for cloud formation
-            self.elevate_to_clouds_height(neighbors)
+            self.elevate_to_clouds_height(neighbors)  # Move upward for cloud formation
         else:
             self.stop_elevation_change(neighbors)  # Stabilize air
 
     def _update_cloud(self, neighbors):
         # Clouds should form at specific heights and stabilize
-
-
-        self.randomize_xy_direction()
         self.randomize_z_direction()
-
         if self.is_at_clouds_level(neighbors):
             # Convert to rain if conditions for rain are met
-            if self.water_mass == 1.0:  # Threshold for rain formation
+            if self.water_mass > 0.5:  # Threshold for rain formation
                 self.convert_to_rain(neighbors)
-                # self.water_mass -= 0.5
             else:
-                # self.stop_elevation_change(neighbors)  # Stabilize cloud
-                self.convert_to_air(neighbors)
-                # self.water_mass += 0.5
+                self.stop_elevation_change(neighbors)  # Stabilize cloud
         else:
             self.elevate_to_clouds_height(neighbors)  # Move upward to stabilize
 
@@ -356,23 +368,32 @@ class Cell:
     def randomize_xy_direction(self):
         dx, dy, dz = self.direction
         if dx == 0:
-            dx = np.random.choice([-1, 0, 1])
+                dx = np.random.choice([-1,0, 1])
         if dy == 0:
-            dx = np.random.choice([-1, 0, 1])
+                dx = np.random.choice([-1,0, 1])
 
-        self.direction = (dx, dy, dz)
+        self.direction = (dx,dy,dz)
+        
 
     def randomize_z_direction(self):
         dx, dy, dz = self.direction
         if dz == 0:
             dz = np.random.choice([0, 1, -1])
 
-        self.direction = (dx, dy, dz)
+        self.direction = (dx,dy,dz)
+        
+
+
+
+
+
 
     def sink_to_ocean(self, neighbors):
         self.randomize_xy_direction()
         dx, dy, _ = self.direction
         self.direction = (dx, dy, -1)  # Move downward
+
+
 
     def elevate_to_clouds_height(self, neighbors):
         if not self.is_at_clouds_level(neighbors):
@@ -380,14 +401,21 @@ class Cell:
             dx, dy, _ = self.direction
             self.direction = (dx, dy, 1)  # Move upward
         else:
-            # self.stop_elevation_change(neighbors)  # Stabilize at cloud height
-            self.randomize_z_direction()
+            self.stop_elevation_change(neighbors)  # Stabilize at cloud height
+
+
 
 
     def stop_elevation_change(self, neighbors):
         self.randomize_xy_direction()
         dx, dy, _ = self.direction
         self.direction = (dx, dy, 0)  # Stop vertical movement
+
+
+
+
+
+
 
     def elevate_to_sea_surface(self, neighbors):
         self.randomize_xy_direction()
@@ -436,10 +464,17 @@ class Cell:
         self.temperature = baseline_temperature[self.cell_type]
         self.sink_to_ocean(neighbors)
 
+
+
+
     def convert_to_rain(self, neighbors):
         self.cell_type = 7
         self.water_mass = 1.0  # Rain drops
         self.sink_to_ocean(neighbors)
+
+
+
+
 
     def convert_to_air(self, neighbors):
         self.cell_type = 6
@@ -447,10 +482,15 @@ class Cell:
         self.randomize_z_direction(neighbors)
         # self.elevate_air(neighbors)
 
+
+
+
+
     def convert_to_cloud(self, neighbors):
         self.cell_type = 2
         self.water_mass = 1.0  # Clouds hold water
         self.elevate_to_clouds_height(neighbors)
+
 
 
 ####################################################################################################################
