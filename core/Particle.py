@@ -270,29 +270,37 @@ class Particle:
         """
         freezing_point = self.config["freezing_point"]
         cloud_saturation_threshold = self.config["cloud_saturation_threshold"]
+        dx, dy, dz = self.calculate_dominant_wind_direction(neighbors)
 
         # Gain water mass from neighbors
         # self.exchange_water_mass(neighbors)
-
+        if self.temperature >= self.config["baseline_temperature"][0]:
+            self.convert_to_ocean()
+            dz = -1
         # Convert to ice if below freezing point
         if self.temperature < freezing_point:
             logging.info(f"Cloud at elevation {
                          self.elevation} converted into ice due to low temperature.")
             self.convert_to_ice()
-            return
+            dz = -1
 
         # Convert to rain if water mass exceeds saturation threshold
         if self.water_mass >= cloud_saturation_threshold:
             logging.info(f"Cloud at elevation {
                          self.elevation} converted into rain due to water saturation.")
             self.convert_to_rain()
-            return
+            dz = -1
 
         # Stabilize at cloud level
         if self.is_at_clouds_level(neighbors):
-            self.stabilize()
+            # self.stabilize()
+            dz = 0
         else:
-            self.go_up()  # Move upward if not yet at cloud level
+            # self.go_up()  # Move upward if not yet at cloud level
+            dz = 1
+    
+        self.direction = (dx, dy, dz)
+    
 
 
 ####################################################################################################################
