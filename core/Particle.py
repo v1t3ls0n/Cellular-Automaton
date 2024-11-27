@@ -124,7 +124,7 @@ class Particle:
         """
         Compute the next state of the cell based on its neighbors and position.
         """
-        if self.pollution_level < self.config["pollution_threshold"]:
+        if self.pollution_level < self.config["pollution_damage_threshold"]:
             self._apply_natural_decay()
 
         self.equilibrate_temperature(neighbors)
@@ -200,7 +200,7 @@ class Particle:
         if self.temperature > self.config["evaporation_point"]:
             self.convert_to_air()
             dz = 1
-        elif self.temperature > min(self.config["baseline_temperature"][self.cell_type], self.config["melting_point"]):
+        elif self.temperature >= self.config["melting_point"] - 5:
             self.convert_to_ocean()
             dz = -1
         else:
@@ -216,6 +216,9 @@ class Particle:
         )
         self.temperature -= self.temperature * cooling_effect
 
+        if self.pollution_level > self.config["pollution_level_tipping_point"]:
+            absorption_rate *= 0.5
+
         if self.position[2] != 0:  # Ensure forest remains at ground level
             self.convert_to_desert()
         elif self.temperature >= abs(self.config["evaporation_point"]) or self.pollution_level >= 100:
@@ -229,14 +232,15 @@ class Particle:
 
         baseline_pollution_level = self.config["baseline_pollution_level"][self.cell_type]
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
+        city_temperature_upper_limit = self.config["city_temperature_upper_limit"]
+        city_pollution_upper_limit = self.config["city_pollution_upper_limit"]
 
-        self.temperature = max(
-            baseline_temperature, self.temperature + warming_effect * self.temperature
-        )
-        self.pollution_level = max(
+        self.temperature = min(city_temperature_upper_limit, max(
+            baseline_temperature, self.temperature + warming_effect * self.temperature))
+        self.pollution_level = min(city_pollution_upper_limit, max(
             baseline_pollution_level, self.pollution_level +
             pollution_increase_rate * self.pollution_level
-        )
+        ))
         self.temperature += self.pollution_level * warming_effect
 
         if self.is_surrounded_by_sea_cells(neighbors):
@@ -377,7 +381,8 @@ class Particle:
         baseline_temp = self.config["baseline_temperature"][self.cell_type]
         if self.temperature > baseline_temp:
             self.temperature -= (self.temperature -
-                                 baseline_temp) * temperature_decay_rate
+                                 baseline_temp) * temperature_decay_rate * 2
+
         elif self.temperature < baseline_temp:
             self.temperature += (baseline_temp -
                                  self.temperature) * temperature_decay_rate
@@ -408,7 +413,9 @@ class Particle:
         total_transfer = 0
         for neighbor in neighbors:
             if neighbor.cell_type in {2, 6}:  # Cloud or Air
-                water_transfer = (neighbor.water_mass - self.water_mass) * 0.05
+                diff = abs(neighbor.water_mass - self.water_mass)
+                water_transfer = (
+                    diff * 0.05) if diff < self.config["water_transfer_threshold"] else 0
                 if water_transfer > 0:
                     self.water_mass += water_transfer
                     total_transfer += water_transfer
@@ -522,7 +529,8 @@ class Particle:
         """
         Check if the cell is surrounded entirely by sea or ice cells.
         """
-        return all(neighbor.cell_type in {0, 3} for neighbor in neighbors)
+        # return all(neighbor.cell_type in {0, 3} for neighbor in neighbors)
+        return sum(n.cell_type == 0 for n in neighbors) > len(neighbors) / 2
 
     def is_surrounded_by_ground(self, neighbors):
         """
@@ -530,7 +538,7 @@ class Particle:
         """
         return all(neighbor.cell_type in {1, 4, 5} for neighbor in neighbors)
 
-    def is_at_ground_level(self,neighbors):
+    def is_at_ground_level(self, neighbors):
         """
         Check if the cell is at ground level.
         """

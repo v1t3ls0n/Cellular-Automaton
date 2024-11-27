@@ -26,7 +26,7 @@ logging.basicConfig(
 )
 logging.info("Simulation started.")
 
-config["tint"] = False
+# config["tint"] = False
 
 # Prompt the user for grid size
 grid_size_input = input(
@@ -74,11 +74,11 @@ except ValueError as e:
 
 # Set the pollution threshold from user input
 try:
-    config["pollution_threshold"] = float(input("Enter pollution threshold (default: 1.0): ") or 1.0)
-    print(f"Pollution threshold set to: {config['pollution_threshold']}")
+    config["pollution_damage_threshold"] = float(input("Enter pollution threshold (default: 1.0): ") or 1.0)
+    print(f"Pollution threshold set to: {config['pollution_damage_threshold']}")
 except ValueError:
     print("Invalid input! Using default value for pollution threshold (1.0).")
-    config["pollution_threshold"] = 1.0
+    config["pollution_damage_threshold"] = 1.0
 
 
 
@@ -86,7 +86,7 @@ except ValueError:
 logging.info("Initialized simulation with parameters:")
 logging.info(f"Ratios - Forests: {initial_forests_ratio}, Cities: {
              initial_cities_ratio}, Deserts: {initial_deserts_ratio}")
-logging.info(f"Pollution Threshold: {config['pollution_threshold']}, Days: {days}, World 3D Grid Dimensions: {grid_size}")
+logging.info(f"Pollution Threshold: {config['pollution_damage_threshold']}, Days: {days}, World 3D Grid Dimensions: {grid_size}")
 
 simulation = Simulation(initial_cities_ratio, initial_forests_ratio,
                         initial_deserts_ratio, grid_size, days)
