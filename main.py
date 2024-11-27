@@ -46,7 +46,7 @@ logging.info(f"Number of days to track: {days}")
 try:
     ratios_input = input("Enter ratios for forests, cities, and deserts as F,C,D (e.g., 0.3,0.3,0.4) (default: 0.3,0.3,0.4): ")
     if ratios_input.strip() == "":
-        initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = 0.3, 0.3, 0.4  # Default ratios
+        initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = 0.2, 0.2, 0.2  # Default ratios
     else:
         # Convert input to float values
         initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = map(float, ratios_input.split(","))
