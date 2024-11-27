@@ -18,7 +18,7 @@ base_colors = {
 freezing_point = -10  # Temperature that cause ocean freeze and convert into ice
 melting_point = 50  # Temperature threshold for melting ice
 evaporation_point = 100  # Temperature threshold for melting ice
-
+pollution_level_threshold = 10
 
 class Particle:
     ####################################################################################################################
@@ -104,7 +104,9 @@ class Particle:
         Compute the next state of the cell based on its neighbors and position.
         """
 
-        self._apply_natural_decay()
+        if self.pollution_level < pollution_level_threshold:
+            self._apply_natural_decay()
+      
         self.equilibrate_temperature(neighbors)
         self.equilibrate_pollution_level(neighbors)
 
