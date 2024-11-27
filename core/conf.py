@@ -2,6 +2,7 @@
 
 config = {
     "baseline_temperature": [15, 25, 5, -10, 20, 30, 10, 12], # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air  | 7: Rain
+    "baseline_pollution_level": [1, 10, 0, 0, 2, 50, 0, 1],
     "base_colors": {
         6: (1.0, 1.0, 1.0, 0.01),  # Air (transparent white)
         2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)

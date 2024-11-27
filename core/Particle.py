@@ -53,7 +53,8 @@ class Particle:
         """Get the color of the cell."""
         # Get the base color for the cell type or default to transparent white
         base_color = self.config["base_colors"].get(self.cell_type)
-
+        return base_color
+    
         if base_color is None or len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type {
                           self.cell_type}: {base_color}")
@@ -108,11 +109,10 @@ class Particle:
             self._update_ice(neighbors)
 
         elif self.cell_type == 4:  # Forest
-            # self.equilibrate_pollution_level(neighbors)
+            self.equilibrate_pollution_level(neighbors)
             self._update_forest(neighbors)
 
         elif self.cell_type == 5:  # City
-            # self.equilibrate_pollution_level(neighbors)
             self._update_city(neighbors)
 
         elif self.cell_type == 6:  # Air
@@ -123,8 +123,8 @@ class Particle:
             self._update_rain(neighbors)
 
     def _update_forest(self, neighbors):
-        pollution_absorption_rate = 0.4
-        cooling_effect = 0.4
+        pollution_absorption_rate = 0.2
+        cooling_effect = 0.2
         self.pollution_level = max(
             0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
         self.temperature = self.temperature - self.temperature * cooling_effect
@@ -144,11 +144,13 @@ class Particle:
     def _update_city(self, neighbors):
         pollution_increase_rate = 0.4
         warming_effect = 0.4
-        self.pollution_level = max(self.pollution_level, 2.0)
-        self.pollution_level += max(self.pollution_level *
-                                    pollution_increase_rate, 1.0)
-        self.temperature = self.temperature + \
-            max(self.temperature * warming_effect, 1.0)
+        baseline_pollution_level = self.config["baseline_pollution_level"][self.cell_type]
+        baseline_temperature = self.config["baseline_temperature"][self.cell_type]
+        
+        self.temperature = max(baseline_temperature, self.temperature + warming_effect * self.temperature)
+        self.pollution_level =  max(baseline_pollution_level, self.pollution_level + pollution_increase_rate * self.pollution_level)
+        self.temperature += self.temperature + (self.pollution_level * warming_effect)
+
         if self.is_surrounded_by_sea_cells(neighbors):
             self.convert_to_desert()
             self.go_down()
@@ -183,6 +185,7 @@ class Particle:
             self.go_down()
 
     def _update_air(self, neighbors):
+        self.equilibrate_pollution_level(neighbors)
         # If air is at cloud level, attempt conversion to cloud
         if self.is_at_clouds_level(neighbors):
             self.convert_to_cloud()
