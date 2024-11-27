@@ -105,7 +105,7 @@ class Cell:
         base_color = base_colors.get(self.cell_type)
         # Ensure the base_color has exactly 4 components (RGBA)
 
-        return base_color
+        # return base_color
 
         if len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type { self.cell_type}: {base_color}")
