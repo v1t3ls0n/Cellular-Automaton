@@ -58,7 +58,7 @@ try:
         "Enter probability for different land cell's type (forest/city/desert - default: 0.3, 0.3, 0.4) : ") or "0.3, 0.3, 0.4"
     if ratios_input.strip() == "":
         # Default ratios
-        initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = 0.2, 0.2, 0.2
+        initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = 0.3, 0.3, 0.4
     else:
         # Convert input to float values
         initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = map(

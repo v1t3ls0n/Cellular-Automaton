@@ -88,11 +88,12 @@ class Particle:
         Compute the next state of the cell based on its neighbors and position.
         """
 
+
+
         if self.pollution_level < self.config["pollution_threshold"]:
             self._apply_natural_decay()
-        else:
-            self.equilibrate_temperature(neighbors)
-            self.equilibrate_pollution_level(neighbors)
+        
+        self.equilibrate_temperature(neighbors)
 
         if self.cell_type == 0:  # Ocean
             self._update_ocean(neighbors)
@@ -107,20 +108,23 @@ class Particle:
             self._update_ice(neighbors)
 
         elif self.cell_type == 4:  # Forest
+            self.equilibrate_pollution_level(neighbors)
             self._update_forest(neighbors)
 
         elif self.cell_type == 5:  # City
+            self.equilibrate_pollution_level(neighbors)
             self._update_city(neighbors)
 
         elif self.cell_type == 6:  # Air
+            self.equilibrate_pollution_level(neighbors)
             self._update_air(neighbors)
 
         elif self.cell_type == 7:  # Rain
             self._update_rain(neighbors)
 
     def _update_forest(self, neighbors):
-        pollution_absorption_rate = 0.1
-        cooling_effect = 0.1
+        pollution_absorption_rate = 0.4
+        cooling_effect = 0.4
         self.pollution_level = max(
             0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
         self.temperature = self.temperature - self.temperature * cooling_effect
