@@ -127,7 +127,7 @@ class State:
                         else:
                             cell_type = 6
                     else:
-                        cell_type = np.random.choice(['land', 'sea'], p=[0.5, 0.5])
+                        cell_type = np.random.choice([0,1], p=[0.5, 0.5])
 
                     match cell_type:
                         case 0 | 3:
