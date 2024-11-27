@@ -246,6 +246,7 @@ class Particle:
                 dz = 0
             elif self.is_surrounded_by_ground(neighbors_below):
                 logging.info(f"Rain at elevation {self.elevation} converted into forest or desert.")
+                self.convert_to_ocean()
                 dz = -1
         else:
             # If no neighbors below, rain evaporates if the temperature is too high
