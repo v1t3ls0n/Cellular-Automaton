@@ -223,8 +223,7 @@ class Cell:
         clouds_cells_count = sum(1 for nei in neighbors if nei.cell_type == 2)
         air_cells_count = sum(1 for nei in neighbors if nei.cell_type == 6)
         # Strict majority clouds
-        # return clouds_cells_count > len(neighbors) / 2
-        return  clouds_cells_count > 2 and clouds_cells_count > air_cells_count
+        return (clouds_cells_count + air_cells_count) == len(neighbors) and clouds_cells_count > len(neighbors) / 4
 
     def is_above_sea_level(self, neighbors):
         """
@@ -242,9 +241,8 @@ class Cell:
         Check if the cell is below sea level.
         A cell is below sea level if all sea/ice neighbors are at a higher elevation.
         """
-        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {
-            0, 3}]  # Only sea and ice
-        return len(sea_cells) > 0 and all(self.elevation < cell.elevation for cell in sea_cells)
+        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3, 7}]  # Only sea and ice
+        return (len(sea_cells) >= 0 and len(sea_cells) == len(neighbors)) or all(self.elevation <= cell.elevation for cell in sea_cells)
 
     def is_below_ground_level(self, neighbors):
         """
@@ -252,8 +250,8 @@ class Cell:
         A cell is below ground level if all ground neighbors are at a higher elevation.
         """
         ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {
-            1, 4, 5}]  # Desert, Forest, City
-        return len(ground_cells) > 0 and all(self.elevation < cell.elevation for cell in ground_cells)
+            1, 4, 5, 6}]  # Desert, Forest, City
+        return (len(ground_cells) > 0 and all(self.elevation < cell.elevation for cell in ground_cells))
 
 ####################################################################################################################
 ###################################### CELL_TYPE UPDATES: ##########################################################
@@ -307,16 +305,20 @@ class Cell:
 
     def _update_rain(self, neighbors):
         logging.debug(f"Rain cell at elevation {self.elevation} updating...")
-        if self.is_above_ground_level(neighbors):
-            if self.is_above_sea_level(neighbors):
+        if self.is_below_ground_level(neighbors):
                 logging.debug("Rain converting to ocean...")
-                self.convert_to_ocean(neighbors)
-            else:
-                logging.debug("Rain evaporating to desert...")
-                self.convert_to_desert(neighbors)
-        elif self.is_below_ground_level(neighbors):
-            logging.debug("Rain sinking to ocean...")
+                self.sink_to_ocean(neighbors)
+        elif self.is_at_clouds_level(neighbors):
+            self.convert_to_cloud(neighbors)
+        else:
             self.sink_to_ocean(neighbors)
+                
+            # else:
+            #     logging.debug("Rain evaporating to desert...")
+            #     self.convert_to_desert(neighbors)
+        # elif self.is_below_ground_level(neighbors):
+        #     logging.debug("Rain sinking to ocean...")
+        #     self.sink_to_ocean(neighbors)
 
     def _update_air(self, neighbors):
         # If air is at cloud level, attempt conversion to cloud
@@ -378,7 +380,9 @@ class Cell:
             dx, dy, _ = self.direction
             self.direction = (dx, dy, 1)  # Move upward
         else:
-            self.stop_elevation_change(neighbors)  # Stabilize at cloud height
+            # self.stop_elevation_change(neighbors)  # Stabilize at cloud height
+            self.randomize_z_direction()
+
 
     def stop_elevation_change(self, neighbors):
         self.randomize_xy_direction()
@@ -440,7 +444,8 @@ class Cell:
     def convert_to_air(self, neighbors):
         self.cell_type = 6
         self.water_mass = 0.0
-        self.elevate_air(neighbors)
+        self.randomize_z_direction(neighbors)
+        # self.elevate_air(neighbors)
 
     def convert_to_cloud(self, neighbors):
         self.cell_type = 2
