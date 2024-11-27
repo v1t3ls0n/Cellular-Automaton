@@ -23,10 +23,10 @@ config = {
     "water_transfer_threshold": 0.1,
 
 
-    "pollution_damage_threshold": 1.0,
-    "pollution_level_tipping_point": 50,
-    "natural_pollution_decay_rate": 0.1,
-    "natural_temperature_decay_rate":  0.1,
+    "pollution_damage_threshold": 10.0,
+    "pollution_level_tipping_point": 60,
+    "natural_pollution_decay_rate": 0.2,
+    "natural_temperature_decay_rate":  0.2,
 
 
     "cloud_saturation_threshold": 10.0,
@@ -36,8 +36,8 @@ config = {
     "forest_cooling_effect": 0.2,
 
 
-    "city_pollution_increase_rate": 0.2,
-    "city_warming_effect": 0.2,
+    "city_pollution_increase_rate": 0.1,
+    "city_warming_effect": 0.1,
     "city_temperature_upper_limit": 60,
     "city_pollution_upper_limit": 100,
 
