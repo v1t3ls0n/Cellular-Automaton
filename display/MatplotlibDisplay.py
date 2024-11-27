@@ -7,6 +7,8 @@ from core.conf import config
 
 
 class MatplotlibDisplay:
+    config = config
+
     def __init__(self, simulation):
         self.simulation = simulation
         self.precomputed_results = simulation.states  # Use precomputed results
@@ -186,14 +188,14 @@ class MatplotlibDisplay:
     def add_legend(self):
         """Add a legend explaining the cell colors."""
         legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', label='Ocean', markersize=10, markerfacecolor=config.base_colors[0]),
-            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor=config.base_colors[3]),
-            plt.Line2D([0], [0], marker='o', color='w', label='Rain', markersize=10, markerfacecolor=config.base_colors[7]),  
-            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor=config.base_colors[2]),
-            plt.Line2D([0], [0], marker='o', color='w', label='Desert', markersize=10, markerfacecolor=config.base_colors[1]),
-            plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor=config.base_colors[4]),
-            plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor=config.base_colors[5]),
-            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor=config.base_colors[6]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Ocean', markersize=10, markerfacecolor=self.config["base_colors"][0]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Ice', markersize=10, markerfacecolor=self.config["base_colors"][3]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Rain', markersize=10, markerfacecolor=self.config["base_colors"][7]),  
+            plt.Line2D([0], [0], marker='o', color='w', label='Cloud', markersize=10, markerfacecolor=self.config["base_colors"][2]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Desert', markersize=10, markerfacecolor=self.config["base_colors"][1]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Forest', markersize=10, markerfacecolor=self.config["base_colors"][4]),
+            plt.Line2D([0], [0], marker='o', color='w', label='City', markersize=10, markerfacecolor=self.config["base_colors"][5]),
+            plt.Line2D([0], [0], marker='o', color='w', label='Air (Sky)', markersize=10, markerfacecolor=self.config["base_colors"][6]),
             plt.Line2D([0], [0], marker='o', color='w', label='Black-Tinted Color', markersize=10, markerfacecolor=(0,0,0,0.9)),
         ]
 

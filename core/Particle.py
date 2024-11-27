@@ -2,22 +2,13 @@ import numpy as np
 import logging
 from core.conf import config
 
-baseline_temperature, base_colors, freezing_point, melting_point, evaporation_point, pollution_threshold = (
-    config["baseline_temperature"],
-    config["base_colors"],
-    config["freezing_point"],
-    config["melting_point"],
-    config["evaporation_point"],
-    config["pollution_threshold"],
-)
-
-
 class Particle:
+    config = config
     ####################################################################################################################
     ###################################### CLASS UTILS #################################################################
     ####################################################################################################################
     def __init__(self, cell_type, temperature, water_mass, pollution_level, direction, elevation):
-
+        
         self.cell_type = cell_type
         self.temperature = temperature
         self.water_mass = water_mass
@@ -61,7 +52,7 @@ class Particle:
     def get_color(self):
         """Get the color of the cell."""
         # Get the base color for the cell type or default to transparent white
-        base_color = base_colors.get(self.cell_type)
+        base_color = self.config["base_colors"].get(self.cell_type)
 
         if base_color is None or len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type {
@@ -97,7 +88,7 @@ class Particle:
         Compute the next state of the cell based on its neighbors and position.
         """
 
-        if self.pollution_level < pollution_threshold:
+        if self.pollution_level < self.config["pollution_threshold"]:
             self._apply_natural_decay()
         else:
             self.equilibrate_temperature(neighbors)
@@ -135,15 +126,15 @@ class Particle:
         self.temperature = self.temperature - self.temperature * cooling_effect
         if self.is_below_sea_level(neighbors):
             self.go_down()
-        elif (self.temperature >= abs(evaporation_point) or self.pollution_level >= 100):
+        elif (self.temperature >= abs(self.config["evaporation_point"]) or self.pollution_level >= 100):
             self.convert_to_desert()
-        elif (self.pollution_level == 0 and 0 < self.temperature <= baseline_temperature[self.cell_type]):
+        elif (self.pollution_level == 0 and 0 < self.temperature <= self.config["baseline_temperature"][self.cell_type]):
             self.convert_to_city()
 
     def _update_desert(self, neighbors):
         if self.is_surrounded_by_sea_cells(neighbors):
             self.convert_to_ocean()
-        elif self.is_above_sea_level(neighbors) and self.pollution_level == 0 and self.temperature in range(baseline_temperature[self.cell_type]):
+        elif self.is_above_sea_level(neighbors) and self.pollution_level == 0 and self.temperature in range(self.config["baseline_temperature"][self.cell_type]):
             self.convert_to_forest()
 
     def _update_city(self, neighbors):
@@ -158,20 +149,20 @@ class Particle:
             self.convert_to_desert()
             self.go_down()
             self.convert_to_ocean()
-        elif self.pollution_level > 100 or abs(self.temperature) >= evaporation_point:
+        elif self.pollution_level > 100 or abs(self.temperature) >= self.config["evaporation_point"]:
             self.convert_to_desert()
 
     def _update_ice(self, neighbors):
         # Ice melts into ocean if temperature exceeds melting point
-        if self.temperature > melting_point:
+        if self.temperature > self.config["melting_point"]:
             self.convert_to_ocean()
 
     def _update_ocean(self, neighbors):
         # Ocean freezes if temperature is below freezing point
-        if self.temperature <= freezing_point:
+        if self.temperature <= self.config["freezing_point"]:
             self.convert_to_ice()
         # Ocean evaporates into air if temperature exceeds evaporation point
-        elif self.temperature >= evaporation_point:
+        elif self.temperature >= self.config["evaporation_point"]:
             self.convert_to_air()
 
     def _update_rain(self, neighbors):
@@ -217,13 +208,13 @@ class Particle:
         self.cell_type = 4
         self.water_mass = 0
         self.direction = (0, 0, 0)
-        self.temperature = baseline_temperature[self.cell_type]
+        self.temperature = self.config["baseline_temperature"][self.cell_type]
 
     def convert_to_city(self):
         self.cell_type = 5
         self.water_mass = 0
         self.direction = (0, 0, 0)
-        self.temperature = baseline_temperature[self.cell_type]
+        self.temperature = self.config["baseline_temperature"][self.cell_type]
 
     def convert_to_desert(self):
         self.cell_type = 1
@@ -234,12 +225,12 @@ class Particle:
     def convert_to_ocean(self):
         self.cell_type = 0
         self.water_mass = 1.0
-        self.temperature = baseline_temperature[self.cell_type]
+        self.temperature = self.config["baseline_temperature"][self.cell_type]
 
     def convert_to_ice(self):
         self.cell_type = 3
         self.water_mass = 1.0
-        self.temperature = baseline_temperature[self.cell_type]
+        self.temperature = self.config["baseline_temperature"][self.cell_type]
         self.go_down()
 
     def convert_to_rain(self):
@@ -272,11 +263,11 @@ class Particle:
             (self.pollution_level * pollution_decay_rate)
 
         # Apply decay to temperature, reducing towards a baseline temperature
-        if self.temperature > baseline_temperature[self.cell_type]:
+        if self.temperature > self.config["baseline_temperature"][self.cell_type]:
             self.temperature -= (self.temperature -
-                                 baseline_temperature[self.cell_type]) * temperature_decay_rate
-        elif self.temperature < baseline_temperature[self.cell_type]:
-            self.temperature += (baseline_temperature[self.cell_type] -
+                                 self.config["baseline_temperature"][self.cell_type]) * temperature_decay_rate
+        elif self.temperature < self.config["baseline_temperature"][self.cell_type]:
+            self.temperature += (self.config["baseline_temperature"][self.cell_type] -
                                  self.temperature) * temperature_decay_rate
 
 ####################################################################################################################
