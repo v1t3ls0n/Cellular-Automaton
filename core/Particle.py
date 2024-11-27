@@ -169,22 +169,22 @@ class Particle:
     def _update_ice(self, neighbors):
         # Ice melts into ocean if temperature exceeds melting point
         if self.temperature > melting_point:
-            self.convert_to_ocean(neighbors)
+            self.convert_to_ocean()
 
     def _update_ocean(self, neighbors):
         # Ocean freezes if temperature is below freezing point
         if self.temperature <= freezing_point:
-            self.convert_to_ice(neighbors)
+            self.convert_to_ice()
         # Ocean evaporates into air if temperature exceeds evaporation point
         elif self.temperature >= evaporation_point:
-            self.convert_to_air(neighbors)
+            self.convert_to_air()
 
     def _update_rain(self, neighbors):
         logging.debug(f"Rain cell at elevation {self.elevation} updating...")
         if self.is_above_ground_level(neighbors):
             if self.is_above_sea_level(neighbors):
                 logging.debug("Rain converting to ocean...")
-                self.convert_to_ocean(neighbors)
+                self.convert_to_ocean()
             else:
                 logging.debug("Rain evaporating to desert...")
                 self.convert_to_desert(neighbors)
@@ -269,8 +269,8 @@ class Particle:
 
     def _apply_natural_decay(self):
 
-        pollution_decay_rate = 0.1  # Rate at which pollution naturally decreases
-        temperature_decay_rate = 0.1  # Rate at which temperature naturally decreases
+        pollution_decay_rate = 0.5  # Rate at which pollution naturally decreases
+        temperature_decay_rate = 0.5  # Rate at which temperature naturally decreases
 
         # Apply decay to pollution level
         self.pollution_level = self.pollution_level - \
