@@ -1,3 +1,3 @@
 from .Cell import Cell
-from .State import State
+from .World import World
 from .Simulation import Simulation

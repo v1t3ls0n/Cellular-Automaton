@@ -133,7 +133,6 @@ class Cell:
         elif self.cell_type == 7:  # Rain
             self._update_rain(neighbors)
 
-        return self
 
     def _update_forest(self, neighbors):
         pollution_absorption_rate = 0.1

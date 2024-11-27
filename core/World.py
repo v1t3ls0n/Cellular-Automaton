@@ -5,10 +5,10 @@ import random
 from collections import defaultdict
 
 
-class State:
+class World:
     def __init__(self, grid_size=(10, 10, 10), initial_cities_ratio=0.3, initial_forests_ratio=0.3, initial_deserts_ratio=0.4, day_number=0):
         """
-        Initialize the State class.
+        Initialize the World class.
         """
         self.grid_size = grid_size
         self.grid = np.empty(grid_size, dtype=object)
@@ -21,7 +21,7 @@ class State:
         """
         Create a deep clone of the current state.
         """
-        cloned_state = State(
+        cloned_state = World(
             grid_size=self.grid_size,
             initial_cities_ratio=self.initial_cities_ratio,
             initial_forests_ratio=self.initial_forests_ratio,
@@ -190,26 +190,6 @@ class State:
         logging.debug(f"Grid initialized successfully with dimensions: {
                       self.grid_size}")
 
-    def _generate_land_map(self, x, y):
-        """
-        Generate a 2D map of land using Perlin noise for realistic islands.
-        """
-        from noise import pnoise2
-        scale = 20.0
-        octaves = 6
-        persistence = 0.5
-        lacunarity = 2.0
-        threshold = 0.2  # Adjust for land-water balance
-
-        land_map = np.zeros((x, y), dtype=bool)
-        for i in range(x):
-            for j in range(y):
-                noise_value = pnoise2(
-                    i / scale, j / scale, octaves=octaves, persistence=persistence, lacunarity=lacunarity)
-                # Land if above threshold
-                land_map[i, j] = noise_value > threshold
-        return land_map
-
     def _generate_elevation_map(self):
         """
         Generate an elevation map using Perlin noise for smooth terrain.
@@ -260,17 +240,6 @@ class State:
 
         self.grid = new_grid
         self._recalculate_global_attributes()
-
-    def resolve_collision(self, existing_cell, incoming_cell):
-        """
-        Resolve collision when two cells occupy the same position.
-        Prefer non-air cells, or prioritize based on specific rules.
-        """
-        if existing_cell.cell_type == 6:  # If the existing cell is Air
-            return incoming_cell
-        if incoming_cell.cell_type == 6:  # If the incoming cell is Air
-            return existing_cell
-        return existing_cell  # Default: Keep the original cell
 
     def get_neighbors(self, i, j, k):
         """

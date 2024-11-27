@@ -1,5 +1,5 @@
 import logging
-from core.State import State  # Import the State class
+from core.World import World  # Import the World class
 
 class Simulation:
     def __init__(self, initial_cities_ratio, initial_forests_ratio, initial_deserts_ratio, grid_size, days):
@@ -12,7 +12,7 @@ class Simulation:
         self.initial_deserts_ratio = initial_deserts_ratio
         self.days = days
 
-        self.states = []  # Store the history of State objects
+        self.states = []  # Store the history of World objects
         # Initialize aggregates
         self.pollution_over_time = []
         self.temperature_over_time = []
@@ -38,7 +38,7 @@ class Simulation:
         logging.info("Simulation started.")
         
         # Initialize the first state
-        initial_state = State(
+        initial_state = World(
             grid_size = self.grid_size, 
             initial_cities_ratio = self.initial_cities_ratio,
             initial_forests_ratio = self.initial_forests_ratio,
