@@ -25,5 +25,6 @@ config = {
     "city_pollution_increase_rate": 0.4,
     "city_warming_effect": 0.4,
     "natural_pollution_decay_rate": 0.1,
-    "natural_temperature_decay_rate":  0.1
+    "natural_temperature_decay_rate":  0.1,
+    "tint": True
 }
