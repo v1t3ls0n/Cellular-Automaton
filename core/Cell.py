@@ -170,8 +170,7 @@ class Cell:
     ############################## Surrounded By ######################################################
 
     def is_surrounded_by_sky_cells(self, neighbors):
-        sky_cells = [
-            neighbor for neighbor in neighbors if neighbor.cell_type in {2, 6, 7}]
+        sky_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {2, 6, 7}]
         return len(neighbors) == len(sky_cells)
 
     def is_surrounded_by_sea_cells(self, neighbors):
@@ -197,29 +196,29 @@ class Cell:
 
     def is_at_sea_level(self, neighbors):
         sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
-        return sum(1 for cell in sea_cells if self.elevation <= cell.elevation) == len(sea_cells)
+        return sum(1 for cell in sea_cells if self.elevation <= cell.elevation) == len(neighbors)
 
     def is_above_ground_level(self, neighbors):
         ground_cells = [
             neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5}]
-        return sum(1 for cell in ground_cells if self.elevation > cell.elevation) == len(ground_cells)
+        return len(ground_cells) > 1 and sum(1 for cell in ground_cells if self.elevation > cell.elevation) == len(neighbors)
 
     def is_above_sea_level(self, neighbors):
         sea_cells = [
             neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
-        return sum(1 for cell in sea_cells if self.elevation > cell.elevation) == len(sea_cells)
+        return sum(1 for cell in sea_cells if self.elevation >= cell.elevation) == len(neighbors)
 
     ############################## Below level ######################################################
 
     def is_below_sea_level(self, neighbors):
         sea_cells = [
-            neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
-        return sum(1 for cell in sea_cells if self.elevation < cell.elevation) == len(sea_cells)
+            neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3, 6, 7}]
+        return sum(1 for cell in sea_cells if self.elevation < cell.elevation) == len(neighbors)
 
     def is_below_ground_level(self, neighbors):
         ground_cells = [
-            neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5, 6}]
-        return sum(1 for cell in ground_cells if self.elevation < cell.elevation) == len(ground_cells)
+            neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5}]
+        return len(ground_cells) > 0 and sum(1 for cell in ground_cells if self.elevation <= cell.elevation) == len(neighbors)
 
 
 ####################################################################################################################
@@ -264,10 +263,7 @@ class Cell:
             self.convert_to_ocean(neighbors)
 
     def _update_ocean(self, neighbors):
-        if self.elevation != 0:
-            if self.is_surrounded_by_sea_cells(neighbors):
-                self.stop_elevation_change(neighbors)
-            else:
+        if self.elevation != -1 and not self.is_below_ground_level(neighbors):
                 self.sink_to_ocean(neighbors)
         else:
             if self.temperature <= freezing_point:
@@ -280,17 +276,15 @@ class Cell:
                         self.elevate_to_sea_surface(neighbors)
 
     def _update_air(self, neighbors):
-        if self.water_mass == 1.0:
+        # if self.water_mass == 1.0:
             if self.is_at_clouds_level(neighbors):
                 self.convert_to_cloud(neighbors)
-            elif self.is_surrounded_by_sea_cells(neighbors):
+            elif self.is_below_ground_level(neighbors):
                 self.convert_to_ocean(neighbors)
-        else:
-            if self.is_surrounded_by_sky_cells(neighbors):
-                self.stop_elevation_change(neighbors)
+
 
     def _update_rain(self, neighbors):
-        if not self.is_at_air_level(neighbors):
+        if self.is_above_sea_level(neighbors):
             self.convert_to_ocean(neighbors)
 
     def _update_cloud(self, neighbors):
@@ -305,32 +299,43 @@ class Cell:
 ###################################### CELL ELEVATION (Z-Direction) Updates ########################################
 ####################################################################################################################
 
+    def randomize_xy_direction(self):
+        dx, dy, dz = self.direction
+        if dx == 0:
+                dx = np.random.choice([-1, 0, 1])
+        if dy == 0:
+                dx = np.random.choice([-1, 0, 1])
+        self.direction = (dx,dy,dz)
+        
+
+
+
     def sink_to_ocean(self, neighbors):
+        self.randomize_xy_direction()
         dx, dy, _ = self.direction
-        dz = 0 if self.is_below_ground_level(neighbors) else -1
-        self.direction = (dx, dy, dz)
+        self.direction = (dx, dy, -1)
 
     def elevate_to_clouds_height(self, neighbors):
+        self.randomize_xy_direction()
         dx, dy, _ = self.direction
         dz = 1 if not self.is_at_clouds_level(neighbors) else 0
         self.direction = (dx, dy, dz)
     
     def stop_elevation_change(self,neighbors):
+        self.randomize_xy_direction()
         dx, dy, _ = self.direction
         self.direction = (dx, dy, 0)
         
     def elevate_to_sea_surface(self,neighbors):
+        self.randomize_xy_direction()
         dx, dy, _ = self.direction
-        dz = 1 if not self.is_b(neighbors) else 0
+        dz = 0 if self.is_below_ground_level(neighbors) else -1
         self.direction = (dx, dy, dz)
-
+    
     def elevate_air(self, neighbors):
-        if self.temperature > evaporation_point:
-            self.elevate_to_clouds_height(neighbors)
-        else:
-            dx, dy, _ = self.direction
-            dz = np.random.choice([1,-1,0])
-            self.direction = (dx,dy,dz)
+        self.randomize_xy_direction()
+        dx, dy, _ = self.direction
+        self.direction = (dx,dy,1)
 
 
 
@@ -378,6 +383,7 @@ class Cell:
 
     def convert_to_air(self, neighbors):
         self.cell_type = 6
+        self.water_mass = 1.0
         self.elevate_air(neighbors)
 
     def convert_to_cloud(self, neighbors):
