@@ -99,7 +99,6 @@ class Particle:
 ###################################### CELL UPDATES: ###############################################################
 ####################################################################################################################
 
-
     def update_state(self, neighbors):
         """
         Compute the next state of the cell based on its neighbors and position.
@@ -132,7 +131,6 @@ class Particle:
 
         elif self.cell_type == 7:  # Rain
             self._update_rain(neighbors)
-
 
     def _update_forest(self, neighbors):
         pollution_absorption_rate = 0.1
@@ -220,6 +218,7 @@ class Particle:
 ###################################### CELL  CONVERSIONS ###########################################################
 ####################################################################################################################
 
+
     def convert_to_forest(self):
         self.cell_type = 4
         self.water_mass = 0
@@ -268,7 +267,6 @@ class Particle:
 ##################################### CELL NATURAL DECAY : #########################################################
 ####################################################################################################################
 
-
     def _apply_natural_decay(self):
 
         pollution_decay_rate = 0.1  # Rate at which pollution naturally decreases
@@ -310,7 +308,6 @@ class Particle:
         dx, dy, _ = self.direction
         self.direction = (dx, dy, 1)  # Move upward
 
-
     def go_static(self):
         dx, dy, _ = self.direction
         self.direction = (dx, dy, 0)  # Stop vertical movement
@@ -323,7 +320,6 @@ class Particle:
 
 ############################################### AVERAGES ###########################################################
 
-
     def calc_neighbors_avg_temperature(self, neighbors):
         return (sum(neighbor.temperature for neighbor in neighbors)) / len(neighbors)
 
@@ -335,7 +331,6 @@ class Particle:
 
 
 ######################################  SURROUNDINGS: ##############################################################
-
 
     def is_surrounded_by_sky_cells(self, neighbors):
         """
