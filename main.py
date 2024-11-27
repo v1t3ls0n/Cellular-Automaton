@@ -50,7 +50,7 @@ logging.info(f"Number of days to track: {days}")
 
 # Prompt the user for ratios of forests, cities, and deserts
 try:
-    ratios_input = input("Enter ratios for forests, cities, and deserts as F,C,D (e.g., 0.3,0.3,0.4) (default: 0.3,0.3,0.4): ")
+    ratios_input = input("Enter ratios for forests, cities, and deserts as F,C,D (e.g., 0.3,0.3,0.4) (default: 0.2, 0.2, 0.2): ")
     if ratios_input.strip() == "":
         initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = 0.2, 0.2, 0.2  # Default ratios
     else:
@@ -60,14 +60,13 @@ try:
             raise ValueError("The sum of the ratios must equal 1.0.")
 except ValueError as e:
     print(f"Invalid input: {e}")
-    initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = 0.3, 0.3, 0.4  # Fallback to default ratios
+    initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio = 0.2, 0.2, 0.2  # Fallback to default ratios
 
 # Print the ratios for confirmation
 logging.info(f"Ratios - Forests: {initial_forests_ratio}, Cities: {initial_cities_ratio}, Deserts: {initial_deserts_ratio}")
 
 # The rest of the initialization logic follows here...
 # For example:
-# simulation = Simulation(grid_size, initial_forests_ratio, initial_cities_ratio, initial_deserts_ratio)
 
 simulation = Simulation(initial_cities_ratio,initial_forests_ratio,initial_deserts_ratio,grid_size,days)
 
