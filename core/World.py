@@ -184,6 +184,7 @@ class World:
                         pollution_level=pollution,
                         direction=direction,
                         elevation=elevation_map[i, j],
+                        position=(i,j,k)
                     )
 
         self._recalculate_global_attributes()
@@ -220,38 +221,78 @@ class World:
 
 
 
-
-
     def update_cells_on_grid(self):
+        """
+        Update the cells on the grid to compute their next states and resolve collisions.
+        """
         x, y, z = self.grid_size
+        # Properly initialize a new grid to hold the updated state
         new_grid = np.empty((x, y, z), dtype=object)
 
-        # Initialize the new grid with clones of the current grid
+        # Clone the current grid to initialize new cells
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     new_grid[i, j, k] = self.grid[i, j, k].clone()
 
-        # Phase 1: Collect transfer data
-        transfer_map = {}  # Dictionary to hold water transfers
+        position_map = {}
+        transfer_map = {}
+
+        # First pass: Compute the next state for all cells
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    cell = new_grid[i, j, k]
-                    neighbors = self.get_neighbors(i, j, k)
-                    transfers = cell.calculate_water_transfer(neighbors)
-                    for neighbor, transfer_amount in transfers.items():
-                        if neighbor not in transfer_map:
-                            transfer_map[neighbor] = 0
-                        transfer_map[neighbor] += transfer_amount
+                    cell = self.grid[i, j, k]  # Use original grid for neighbor lookup
+                    neighbors = self.get_neighbors(i, j, k)  # Retrieve neighbors
+                    unpacked_neighbors = [neighbor for neighbor, _ in neighbors]  # Extract only the Particle objects
+                    new_grid[i, j, k].update_state(unpacked_neighbors)  # Update state of the cell
 
-        # Phase 2: Apply transfers
-        for (i, j, k), transfer_amount in transfer_map.items():
-            new_grid[i, j, k].water_mass += transfer_amount
 
-        # Update the grid
-        self.grid = new_grid
+                    # Compute water transfers and store in transfer map
+                    for neighbor, neighbor_pos in neighbors:
+                        if neighbor.cell_type in {2, 6}:  # Only clouds or air
+                            transfer_amount = (neighbor.water_mass - cell.water_mass) * 0.05
+                            if transfer_amount != 0:
+                                transfer_key = ((i, j, k), neighbor_pos)  # Use neighbor's position
+                                if transfer_key not in transfer_map:
+                                    transfer_map[transfer_key] = 0
+                                transfer_map[transfer_key] += transfer_amount
+
+
+        # Apply transfer map to update water mass
+        for (from_pos, to_pos), transfer in transfer_map.items():
+            fx, fy, fz = from_pos
+            tx, ty, tz = to_pos
+            if 0 <= fx < x and 0 <= fy < y and 0 <= fz < z:
+                new_grid[fx, fy, fz].water_mass -= transfer
+            if 0 <= tx < x and 0 <= ty < y and 0 <= tz < z:
+                new_grid[tx, ty, tz].water_mass += transfer
+
+        # Second pass: Determine new positions and resolve collisions
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
+                    cell = new_grid[i, j, k]  # Use updated grid for next position calculation
+                    next_position = cell.get_next_position((i, j, k), self.grid_size)
+                    if next_position not in position_map:
+                        position_map[next_position] = cell
+                    else:
+                        # Handle collision by averaging attributes (e.g., water_mass, temperature)
+                        other_cell = position_map[next_position]
+                        self.resolve_collision(cell, other_cell)
+
+        # Populate the new grid with updated cells
+        for (ni, nj, nk), updated_cell in position_map.items():
+            new_grid[ni, nj, nk] = updated_cell
+
+        self.grid = new_grid  # Replace the current grid with the updated one
         self._recalculate_global_attributes()
+
+
+
+
+
+
 
 
 
@@ -279,22 +320,20 @@ class World:
         cell2.pollution_level = cell1.pollution_level
 
         # Optionally adjust other attributes or preserve one cell's state
-
-    def get_neighbors(self, i, j, k):
+        
+    def get_neighbors(self, x, y, z):
         """
-        Get the neighbors of a cell at position (i, j, k).
-        Returns a list of neighbor cells.
+        Get the neighbors of the cell at position (x, y, z) and their positions.
         """
         neighbors = []
-        x, y, z = self.grid_size
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                for dz in [-1, 0, 1]:
-                    if dx == 0 and dy == 0 and dz == 0:
-                        continue  # Skip the current cell itself
-                    ni, nj, nk = (i + dx) % x, (j + dy) % y, (k + dz) % z
-                    neighbors.append(self.grid[ni, nj, nk])
-        return neighbors
+        positions = []
+        for dx, dy, dz in [(-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1), (0, 0, 1)]:
+            nx, ny, nz = x + dx, y + dy, z + dz
+            if 0 <= nx < self.grid_size[0] and 0 <= ny < self.grid_size[1] and 0 <= nz < self.grid_size[2]:
+                neighbors.append(self.grid[nx, ny, nz])
+                positions.append((nx, ny, nz))
+        return list(zip(neighbors, positions))  # Return both neighbors and positions
+
 
     def _recalculate_global_attributes(self):
         """

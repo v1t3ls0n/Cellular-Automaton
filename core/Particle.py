@@ -5,18 +5,20 @@ from core.conf import config
 
 class Particle:
     config = config
-    ####################################################################################################################
-    ###################################### CLASS UTILS #################################################################
-    ####################################################################################################################
 
-    def __init__(self, cell_type, temperature, water_mass, pollution_level, direction, elevation):
-
+    def __init__(self, cell_type, temperature, water_mass, pollution_level, direction, elevation, position):
         self.cell_type = cell_type
         self.temperature = temperature
         self.water_mass = water_mass
         self.pollution_level = pollution_level
         self.direction = direction
         self.elevation = elevation
+        self.position = position  # Add position
+
+
+    ####################################################################################################################
+    ###################################### CLASS UTILS #################################################################
+    ####################################################################################################################
 
     def clone(self):
         return Particle(
@@ -25,7 +27,8 @@ class Particle:
             water_mass=self.water_mass,
             pollution_level=self.pollution_level,
             direction=self.direction,
-            elevation=self.elevation
+            elevation=self.elevation,
+            position=self.position
         )
 
     def get_next_position(self, current_position, grid_size):
@@ -370,33 +373,33 @@ class Particle:
 ####################################################################################################################
 
     def equilibrate_temperature(self, neighbors):
-        self.temperature = (self.calc_neighbors_avg_temperature(
-            neighbors) + self.temperature)/2
+        """
+        Equilibrates the cell's temperature based on its neighbors.
+        """
+        self.temperature = (self.calc_neighbors_avg_temperature(neighbors) + self.temperature) / 2
 
     def equilibrate_pollution_level(self, neighbors):
-        self.pollution_level = (self.calc_neighbors_avg_pollution(
-            neighbors) + self.temperature)/2
-
+        """
+        Equilibrates the cell's pollution level based on its neighbors.
+        """
+        self.pollution_level = (self.calc_neighbors_avg_pollution(neighbors) + self.pollution_level) / 2
 
 
 
     def exchange_water_mass(self, neighbors):
         """
         Exchange water mass with neighboring clouds or air.
-        Updates the current particle's water mass; neighbors adjust during their own updates.
         """
         total_transfer = 0
         for neighbor in neighbors:
             if neighbor.cell_type in {2, 6}:  # Cloud or Air
                 # Calculate water mass transfer rate
-                water_transfer = (neighbor.water_mass - self.water_mass) * 0.05  # 5% exchange rate
-                if water_transfer > 0:  # Prevent reversing effects (gain/loss)
+                water_transfer = (neighbor.water_mass - self.water_mass) * 0.05
+                if water_transfer > 0:
                     self.water_mass += water_transfer
                     total_transfer += water_transfer
-        logging.debug(f"Cloud at elevation {self.elevation} exchanged {total_transfer} water mass.")
+        logging.debug(f"Cloud at elevation {self.elevation} exchanged {total_transfer:.2f} water mass.")
         return total_transfer
-
-
 
 
 
@@ -424,14 +427,29 @@ class Particle:
 ############################################### AVERAGES ###########################################################
 
 
+
+
+
+
     def calc_neighbors_avg_temperature(self, neighbors):
-        return (sum(neighbor.temperature for neighbor in neighbors)) / len(neighbors)
+        """
+        Calculates the average temperature of the neighbors.
+        """
+        return sum(neighbor.temperature for neighbor in neighbors) / len(neighbors)
 
     def calc_neighbors_avg_pollution(self, neighbors):
-        return (sum(neighbor.pollution_level for neighbor in neighbors)) / len(neighbors)
+        """
+        Calculates the average pollution level of the neighbors.
+        """
+        return sum(neighbor.pollution_level for neighbor in neighbors) / len(neighbors)
 
     def calc_neighbors_avg_water_mass(self, neighbors):
-        return (sum(neighbor.water_mass for neighbor in neighbors)) / len(neighbors)
+        """
+        Calculates the average water mass of the neighbors.
+        """
+        return sum(neighbor.water_mass for neighbor in neighbors) / len(neighbors)
+
+
 
     def calculate_water_transfer(self, neighbors):
         """
@@ -452,26 +470,21 @@ class Particle:
 
 
 
-
-    def contains_land(self,neighbors_below):
+    def contains_sea(self, neighbors_below):
         """
-        Check if any neighboring cells below are land (desert, forest, or city).
-        """
-        result = any(neighbor.cell_type in {1, 4, 5} for neighbor in neighbors_below)
-        logging.debug(f"Neighbors below contain land: {result}")
-        return result
-
-    def contains_sea(self,neighbors_below):
-        """
-        Check if any neighboring cells below are sea (ocean or ice).
+        Check if any of the neighbors below are of type Sea (0) or Ice (3).
         """
         result = any(neighbor.cell_type in {0, 3} for neighbor in neighbors_below)
         logging.debug(f"Neighbors below contain sea: {result}")
         return result
 
-
-
-
+    def contains_land(self, neighbors_below):
+        """
+        Check if any of the neighbors below are of type Land (1, 4, 5).
+        """
+        result = any(neighbor.cell_type in {1, 4, 5} for neighbor in neighbors_below)
+        logging.debug(f"Neighbors below contain land: {result}")
+        return result
 
 
 
@@ -479,40 +492,24 @@ class Particle:
         """
         Check if the cell is surrounded entirely by air or cloud cells.
         """
-        sky_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {
-            2, 6}]  # Only Cloud or Air
-        # All neighbors must be sky cells
+        sky_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {2, 6}]
         return len(sky_cells) == len(neighbors)
 
     def is_surrounded_by_sea_cells(self, neighbors):
         """
         Check if the cell is surrounded entirely by sea or ice cells.
         """
-        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {
-            0, 3}]  # Only Sea or Ice
-        # All neighbors must be sea cells
+        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
         return len(sea_cells) == len(neighbors)
 
     def is_surrounded_by_ground(self, neighbors):
         """
         Check if the cell is surrounded entirely by ground-related cells (desert, forest, city).
         """
-        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {
-            1, 4, 5}]  # Only Land-based cells
-        # All neighbors must be ground cells
+        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5}]
         return len(ground_cells) == len(neighbors)
 
 ##################################################  At #############################################################
-    def is_at_clouds_level(self, neighbors):
-        """
-        Check if the cell is at cloud level (majority of neighbors are clouds).
-        """
-        if not neighbors:  # Handle cases with no neighbors
-            return False
-        # Count cloud neighbors
-        clouds_cells_count = sum(1 for nei in neighbors if nei.cell_type == 2)
-        # Strict majority clouds
-        return clouds_cells_count >= len(neighbors) / 2
 
     def is_at_air_level(self, neighbors):
         """
@@ -523,40 +520,39 @@ class Particle:
             neighbor for neighbor in neighbors if neighbor.cell_type not in {6}]
         return len(non_air_nor_rain_cells) == 0  # All neighbors must be air
 
-################################################  Above  ###########################################################
+    def is_at_clouds_level(self, neighbors):
+        """
+        Check if the cell is at cloud level (majority of neighbors are clouds).
+        """
+        if not neighbors:
+            return False
+        clouds_cells_count = sum(1 for neighbor in neighbors if neighbor.cell_type == 2)
+        return clouds_cells_count >= len(neighbors) / 2
+
     def is_above_ground_level(self, neighbors):
         """
         Check if the cell is above ground level (i.e., higher elevation than all ground neighbors).
         """
-        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {
-            1, 4, 5}]  # Desert, Forest, City
-        # Higher than all ground neighbors
+        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5}]
         return len(ground_cells) > 0 and all(self.elevation > cell.elevation for cell in ground_cells)
 
     def is_above_sea_level(self, neighbors):
         """
         Check if the cell is above sea level (all neighbors are not sea or ice, and their elevation is lower).
         """
-        sea_or_ice_neighbors = [
-            # Sea or Ice neighbors
-            nei for nei in neighbors if nei.cell_type in {0, 3}]
+        sea_or_ice_neighbors = [neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
         return all(self.elevation > nei.elevation for nei in sea_or_ice_neighbors) if sea_or_ice_neighbors else True
 
-############################################  Below Level ##########################################################
     def is_below_sea_level(self, neighbors):
         """
         Check if the cell is below sea level.
-        A cell is below sea level if all sea/ice neighbors are at a higher elevation.
         """
-        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {
-            0, 3}]  # Sea or Ice
+        sea_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
         return len(sea_cells) > 0 and all(self.elevation < cell.elevation for cell in sea_cells)
 
     def is_below_ground_level(self, neighbors):
         """
         Check if the cell is below ground level.
-        A cell is below ground level if all ground neighbors are at a higher elevation.
         """
-        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {
-            1, 4, 5}]  # Land types
+        ground_cells = [neighbor for neighbor in neighbors if neighbor.cell_type in {1, 4, 5}]
         return len(ground_cells) > 0 and all(self.elevation < cell.elevation for cell in ground_cells)
