@@ -217,7 +217,8 @@ class Particle:
                              self.elevation} converted into forest or desert.")
                 self.go_left_or_right_only()
             else:
-                self.convert_to_air()
+                # self.convert_to_air()
+                self.go_left_or_right_only()
                 self.go_down()  # Continue downward movement
         else:
             # If no neighbors below, rain evaporates if the temperature is too high
