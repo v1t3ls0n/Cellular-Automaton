@@ -206,7 +206,7 @@ class Cell:
     def is_above_sea_level(self, neighbors):
         sea_cells = [
             neighbor for neighbor in neighbors if neighbor.cell_type in {0, 3}]
-        return sum(1 for cell in sea_cells if self.elevation >= cell.elevation) == len(neighbors)
+        return len(sea_cells) and sum(1 for cell in sea_cells if self.elevation >= cell.elevation) == len(neighbors)
 
     ############################## Below level ######################################################
 
@@ -277,10 +277,14 @@ class Cell:
 
     def _update_air(self, neighbors):
         # if self.water_mass == 1.0:
-        if self.water_mass > 0 and self.is_at_clouds_level(neighbors):
-            self.convert_to_cloud(neighbors)
-        elif self.is_below_ground_level(neighbors):
-            self.convert_to_ocean(neighbors)
+        if self.is_at_clouds_level(neighbors):
+            if self.water_mass == 0.0:
+                self.convert_to_cloud(neighbors)
+            else:
+                self.convert_to_rain(neighbors)
+
+        elif self.is_above_sea_level(neighbors):
+            self.convert_to_air(neighbors)
 
 
     def _update_rain(self, neighbors):
@@ -383,7 +387,7 @@ class Cell:
 
     def convert_to_air(self, neighbors):
         self.cell_type = 6
-        self.water_mass = 1.0
+        self.water_mass = 0.0
         self.elevate_air(neighbors)
 
     def convert_to_cloud(self, neighbors):
