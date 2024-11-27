@@ -174,8 +174,6 @@ class Particle:
     def _update_ice(self, neighbors):
         # Ice melts into ocean if temperature exceeds melting point
         dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
-
-
         if self.temperature > self.config["evaporation_point"]:
             # self.exchange_water_mass(neighbors)
             self.convert_to_air()
@@ -191,28 +189,40 @@ class Particle:
 
     def _update_ocean(self, neighbors):
         dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
-
-        # Ocean freezes if temperature is below freezing point
-        if self.temperature <= self.config["freezing_point"]:
-            self.convert_to_ice()
-            dz = -1
-        elif self.temperature <= self.config["melting_point"]:
-            dz = 0
-        # Ocean evaporates into air if temperature exceeds evaporation point
-        elif self.temperature >= self.config["evaporation_point"]:
+        neighbors_below = [
+            neighbor for neighbor in neighbors if neighbor.elevation < self.elevation]
+        if self.is_surrounded_by_ground(neighbors_below):
+            # self.exchange_water_mass(neighbors_below)
             self.convert_to_air()
             dz = 1
 
+        elif self.temperature >= self.config["melting_point"]:
+            self.convert_to_air()
+            dz = 1
+        # Ocean freezes if temperature is below freezing point
+        elif self.temperature <= self.config["freezing_point"]:
+            self.convert_to_ice()
+            dz = -1
+        else:
+            dz = 0
+        # Ocean evaporates into air if temperature exceeds evaporation point
+        self.direction = (dx,dy,dz)
+        
+
     def _update_air(self, neighbors):
         self.equilibrate_pollution_level(neighbors)
+        dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
+
         # If air is at cloud level, attempt conversion to cloud
         if self.is_at_clouds_level(neighbors):
             self.convert_to_cloud()
-        elif self.water_mass > 0.2:  # Threshold for cloud formation
+            dz = -1
+        # elif self.water_mass > 0.2:  # Threshold for cloud formation
             # Move upward for cloud formation
-            self.go_up()
-        else:
-            self.stabilize()  # Stabilize air
+            # self.go_up()
+        # else:
+            # self.stabilize()  # Stabilize air
+        self.direction = (dx,dy,dz)
 
     def _update_rain(self, neighbors):
         """
