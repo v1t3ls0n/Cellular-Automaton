@@ -336,6 +336,7 @@ class Cell:
     def _update_cloud(self, neighbors):
         # Clouds should form at specific heights and stabilize
         self.randomize_z_direction()
+        self.randomize_xy_direction()
         if self.is_at_clouds_level(neighbors):
             # Convert to rain if conditions for rain are met
             if self.water_mass > 0.5:  # Threshold for rain formation
