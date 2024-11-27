@@ -220,7 +220,6 @@ class World:
 
 
 
-
     def update_cells_on_grid(self):
         """
         Update the cells on the grid to compute their next states and resolve collisions.
@@ -238,28 +237,26 @@ class World:
         position_map = {}
         transfer_map = {}
 
-        # First pass: Compute the next state for all cells
+        # First pass: Compute the next state for all cells and collect transfers
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     cell = self.grid[i, j, k]  # Use original grid for neighbor lookup
                     neighbors = self.get_neighbors(i, j, k)  # Retrieve neighbors
-                    unpacked_neighbors = [neighbor for neighbor, _ in neighbors]  # Extract only the Particle objects
+                    
+                    # Unpack only the Particle objects
+                    unpacked_neighbors = [neighbor for neighbor, _ in neighbors]
                     new_grid[i, j, k].update_state(unpacked_neighbors)  # Update state of the cell
-
 
                     # Compute water transfers and store in transfer map
                     for neighbor, neighbor_pos in neighbors:
                         if neighbor.cell_type in {2, 6}:  # Only clouds or air
                             transfer_amount = (neighbor.water_mass - cell.water_mass) * 0.05
                             if transfer_amount != 0:
-                                transfer_key = ((i, j, k), neighbor_pos)  # Use neighbor's position
-                                if transfer_key not in transfer_map:
-                                    transfer_map[transfer_key] = 0
-                                transfer_map[transfer_key] += transfer_amount
+                                transfer_key = ((i, j, k), neighbor_pos)
+                                transfer_map[transfer_key] = transfer_map.get(transfer_key, 0) + transfer_amount
 
-
-        # Apply transfer map to update water mass
+        # Apply transfers to update water mass
         for (from_pos, to_pos), transfer in transfer_map.items():
             fx, fy, fz = from_pos
             tx, ty, tz = to_pos
@@ -277,7 +274,7 @@ class World:
                     if next_position not in position_map:
                         position_map[next_position] = cell
                     else:
-                        # Handle collision by averaging attributes (e.g., water_mass, temperature)
+                        # Handle collision by averaging attributes
                         other_cell = position_map[next_position]
                         self.resolve_collision(cell, other_cell)
 
@@ -287,11 +284,6 @@ class World:
 
         self.grid = new_grid  # Replace the current grid with the updated one
         self._recalculate_global_attributes()
-
-
-
-
-
 
 
 
