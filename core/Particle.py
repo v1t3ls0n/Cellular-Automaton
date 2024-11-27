@@ -205,7 +205,7 @@ class Particle:
         # Rain moves downward
         if neighbors_below:
             if self.is_above_ground_level(neighbors_below):
-                self.go_left_or_right_only()
+                # self.go_left_or_right_only()
                 self.go_down()  # Continue downward movement
 
             elif self.is_surrounded_by_sea_cells(neighbors_below):
@@ -218,7 +218,7 @@ class Particle:
                 self.go_left_or_right_only()
             else:
                 # self.convert_to_air()
-                self.go_left_or_right_only()
+                # self.go_left_or_right_only()
                 self.go_down()  # Continue downward movement
         else:
             # If no neighbors below, rain evaporates if the temperature is too high
@@ -392,8 +392,19 @@ class Particle:
         self.direction = (self.direction[0], self.direction[1], 1)
 
     def go_left_or_right_only(self):
-        self.direction = (self.direction[0], self.direction[1], 0)
+        dx,dy, _ = self.direction
+        if abs(max(dx,dy)) == 0: 
+            if self.position[0] > self.position[1]:
+                self.go_right()
+            else:
+                self.go_left()
 
+    def go_right(self):
+        dx,dy,dz = self.direction
+        self.direction = (1,dy,dz)
+    def go_left(self):
+        dx,dy,dz = self.direction
+        self.direction = (dx,1,dz)
     def stabilize(self):
         self.direction = (0, 0, 0)  # Stop movement
 
