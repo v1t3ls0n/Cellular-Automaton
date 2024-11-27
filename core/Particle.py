@@ -201,35 +201,36 @@ class Particle:
         """
         neighbors_below = [
             neighbor for neighbor in neighbors if neighbor.elevation < self.elevation]
+        dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
 
         # Rain moves downward
-        if neighbors_below:
-            if self.is_above_ground_level(neighbors_below):
-                self.go_left_or_right_only()
-                self.go_down()  # Continue downward movement
-
-            elif self.is_surrounded_by_sea_cells(neighbors):
-                logging.info(f"Rain at elevation {
-                             self.elevation} converted into ocean.")
+     
+        
+        if self.is_surrounded_by_ground(neighbors_below):
+            self.exchange_water_mass(neighbors_below)
+            self.convert_to_air()
+        elif self.contains_sea(neighbors_below):
+            if self.is_surrounded_by_sea_cells(neighbors):
+                logging.info(f"Rain at elevation {self.elevation} converted into ocean.")
                 self.convert_to_ocean()
+                dz = 0
             elif self.is_surrounded_by_ground(neighbors_below):
-                logging.info(f"Rain at elevation {
-                             self.elevation} converted into forest or desert.")
-                self.go_left_or_right_only()
-            else:
-                # self.convert_to_air()
-                self.go_left_or_right_only()
-                self.go_down()  # Continue downward movement
+                logging.info(f"Rain at elevation {self.elevation} converted into forest or desert.")
+                dz = -1
         else:
             # If no neighbors below, rain evaporates if the temperature is too high
             if self.temperature > self.config["evaporation_point"]:
                 logging.info(f"Rain at elevation {
                              self.elevation} evaporated due to high temperature.")
+                self.exchange_water_mass(neighbors_below)
                 self.convert_to_air()
+                dz = 1
             else:
-                
-                self.go_left_or_right_only()
-                self.go_down()  # Continue downward movement
+                self.exchange_water_mass(neighbors_below)
+                self.convert_to_air()
+    
+        
+        self.direction = (dx,dy,dz)                
 
 
     def _update_cloud(self, neighbors):
@@ -453,6 +454,25 @@ class Particle:
                     transfer_data[neighbor] = water_transfer
         return transfer_data
 
+    def calculate_dominant_wind_direction(self, neighbors):
+
+        total_dx = 0
+        total_dy = 0
+        total_dz = 0
+
+        # מעבר על כל השכנים כדי לסכם את תרומת הכיוונים שלהם
+        for neighbor in neighbors:
+            dx, dy, dz = neighbor.direction  # קבלת כיוון החלקיק השכן
+            total_dx += dx
+            total_dy += dy
+            total_dz += dz
+
+        # קביעה של הכיוון הדומיננטי עבור כל ציר
+        dominant_dx = 1 if total_dx > 0 else (-1 if total_dx < 0 else 0)
+        dominant_dy = 1 if total_dy > 0 else (-1 if total_dy < 0 else 0)
+        dominant_dz = 1 if total_dz > 0 else (-1 if total_dz < 0 else 0)
+
+        return (dominant_dx, dominant_dy, dominant_dz)
 
 ######################################  SURROUNDINGS: ##############################################################
 
