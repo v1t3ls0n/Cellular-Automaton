@@ -175,30 +175,6 @@ class Particle:
         elif self.temperature >= self.config["evaporation_point"]:
             self.convert_to_air()
 
-    def _update_rain(self, neighbors):
-        """
-        Update logic for rain cells. Rain moves downward and interacts with the environment.
-        """
-        neighbors_below = [
-            neighbor for neighbor in neighbors if neighbor.elevation < self.elevation]
-
-        # Check conditions to convert rain to ocean or land-based cells
-        if self.is_above_sea_level(neighbors):
-            self.convert_to_ocean()
-        elif self.is_above_ground_level(neighbors):
-            self.convert_to_desert()  # Convert to desert if hitting land without enough water
-        elif neighbors_below:
-            if self.contains_sea(neighbors_below):
-                self.convert_to_ocean()
-            elif self.contains_land(neighbors_below):
-                self.convert_to_forest()
-            else:
-                self.go_down()  # Continue moving downward
-
-        # Handle evaporation conditions for rain
-        if self.temperature > self.config["evaporation_point"]:
-            self.convert_to_air()
-
     def _update_air(self, neighbors):
         self.equilibrate_pollution_level(neighbors)
         # If air is at cloud level, attempt conversion to cloud
@@ -209,6 +185,47 @@ class Particle:
             self.go_up()
         else:
             self.stabilize()  # Stabilize air
+
+
+
+
+
+
+
+
+
+
+
+
+    def _update_rain(self, neighbors):
+        """
+        Update logic for rain cells. Rain should move downward and convert to ocean or land.
+        """
+        neighbors_below = [neighbor for neighbor in neighbors if neighbor.elevation < self.elevation]
+
+        # Move rain downward
+        self.go_down()
+
+        # Check if rain is above sea or land and act accordingly
+        if self.is_above_sea_level(neighbors):
+            self.convert_to_ocean()
+        elif self.is_above_ground_level(neighbors):
+            self.convert_to_forest()  # Convert to forest if hitting land with water
+        elif neighbors_below:
+            if self.contains_sea(neighbors_below):
+                self.convert_to_ocean()
+            elif self.contains_land(neighbors_below):
+                self.convert_to_forest()
+            else:
+                self.go_down()  # Continue moving downward
+
+        # Handle conditions for evaporating rain
+        if self.temperature > self.config["evaporation_point"]:
+            self.convert_to_air()
+
+
+
+
 
 
 
@@ -231,25 +248,19 @@ class Particle:
 
         # Convert to ice if temperature is below freezing
         if self.temperature < freezing_point:
-            logging.info(f"Cloud at elevation {self.elevation} converting to ice due to freezing temperature.")
             self.convert_to_ice()
             return
 
         # Convert to rain if water mass exceeds saturation threshold
         if self.water_mass >= cloud_saturation_threshold:
-            logging.info(f"Cloud at elevation {self.elevation} converting to rain due to saturation.")
             self.convert_to_rain()
             return
 
         # Stabilize clouds at the proper height
         if self.is_at_clouds_level(neighbors):
-            logging.info(f"Cloud at elevation {self.elevation} stabilizing at cloud level.")
             self.stabilize()
         else:
-            logging.info(f"Cloud at elevation {self.elevation} moving upward.")
             self.go_up()  # Move upward if not yet at cloud level
-
-
 
 
 
@@ -305,19 +316,35 @@ class Particle:
         self.cell_type = 6
         self.water_mass = 0.0
 
+
+
+
+
+
+
     def convert_to_rain(self):
-        logging.info(f"Cloud at elevation {
-                     self.elevation} converted into rain.")
-        self.cell_type = 7  # Rain
+        logging.info(f"Cloud at elevation {self.elevation} converted into rain.")
+        self.cell_type = 7
         self.water_mass = 1.0
-        self.go_down()  # Move rain downward
+        self.go_down()
 
     def convert_to_cloud(self):
-        logging.info(f"Air at elevation {
-                     self.elevation} converted into cloud.")
-        self.cell_type = 2  # Cloud
+        logging.info(f"Air at elevation {self.elevation} converted into cloud.")
+        self.cell_type = 2
         self.water_mass = 1.0
-        self.go_up()  # Move cloud upward
+        self.go_up()
+
+
+
+
+
+
+
+
+
+
+
+
 
 ####################################################################################################################
 ##################################### CELL NATURAL DECAY : #########################################################
