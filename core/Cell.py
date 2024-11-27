@@ -75,6 +75,51 @@ class Cell:
         return self
 
 
+    def move(self, current_position, grid_size):
+
+        if self.direction == (0, 0, 0):  # No movement for static cells
+            return current_position
+
+        x, y, z = current_position
+        dx, dy, dz = self.direction
+
+        new_x = (x + dx) % grid_size[0]
+        new_y = (y + dy) % grid_size[1]
+        new_z = (z + dz)
+
+        if new_z <= 0:
+            new_z = 0
+            # self.direction = (dx,dy,0)
+        elif new_z >= grid_size[2] - 1:
+            new_z = grid_size[2] - 1
+            # self.direction = (dx,dy,0)
+
+
+        self.elevation = new_z
+
+        return new_x, new_y, new_z
+
+    def get_color(self):
+        """Get the color of the cell."""
+        # Get the base color for the cell type or default to transparent white
+        base_color = base_colors.get(self.cell_type)
+        # Ensure the base_color has exactly 4 components (RGBA)
+
+        return base_color
+
+        if len(base_color) != 4:
+            logging.error(f"Invalid color definition for cell_type { self.cell_type}: {base_color}")
+            return None
+
+        # Tint based on pollution level
+        # Ensure within 0-1 range
+        pollution_intensity = max(0.0, min(self.pollution_level / 100.0, 0.8))
+        black_tinted_color = [
+            max(0.0, min(base_color[i] * (1.0 - pollution_intensity), 1.0)) for i in range(3)]
+        # Ensure alpha is also within 0-1 range
+        alpha = max(0.0, min(base_color[3], 1.0))
+        return (*black_tinted_color, alpha)
+
 ####################################################################################################################
 ######################################  CELL'S SELF EFFECTS : ######################################################
 ####################################################################################################################
@@ -339,49 +384,3 @@ class Cell:
 ###################################### CELL UTILS FUNCTIONS: ##########################################################
 ####################################################################################################################
 
-
-    def move(self, current_position, grid_size):
-
-        if self.direction == (0, 0, 0):  # No movement for static cells
-            return current_position
-
-        x, y, z = current_position
-        dx, dy, dz = self.direction
-
-        new_x = (x + dx) % grid_size[0]
-        new_y = (y + dy) % grid_size[1]
-        new_z = (z + dz)
-
-        if new_z <= 0:
-            new_z = 0
-            # self.direction = (dx,dy,0)
-        elif new_z >= grid_size[2] - 1:
-            new_z = grid_size[2] - 1
-            # self.direction = (dx,dy,0)
-
-
-        self.elevation = new_z
-
-        return new_x, new_y, new_z
-
-    def get_color(self):
-        """Get the color of the cell."""
-        # Get the base color for the cell type or default to transparent white
-        base_color = base_colors.get(self.cell_type)
-        # Ensure the base_color has exactly 4 components (RGBA)
-
-        # return base_color
-
-        if len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {
-                          self.cell_type}: {base_color}")
-            return None
-
-        # Tint based on pollution level
-        # Ensure within 0-1 range
-        pollution_intensity = max(0.0, min(self.pollution_level / 100.0, 0.8))
-        black_tinted_color = [
-            max(0.0, min(base_color[i] * (1.0 - pollution_intensity), 1.0)) for i in range(3)]
-        # Ensure alpha is also within 0-1 range
-        alpha = max(0.0, min(base_color[3], 1.0))
-        return (*black_tinted_color, alpha)
