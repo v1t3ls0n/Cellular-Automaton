@@ -187,7 +187,7 @@ class Cell:
 
     def is_at_clouds_level(self, neighbors):
         clouds_cells_count = sum(1 for nei in neighbors if nei.cell_type == 2)
-        return self.is_surrounded_by_sky_cells(neighbors) and clouds_cells_count >= 1
+        return clouds_cells_count >= 1
 
     def is_at_air_level(self, neighbors):
         non_air_nor_rain_cells_count = [
@@ -277,10 +277,10 @@ class Cell:
 
     def _update_air(self, neighbors):
         # if self.water_mass == 1.0:
-            if self.is_at_clouds_level(neighbors):
-                self.convert_to_cloud(neighbors)
-            elif self.is_below_ground_level(neighbors):
-                self.convert_to_ocean(neighbors)
+        if self.water_mass > 0 and self.is_at_clouds_level(neighbors):
+            self.convert_to_cloud(neighbors)
+        elif self.is_below_ground_level(neighbors):
+            self.convert_to_ocean(neighbors)
 
 
     def _update_rain(self, neighbors):
@@ -365,7 +365,7 @@ class Cell:
 
     def convert_to_ocean(self, neighbors):
         self.cell_type = 0
-        self.water_mass = 1.0
+        self.water_mass = 0.0
         self.temperature = baseline_temperature[self.cell_type]
         self.sink_to_ocean(neighbors)
 
