@@ -359,7 +359,7 @@ class Particle:
         self.direction = (self.direction[0], self.direction[1], 1)
 
     def go_static(self):
-        self.direction = (self.direction[0], self.direction[1], 1)
+        self.direction = (self.direction[0], self.direction[1], 0)
 
     def stabilize(self):
         self.direction = (0, 0, 0)  # Stop movement
