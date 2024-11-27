@@ -18,7 +18,8 @@ base_colors = {
 freezing_point = -10  # Temperature that cause ocean freeze and convert into ice
 melting_point = 50  # Temperature threshold for melting ice
 evaporation_point = 100  # Temperature threshold for melting ice
-pollution_level_threshold = 10
+pollution_level_threshold = 1
+
 
 class Particle:
     ####################################################################################################################
@@ -99,6 +100,7 @@ class Particle:
 ###################################### CELL UPDATES: ###############################################################
 ####################################################################################################################
 
+
     def update_state(self, neighbors):
         """
         Compute the next state of the cell based on its neighbors and position.
@@ -106,9 +108,9 @@ class Particle:
 
         if self.pollution_level < pollution_level_threshold:
             self._apply_natural_decay()
-      
-        self.equilibrate_temperature(neighbors)
-        self.equilibrate_pollution_level(neighbors)
+        else:
+            self.equilibrate_temperature(neighbors)
+            self.equilibrate_pollution_level(neighbors)
 
         if self.cell_type == 0:  # Ocean
             self._update_ocean(neighbors)
@@ -220,7 +222,6 @@ class Particle:
 ###################################### CELL  CONVERSIONS ###########################################################
 ####################################################################################################################
 
-
     def convert_to_forest(self):
         self.cell_type = 4
         self.water_mass = 0
@@ -269,10 +270,11 @@ class Particle:
 ##################################### CELL NATURAL DECAY : #########################################################
 ####################################################################################################################
 
+
     def _apply_natural_decay(self):
 
-        pollution_decay_rate = 0.5  # Rate at which pollution naturally decreases
-        temperature_decay_rate = 0.5  # Rate at which temperature naturally decreases
+        pollution_decay_rate = 0.1  # Rate at which pollution naturally decreases
+        temperature_decay_rate = 0.1  # Rate at which temperature naturally decreases
 
         # Apply decay to pollution level
         self.pollution_level = self.pollution_level - \
@@ -322,6 +324,7 @@ class Particle:
 
 ############################################### AVERAGES ###########################################################
 
+
     def calc_neighbors_avg_temperature(self, neighbors):
         return (sum(neighbor.temperature for neighbor in neighbors)) / len(neighbors)
 
@@ -333,6 +336,7 @@ class Particle:
 
 
 ######################################  SURROUNDINGS: ##############################################################
+
 
     def is_surrounded_by_sky_cells(self, neighbors):
         """
