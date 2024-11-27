@@ -173,16 +173,35 @@ class Particle:
 
     def _update_ice(self, neighbors):
         # Ice melts into ocean if temperature exceeds melting point
-        if self.temperature > self.config["melting_point"]:
+        dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
+
+
+        if self.temperature > self.config["evaporation_point"]:
+            # self.exchange_water_mass(neighbors)
+            self.convert_to_air()
+            dz = 1
+        elif self.temperature > min(self.config["baseline_temperature"][self.cell_type], self.config["melting_point"]):
             self.convert_to_ocean()
+            dz = -1
+        else:
+            dz = 0
+
+        self.direction = (dx,dy,dz)
+
 
     def _update_ocean(self, neighbors):
+        dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
+
         # Ocean freezes if temperature is below freezing point
         if self.temperature <= self.config["freezing_point"]:
             self.convert_to_ice()
+            dz = -1
+        elif self.temperature <= self.config["melting_point"]:
+            dz = 0
         # Ocean evaporates into air if temperature exceeds evaporation point
         elif self.temperature >= self.config["evaporation_point"]:
             self.convert_to_air()
+            dz = 1
 
     def _update_air(self, neighbors):
         self.equilibrate_pollution_level(neighbors)
@@ -207,8 +226,9 @@ class Particle:
      
         
         if self.is_surrounded_by_ground(neighbors_below):
-            self.exchange_water_mass(neighbors_below)
+            # self.exchange_water_mass(neighbors_below)
             self.convert_to_air()
+            dz = -1
         elif self.contains_sea(neighbors_below):
             if self.is_surrounded_by_sea_cells(neighbors):
                 logging.info(f"Rain at elevation {self.elevation} converted into ocean.")
@@ -222,11 +242,10 @@ class Particle:
             if self.temperature > self.config["evaporation_point"]:
                 logging.info(f"Rain at elevation {
                              self.elevation} evaporated due to high temperature.")
-                self.exchange_water_mass(neighbors_below)
+                # self.exchange_water_mass(neighbors_below)
                 self.convert_to_air()
                 dz = 1
             else:
-                self.exchange_water_mass(neighbors_below)
                 self.convert_to_air()
     
         
@@ -242,7 +261,7 @@ class Particle:
         cloud_saturation_threshold = self.config["cloud_saturation_threshold"]
 
         # Gain water mass from neighbors
-        self.exchange_water_mass(neighbors)
+        # self.exchange_water_mass(neighbors)
 
         # Convert to ice if below freezing point
         if self.temperature < freezing_point:
@@ -281,19 +300,19 @@ class Particle:
 
     def convert_to_forest(self):
         self.cell_type = 4
-        self.water_mass = 0
+        # self.water_mass = 0
         self.direction = (0, 0, 0)
         self.temperature = self.config["baseline_temperature"][self.cell_type]
 
     def convert_to_city(self):
         self.cell_type = 5
-        self.water_mass = 0
+        # self.water_mass = 0
         self.direction = (0, 0, 0)
         self.temperature = self.config["baseline_temperature"][self.cell_type]
 
     def convert_to_desert(self):
         self.cell_type = 1
-        self.water_mass = 0
+        # self.water_mass = 0
         self.direction = (0, 0, 0)
         # self.temperature -= 0.2 * self.temperature
         self.temperature = self.config["baseline_temperature"][self.cell_type]
@@ -301,31 +320,31 @@ class Particle:
 
     def convert_to_ocean(self):
         self.cell_type = 0
-        self.water_mass = 1.0
+        # self.water_mass = 1.0
         self.temperature = self.config["baseline_temperature"][self.cell_type]
 
     def convert_to_ice(self):
         self.cell_type = 3
-        self.water_mass = 1.0
+        # self.water_mass = 1.0
         self.temperature = self.config["baseline_temperature"][self.cell_type]
         self.go_down()
 
     def convert_to_air(self):
         self.cell_type = 6
-        self.water_mass = 0.0
+        # self.water_mass = 0.0
 
     def convert_to_rain(self):
         logging.info(f"Cloud at elevation {
                      self.elevation} converted into rain.")
         self.cell_type = 7
-        self.water_mass = 1.0
+        # self.water_mass = 1.0
         self.go_down()
 
     def convert_to_cloud(self):
         logging.info(f"Air at elevation {
                      self.elevation} converted into cloud.")
         self.cell_type = 2
-        self.water_mass = 1.0
+        # self.water_mass = 1.0
         self.go_up()
 
 
