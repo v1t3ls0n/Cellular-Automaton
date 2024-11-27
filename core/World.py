@@ -1,5 +1,5 @@
 import numpy as np
-from .Cell import Cell
+from .Particle import Particle
 import logging
 import random
 from collections import defaultdict
@@ -177,7 +177,7 @@ class World:
                     temperature = cell_properties[cell_type]["temperature"] + \
                         np.random.uniform(-2, 2)
                     pollution = cell_properties[cell_type]["pollution"]
-                    self.grid[i, j, k] = Cell(
+                    self.grid[i, j, k] = Particle(
                         cell_type=cell_type,
                         temperature=temperature,
                         water_mass=1 if cell_type in {0, 2, 3} else 0,

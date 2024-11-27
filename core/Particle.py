@@ -20,7 +20,7 @@ melting_point = 50  # Temperature threshold for melting ice
 evaporation_point = 100  # Temperature threshold for melting ice
 
 
-class Cell:
+class Particle:
     ####################################################################################################################
     ###################################### CLASS UTILS #################################################################
     ####################################################################################################################
@@ -34,7 +34,7 @@ class Cell:
         self.elevation = elevation
 
     def clone(self):
-        return Cell(
+        return Particle(
             cell_type=self.cell_type,
             temperature=self.temperature,
             water_mass=self.water_mass,

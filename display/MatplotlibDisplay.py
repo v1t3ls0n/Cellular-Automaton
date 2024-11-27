@@ -3,7 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
 import numpy as np
 import logging
-from core.Cell import base_colors
+from core.Particle import base_colors
 
 class MatplotlibDisplay:
     def __init__(self, simulation):
