@@ -16,7 +16,13 @@ import logging
 import logging
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging
+logging.basicConfig(
+    filename='simulation.log',    # Name of the log file
+    level=logging.INFO,           # Minimum log level to write to the file
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Log message format
+    datefmt='%Y-%m-%d %H:%M:%S'   # Date and time format
+)
 logging.info("Simulation started.")
 
 # Prompt the user for grid size

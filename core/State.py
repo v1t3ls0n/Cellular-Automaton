@@ -2,7 +2,7 @@ import numpy as np
 from .Cell import Cell
 import logging
 import random
-
+from collections import defaultdict
 
 class State:
     def __init__(self, grid_size=(10, 10, 10), initial_cities_ratio=0.3, initial_forests_ratio=0.3, initial_deserts_ratio=0.4, state_index=0):
@@ -51,8 +51,7 @@ class State:
         initial_deserts_ratio /= total_land_ratio
         # sea_prob = 1.0 - total_land_ratio  # Remaining probability for sea at z=0
 
-        plane_surfaces_map = [{(i, j): None for i in range(x)
-                               for j in range(y)} for _ in range(z)]
+        plane_surfaces_map = defaultdict(str)
         # Define temperature and pollution levels for each cell type
         cell_properties = {
             0: {"temperature": 15, "pollution": 0},  # Sea
@@ -67,10 +66,10 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    cell_type = direction = temperature = pollution = None
-
-                    if k > 0:
-                        if plane_surfaces_map[k-1][(i, j)] == 'sea':
+                    cell_type = 6
+                    direction = (0,0,0)
+                    if k >= 1:
+                        if plane_surfaces_map[(i,j,k-1)] == 'sea':
                             if k < elevation_map[i, j]:
                                 cell_type = np.random.choice(
                                     [0, 3], p=[0.9, 0.1])
@@ -90,7 +89,7 @@ class State:
                                 else:
                                     cell_type = 6
 
-                        elif plane_surfaces_map[k-1][(i, j)] == 'land':
+                        elif plane_surfaces_map[(i,j,k-1)] == 'land':
                             if k <= elevation_map[i, j]:
                                 cell_type = 1
                             elif k == elevation_map[i, j] + 1:
@@ -110,8 +109,7 @@ class State:
                                 else:
                                     cell_type = 6
 
-                        elif plane_surfaces_map[k-1][(i, j)] == 'sky':
-                            plane_surfaces_map[k][(i, j)] == 'sky'
+                        elif plane_surfaces_map[(i,j,k-1)] == 'sky':
 
                             if k >= 0.9 * z:
                                 cell_type = np.random.choice(
@@ -128,27 +126,28 @@ class State:
                             cell_type = 6
                     else:
                         cell_type = np.random.choice([0,1], p=[0.5, 0.5])
+                        plane_surfaces_map[(i,j,k)] = 'land' if cell_type else 'sea'
 
                     match cell_type:
                         case 0 | 3:
-                            plane_surfaces_map[k][(i, j)] == 'sea'
+                            plane_surfaces_map[(i,j,k)] == 'sea'
                             dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])
                             direction = (dx, dy, 0)
                         case 1:
-                            plane_surfaces_map[k][(i, j)] == 'land'
+                            plane_surfaces_map[(i,j,k)] == 'land'
                             direction = (0, 0, 0)
                         case 4 | 5:
-                            plane_surfaces_map[k][(i, j)] == 'forest or city'
+                            plane_surfaces_map[(i,j,k)] == 'forest or city'
                             direction = (0, 0, 0)
                         case 2 | 6 | 7:
-                            plane_surfaces_map[k][(i, j)] == 'sky'
+                            plane_surfaces_map[(i,j,k)] == 'sky'
                             dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1]) 
                             dz = -1 if cell_type == 6 else 1  # Clouds rise, air falls
                             direction = (dx, dy, dz)
 
-
-                    temperature = cell_properties[cell_type]["temperature"] + \
-                        np.random.uniform(-2, 2)
+                    
+                    logging.info(f"plane_surfaces_map[{(i,j,k)}]: {plane_surfaces_map[(i,j,k)]}")
+                    temperature = cell_properties[cell_type]["temperature"] + np.random.uniform(-2, 2)
                     pollution = cell_properties[cell_type]["pollution"]
 
                     # Adjust movement direction and other dynamic properties
@@ -341,5 +340,4 @@ class State:
         self.total_cities = total_cities
         self.total_forests = total_forests
 
-        logging.debug(f"Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={
-                      self.avg_pollution}, Avg Water Mass={self.avg_water_mass}")
+        logging.debug(f"Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={ self.avg_pollution}, Avg Water Mass={self.avg_water_mass}")
