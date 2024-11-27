@@ -203,26 +203,21 @@ class Particle:
         """
         neighbors_below = [neighbor for neighbor in neighbors if neighbor.elevation < self.elevation]
 
-        # Move rain downward
-        self.go_down()
-
-        # Check if rain is above sea or land and act accordingly
-        if self.is_above_sea_level(neighbors):
-            self.convert_to_ocean()
-        elif self.is_above_ground_level(neighbors):
-            self.convert_to_forest()  # Convert to forest if hitting land with water
-        elif neighbors_below:
+        # Rain moves downward
+        if neighbors_below:
             if self.contains_sea(neighbors_below):
+                logging.info(f"Rain at elevation {self.elevation} converted into ocean.")
                 self.convert_to_ocean()
             elif self.contains_land(neighbors_below):
-                self.convert_to_forest()
+                logging.info(f"Rain at elevation {self.elevation} converted into forest or desert.")
+                self.convert_to_forest_or_desert()
             else:
-                self.go_down()  # Continue moving downward
-
-        # Handle conditions for evaporating rain
-        if self.temperature > self.config["evaporation_point"]:
-            self.convert_to_air()
-
+                self.go_down()  # Continue downward movement
+        else:
+            # If no neighbors below, rain evaporates if the temperature is too high
+            if self.temperature > self.config["evaporation_point"]:
+                logging.info(f"Rain at elevation {self.elevation} evaporated due to high temperature.")
+                self.convert_to_air()
 
 
 
@@ -243,25 +238,26 @@ class Particle:
         freezing_point = self.config["freezing_point"]
         cloud_saturation_threshold = self.config["cloud_saturation_threshold"]
 
-        # Exchange water with neighboring clouds or air
+        # Gain water mass from neighbors
         self.exchange_water_mass(neighbors)
 
-        # Convert to ice if temperature is below freezing
+        # Convert to ice if below freezing point
         if self.temperature < freezing_point:
+            logging.info(f"Cloud at elevation {self.elevation} converted into ice due to low temperature.")
             self.convert_to_ice()
             return
 
         # Convert to rain if water mass exceeds saturation threshold
         if self.water_mass >= cloud_saturation_threshold:
+            logging.info(f"Cloud at elevation {self.elevation} converted into rain due to water saturation.")
             self.convert_to_rain()
             return
 
-        # Stabilize clouds at the proper height
+        # Stabilize at cloud level
         if self.is_at_clouds_level(neighbors):
             self.stabilize()
         else:
             self.go_up()  # Move upward if not yet at cloud level
-
 
 
 
