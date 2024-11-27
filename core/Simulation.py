@@ -43,7 +43,7 @@ class Simulation:
             initial_cities_ratio = self.initial_cities_ratio,
             initial_forests_ratio = self.initial_forests_ratio,
             initial_deserts_ratio = self.initial_deserts_ratio,
-            state_index = 0
+            day_number = 0
         )
 
         initial_state.initialize_grid(
@@ -59,7 +59,7 @@ class Simulation:
             logging.info(f"Simulating day {day + 1}...")
             # Compute the next state by cloning and updating
             next_state = self.states[-1].clone()
-            next_state.state_index += 1
+            next_state.day_number += 1
             next_state.update_cells_on_grid()
             self.states.append(next_state)
             self._update_aggregates(next_state)

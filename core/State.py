@@ -6,7 +6,7 @@ from collections import defaultdict
 
 
 class State:
-    def __init__(self, grid_size=(10, 10, 10), initial_cities_ratio=0.3, initial_forests_ratio=0.3, initial_deserts_ratio=0.4, state_index=0):
+    def __init__(self, grid_size=(10, 10, 10), initial_cities_ratio=0.3, initial_forests_ratio=0.3, initial_deserts_ratio=0.4, day_number=0):
         """
         Initialize the State class.
         """
@@ -14,7 +14,7 @@ class State:
         self.grid = np.empty(grid_size, dtype=object)
         self.initial_cities_ratio = initial_cities_ratio
         self.initial_forests_ratio = initial_forests_ratio
-        self.state_index = state_index
+        self.day_number = day_number
         self.initial_deserts_ratio = initial_deserts_ratio
 
     def clone(self):
@@ -26,7 +26,7 @@ class State:
             initial_cities_ratio=self.initial_cities_ratio,
             initial_forests_ratio=self.initial_forests_ratio,
             initial_deserts_ratio=self.initial_deserts_ratio,
-            state_index=self.state_index
+            day_number=self.day_number
         )
 
         for i in range(self.grid_size[0]):
