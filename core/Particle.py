@@ -208,7 +208,7 @@ class Particle:
                 self.go_left_or_right_only()
                 self.go_down()  # Continue downward movement
 
-            elif self.is_above_sea_level(neighbors):
+            elif self.is_surrounded_by_sea_cells(neighbors):
                 logging.info(f"Rain at elevation {
                              self.elevation} converted into ocean.")
                 self.convert_to_ocean()
@@ -226,6 +226,11 @@ class Particle:
                 logging.info(f"Rain at elevation {
                              self.elevation} evaporated due to high temperature.")
                 self.convert_to_air()
+            else:
+                
+                self.go_left_or_right_only()
+                self.go_down()  # Continue downward movement
+
 
     def _update_cloud(self, neighbors):
         """
