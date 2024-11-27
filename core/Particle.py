@@ -130,7 +130,7 @@ class Particle:
         self.pollution_level = max(
             0, self.pollution_level - aabsorption_rate * self.pollution_level)
         self.temperature = self.temperature - self.temperature * cooling_effect
-            # Ensure forest stays on ground level and doesn't stack
+        # Ensure forest stays on ground level and doesn't stack
 
         if self.is_below_sea_level(neighbors):
             self.go_down()
@@ -173,7 +173,7 @@ class Particle:
 
     def _update_ice(self, neighbors):
         # Ice melts into ocean if temperature exceeds melting point
-        dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
+        dx, dy, dz = self.calculate_dominant_wind_direction(neighbors)
         if self.temperature > self.config["evaporation_point"]:
             # self.exchange_water_mass(neighbors)
             self.convert_to_air()
@@ -184,11 +184,10 @@ class Particle:
         else:
             dz = 0
 
-        self.direction = (dx,dy,dz)
-
+        self.direction = (dx, dy, dz)
 
     def _update_ocean(self, neighbors):
-        dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
+        dx, dy, dz = self.calculate_dominant_wind_direction(neighbors)
         neighbors_below = [
             neighbor for neighbor in neighbors if neighbor.elevation < self.elevation]
         if self.is_surrounded_by_ground(neighbors_below):
@@ -206,12 +205,11 @@ class Particle:
         else:
             dz = 0
         # Ocean evaporates into air if temperature exceeds evaporation point
-        self.direction = (dx,dy,dz)
-        
+        self.direction = (dx, dy, dz)
 
     def _update_air(self, neighbors):
         self.equilibrate_pollution_level(neighbors)
-        dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
+        dx, dy, dz = self.calculate_dominant_wind_direction(neighbors)
 
         # If air is at cloud level, attempt conversion to cloud
         if self.is_at_clouds_level(neighbors):
@@ -222,7 +220,7 @@ class Particle:
             # self.go_up()
         # else:
             # self.stabilize()  # Stabilize air
-        self.direction = (dx,dy,dz)
+        self.direction = (dx, dy, dz)
 
     def _update_rain(self, neighbors):
         """
@@ -230,22 +228,26 @@ class Particle:
         """
         neighbors_below = [
             neighbor for neighbor in neighbors if neighbor.elevation < self.elevation]
-        dx,dy, dz = self.calculate_dominant_wind_direction(neighbors)
+        dx, dy, dz = self.calculate_dominant_wind_direction(neighbors)
 
         # Rain moves downward
-     
-        
-        if self.is_surrounded_by_ground(neighbors_below):
+
+        if self.temperature >= self.config["baseline_temperature"][0]:
+            self.convert_to_ocean()
+            dz = -1
+        elif self.is_surrounded_by_ground(neighbors_below):
             # self.exchange_water_mass(neighbors_below)
             self.convert_to_air()
             dz = -1
         elif self.contains_sea(neighbors_below):
             if self.is_surrounded_by_sea_cells(neighbors):
-                logging.info(f"Rain at elevation {self.elevation} converted into ocean.")
+                logging.info(f"Rain at elevation {
+                             self.elevation} converted into ocean.")
                 self.convert_to_ocean()
                 dz = 0
             elif self.is_surrounded_by_ground(neighbors_below):
-                logging.info(f"Rain at elevation {self.elevation} converted into forest or desert.")
+                logging.info(f"Rain at elevation {
+                             self.elevation} converted into forest or desert.")
                 self.convert_to_ocean()
                 dz = -1
         else:
@@ -258,10 +260,8 @@ class Particle:
                 dz = 1
             else:
                 self.convert_to_air()
-    
-        
-        self.direction = (dx,dy,dz)                
 
+        self.direction = (dx, dy, dz)
 
     def _update_cloud(self, neighbors):
         """
@@ -327,7 +327,6 @@ class Particle:
         self.direction = (0, 0, 0)
         # self.temperature -= 0.2 * self.temperature
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-
 
     def convert_to_ocean(self):
         self.cell_type = 0
@@ -428,19 +427,21 @@ class Particle:
         self.direction = (self.direction[0], self.direction[1], 1)
 
     def go_left_or_right_only(self):
-        dx,dy, _ = self.direction
-        if abs(max(dx,dy)) == 0: 
+        dx, dy, _ = self.direction
+        if abs(max(dx, dy)) == 0:
             if self.position[0] > self.position[1]:
                 self.go_right()
             else:
                 self.go_left()
 
     def go_right(self):
-        dx,dy,dz = self.direction
-        self.direction = (1,dy,dz)
+        dx, dy, dz = self.direction
+        self.direction = (1, dy, dz)
+
     def go_left(self):
-        dx,dy,dz = self.direction
-        self.direction = (dx,1,dz)
+        dx, dy, dz = self.direction
+        self.direction = (dx, 1, dz)
+
     def stabilize(self):
         self.direction = (0, 0, 0)  # Stop movement
 
