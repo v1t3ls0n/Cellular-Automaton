@@ -35,24 +35,47 @@ class State:
 
         return cloned_state
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def initialize_grid(self, initial_cities_ratio, initial_forests_ratio, initial_deserts_ratio):
         """
         Initialize the grid with a realistic distribution of oceans, forests, cities, deserts, and other elements.
-        Adjust cloud probability dynamically based on height above the surface.
+        Includes logic to prevent overlapping forests/cities and adjusts cloud/air probabilities dynamically by height.
         """
         x, y, z = self.grid_size
         elevation_map = self._generate_elevation_map()
 
         # Adjust the ratios for realistic distributions
-        total_land_ratio = initial_cities_ratio + \
-            initial_forests_ratio + initial_deserts_ratio
+        total_land_ratio = initial_cities_ratio + initial_forests_ratio + initial_deserts_ratio
         initial_cities_ratio /= total_land_ratio
         initial_forests_ratio /= total_land_ratio
         initial_deserts_ratio /= total_land_ratio
-        # sea_prob = 1.0 - total_land_ratio  # Remaining probability for sea at z=0
 
-        plane_surfaces_map = defaultdict(str)
-        # Define temperature and pollution levels for each cell type
+        plane_surfaces_map = {}  # Use a dictionary to track the surface type
         cell_properties = {
             0: {"temperature": 15, "pollution": 0},  # Sea
             1: {"temperature": 25, "pollution": 5},  # Desert
@@ -66,92 +89,97 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    cell_type = 6
-                    direction = (0,0,0)
-                    if k >= 1:
-                        if plane_surfaces_map[(i,j,k-1)] == 'sea':
+                    cell_type = 6  # Default to Air
+                    direction = (0, 0, 0)
+
+                    if k == 0:
+                        # Surface layer: Assign initial sea or land
+                        cell_type = np.random.choice([0, 1], p=[0.5, 0.5])
+                        plane_surfaces_map[(i, j, k)] = 'unused_land' if cell_type == 1 else 'sea'
+                    else:
+                        # Check the surface type below this cell
+                        surface_type = plane_surfaces_map.get((i, j, k - 1), 'sky')
+
+                        if surface_type == 'sea':
                             if k < elevation_map[i, j]:
-                                cell_type = np.random.choice(
-                                    [0, 3], p=[0.9, 0.1])
+                                cell_type = np.random.choice([0, 3], p=[0.9, 0.1])  # Mostly sea, some ice
                             elif k == elevation_map[i, j]:
-                                cell_type = np.random.choice(
-                                    [0, 3, 6], p=[0.6, 0.1, 0.3])
-                            elif k > elevation_map[i, j]:  # Above land or sea
+                                cell_type = np.random.choice([0, 3, 6], p=[0.6, 0.1, 0.3])  # Sea/Ice/Air
+                            elif k > elevation_map[i, j]:  # Above sea
                                 if k >= 0.9 * z:
-                                    cell_type = np.random.choice(
-                                        [6, 2], p=[0.6, 0.4])  # Air or Cloud
+                                    cell_type = np.random.choice([6, 2], p=[0.6, 0.4])  # Air or Cloud
                                 elif k >= 0.8 * z:
-                                    cell_type = np.random.choice(
-                                        [6, 2], p=[0.7, 0.3])  # Air or Cloud
+                                    cell_type = np.random.choice([6, 2], p=[0.7, 0.3])  # Air or Cloud
                                 elif k >= 0.7 * z:
-                                    cell_type = np.random.choice(
-                                        [6, 2], p=[0.9, 0.1])  # Air or Cloud
+                                    cell_type = np.random.choice([6, 2], p=[0.9, 0.1])  # Air or Cloud
                                 else:
                                     cell_type = 6
 
-                        elif plane_surfaces_map[(i,j,k-1)] == 'land':
+                        elif surface_type == 'unused_land':
                             if k <= elevation_map[i, j]:
-                                cell_type = 1
+                                cell_type = 1  # Unused Land (Desert)
                             elif k == elevation_map[i, j] + 1:
-                                cell_type = np.random.choice(
-                                    [1, 4, 5], p=[initial_deserts_ratio, initial_forests_ratio, initial_cities_ratio])
-
-                            elif k > elevation_map[i, j] + 1:  # Above land or sea
+                                # Prevent placing forests/cities above existing forests/cities
+                                if plane_surfaces_map.get((i, j, k - 1)) != 'used_land':
+                                    cell_type = np.random.choice(
+                                        [1, 4, 5], p=[initial_deserts_ratio, initial_forests_ratio, initial_cities_ratio])
+                                    plane_surfaces_map[(i, j, k)] = 'used_land'
+                            elif k > elevation_map[i, j] + 1:  # Above land
                                 if k >= 0.9 * z:
-                                    cell_type = np.random.choice(
-                                        [6, 2], p=[0.6, 0.4])  # Air or Cloud
+                                    cell_type = np.random.choice([6, 2], p=[0.6, 0.4])  # Air or Cloud
                                 elif k >= 0.8 * z:
-                                    cell_type = np.random.choice(
-                                        [6, 2], p=[0.7, 0.3])  # Air or Cloud
+                                    cell_type = np.random.choice([6, 2], p=[0.7, 0.3])  # Air or Cloud
                                 elif k >= 0.7 * z:
-                                    cell_type = np.random.choice(
-                                        [6, 2], p=[0.9, 0.1])  # Air or Cloud
+                                    cell_type = np.random.choice([6, 2], p=[0.9, 0.1])  # Air or Cloud
                                 else:
                                     cell_type = 6
 
-                        elif plane_surfaces_map[(i,j,k-1)] == 'sky':
-
+                        elif surface_type == 'used_land':
+                            # Above forests/cities, only air or cloud
                             if k >= 0.9 * z:
-                                cell_type = np.random.choice(
-                                    [6, 2], p=[0.6, 0.4])  # Air or Cloud
+                                cell_type = np.random.choice([6, 2], p=[0.6, 0.4])  # Air or Cloud
                             elif k >= 0.8 * z:
-                                cell_type = np.random.choice(
-                                    [6, 2], p=[0.7, 0.3])  # Air or Cloud
+                                cell_type = np.random.choice([6, 2], p=[0.7, 0.3])  # Air or Cloud
                             elif k >= 0.7 * z:
-                                cell_type = np.random.choice(
-                                    [6, 2], p=[0.9, 0.1])  # Air or Cloud
+                                cell_type = np.random.choice([6, 2], p=[0.9, 0.1])  # Air or Cloud
                             else:
                                 cell_type = 6
-                        else:
-                            cell_type = 6
-                    else:
-                        cell_type = np.random.choice([0,1], p=[0.5, 0.5])
-                        plane_surfaces_map[(i,j,k)] = 'land' if cell_type else 'sea'
 
-                    match cell_type:
-                        case 0 | 3:
-                            plane_surfaces_map[(i,j,k)] == 'sea'
-                            dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])
-                            direction = (dx, dy, 0)
-                        case 1:
-                            plane_surfaces_map[(i,j,k)] == 'land'
-                            direction = (0, 0, 0)
-                        case 4 | 5:
-                            plane_surfaces_map[(i,j,k)] == 'forest or city'
-                            direction = (0, 0, 0)
-                        case 2 | 6 | 7:
-                            plane_surfaces_map[(i,j,k)] == 'sky'
-                            dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1]) 
-                            dz = -1 if cell_type == 6 else 1  # Clouds rise, air falls
-                            direction = (dx, dy, dz)
+                        elif surface_type == 'sky':
+                            # Above sky, only air or cloud
+                            if k >= 0.9 * z:
+                                cell_type = np.random.choice([6, 2], p=[0.6, 0.4])  # Air or Cloud
+                            elif k >= 0.8 * z:
+                                cell_type = np.random.choice([6, 2], p=[0.7, 0.3])  # Air or Cloud
+                            elif k >= 0.7 * z:
+                                cell_type = np.random.choice([6, 2], p=[0.9, 0.1])  # Air or Cloud
+                            else:
+                                cell_type = 6
 
-                    
-                    logging.info(f"plane_surfaces_map[{(i,j,k)}]: {plane_surfaces_map[(i,j,k)]}")
+                    # Update plane_surfaces_map
+                    if cell_type in {0, 3}:  # Sea or Ice
+                        plane_surfaces_map[(i, j, k)] = 'sea'
+                    elif cell_type == 1:  # Unused Land (Desert)
+                        plane_surfaces_map[(i, j, k)] = 'unused_land'
+                    elif cell_type in {4, 5}:  # Forest or City
+                        plane_surfaces_map[(i, j, k)] = 'used_land'
+                    elif cell_type in {2, 6}:  # Cloud or Air
+                        plane_surfaces_map[(i, j, k)] = 'sky'
+
+                    # Set direction for dynamic cells
+                    if cell_type in {0, 3}:  # Sea/Ice
+                        direction = (np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1]), 0)
+                    elif cell_type in {2, 6}:  # Cloud/Air
+                        dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])
+                        dz = -1 if cell_type == 6 else 1  # Air falls, clouds rise
+                        direction = (dx, dy, dz)
+
+                    # Logging for debugging
+                    logging.info(f"plane_surfaces_map[{(i, j, k)}]: {plane_surfaces_map[(i, j, k)]}")
+
+                    # Create the cell
                     temperature = cell_properties[cell_type]["temperature"] + np.random.uniform(-2, 2)
                     pollution = cell_properties[cell_type]["pollution"]
-
-                    # Adjust movement direction and other dynamic properties
-            
                     self.grid[i, j, k] = Cell(
                         cell_type=cell_type,
                         temperature=temperature,
@@ -162,8 +190,41 @@ class State:
                     )
 
         self._recalculate_global_attributes()
-        logging.debug(f"Grid initialized successfully with dimensions: {
-                      self.grid_size}")
+        logging.debug(f"Grid initialized successfully with dimensions: {self.grid_size}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def _generate_land_map(self, x, y):
         """
