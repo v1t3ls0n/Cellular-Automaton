@@ -210,6 +210,14 @@ class Particle:
         else:
             self.stabilize()  # Stabilize air
 
+
+
+
+
+
+
+
+
     def _update_cloud(self, neighbors):
         """
         Update logic for cloud cells. Clouds gain water from neighbors, stabilize at cloud level,
@@ -223,19 +231,31 @@ class Particle:
 
         # Convert to ice if temperature is below freezing
         if self.temperature < freezing_point:
+            logging.info(f"Cloud at elevation {self.elevation} converting to ice due to freezing temperature.")
             self.convert_to_ice()
             return
 
         # Convert to rain if water mass exceeds saturation threshold
         if self.water_mass >= cloud_saturation_threshold:
+            logging.info(f"Cloud at elevation {self.elevation} converting to rain due to saturation.")
             self.convert_to_rain()
             return
 
         # Stabilize clouds at the proper height
         if self.is_at_clouds_level(neighbors):
+            logging.info(f"Cloud at elevation {self.elevation} stabilizing at cloud level.")
             self.stabilize()
         else:
+            logging.info(f"Cloud at elevation {self.elevation} moving upward.")
             self.go_up()  # Move upward if not yet at cloud level
+
+
+
+
+
+
+
+
 
 
 ####################################################################################################################
@@ -334,6 +354,9 @@ class Particle:
         self.pollution_level = (self.calc_neighbors_avg_pollution(
             neighbors) + self.temperature)/2
 
+
+
+
     def exchange_water_mass(self, neighbors):
         """
         Exchange water mass with neighboring clouds or air.
@@ -343,10 +366,16 @@ class Particle:
         for neighbor in neighbors:
             if neighbor.cell_type in {2, 6}:  # Cloud or Air
                 # Calculate water mass transfer rate
-                water_transfer = (neighbor.water_mass - self.water_mass) * 0.05
-                self.water_mass += water_transfer
-                total_transfer += water_transfer
+                water_transfer = (neighbor.water_mass - self.water_mass) * 0.05  # 5% exchange rate
+                if water_transfer > 0:  # Prevent reversing effects (gain/loss)
+                    self.water_mass += water_transfer
+                    total_transfer += water_transfer
+        logging.debug(f"Cloud at elevation {self.elevation} exchanged {total_transfer} water mass.")
         return total_transfer
+
+
+
+
 
 ####################################################################################################################
 ###################################### CELL ELEVATION ##############################################################
@@ -385,11 +414,29 @@ class Particle:
 ######################################  SURROUNDINGS: ##############################################################
 
 
+
+
     def contains_land(neighbors_below):
-        return any(neighbor.cell_type in {1, 4, 5} for neighbor in neighbors_below)
+        """
+        Check if any neighboring cells below are land (desert, forest, or city).
+        """
+        result = any(neighbor.cell_type in {1, 4, 5} for neighbor in neighbors_below)
+        logging.debug(f"Neighbors below contain land: {result}")
+        return result
 
     def contains_sea(neighbors_below):
-        return any(neighbor.cell_type in {0, 3} for neighbor in neighbors_below)
+        """
+        Check if any neighboring cells below are sea (ocean or ice).
+        """
+        result = any(neighbor.cell_type in {0, 3} for neighbor in neighbors_below)
+        logging.debug(f"Neighbors below contain sea: {result}")
+        return result
+
+
+
+
+
+
 
     def is_surrounded_by_sky_cells(self, neighbors):
         """
