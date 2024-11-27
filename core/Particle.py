@@ -130,8 +130,12 @@ class Particle:
         self.pollution_level = max(
             0, self.pollution_level - aabsorption_rate * self.pollution_level)
         self.temperature = self.temperature - self.temperature * cooling_effect
+            # Ensure forest stays on ground level and doesn't stack
+
         if self.is_below_sea_level(neighbors):
             self.go_down()
+        elif not self.is_at_ground_level(neighbors):
+            self.convert_to_desert()
         elif (self.temperature >= abs(self.config["evaporation_point"]) or self.pollution_level >= 100):
             self.convert_to_desert()
         elif (self.pollution_level == 0 and 0 < self.temperature <= self.config["baseline_temperature"][self.cell_type]):
@@ -156,11 +160,14 @@ class Particle:
             baseline_pollution_level, self.pollution_level + pollution_increase_rate * self.pollution_level)
         self.temperature += self.temperature + \
             (self.pollution_level * warming_effect)
+    # Prevent city stacking
 
         if self.is_surrounded_by_sea_cells(neighbors):
             self.convert_to_desert()
             self.go_down()
             self.convert_to_ocean()
+        elif not self.is_at_ground_level(neighbors):
+            self.convert_to_desert()
         elif self.pollution_level > 100 or abs(self.temperature) >= self.config["evaporation_point"]:
             self.convert_to_desert()
 
@@ -197,14 +204,14 @@ class Particle:
 
         # Rain moves downward
         if neighbors_below:
-            if self.contains_sea(neighbors_below):
+            if self.contains_sea(neighbors_below) and self.is_below_ground_level(neighbors) and self.is_below_sea_level(neighbors):
                 logging.info(f"Rain at elevation {
                              self.elevation} converted into ocean.")
                 self.convert_to_ocean()
-            elif self.contains_land(neighbors_below):
-                logging.info(f"Rain at elevation {
-                             self.elevation} converted into forest or desert.")
-                self.convert_to_forest_or_desert()
+            # elif self.contains_land(neighbors_below):
+            #     logging.info(f"Rain at elevation {
+            #                  self.elevation} converted into forest or desert.")
+            #     self.convert_to_forest_or_desert()
             else:
                 self.go_down()  # Continue downward movement
         else:
@@ -276,7 +283,9 @@ class Particle:
         self.cell_type = 1
         self.water_mass = 0
         self.direction = (0, 0, 0)
-        self.temperature -= 0.2 * self.temperature
+        # self.temperature -= 0.2 * self.temperature
+        self.temperature = self.config["baseline_temperature"][self.cell_type]
+
 
     def convert_to_ocean(self):
         self.cell_type = 0
@@ -468,6 +477,11 @@ class Particle:
         return len(ground_cells) == len(neighbors)
 
 ##################################################  At #############################################################
+    def is_at_ground_level(self, neighbors):
+        """
+        Check if the cell is at ground level (has no neighbors below it).
+        """
+        return all(neighbor.elevation >= self.elevation for neighbor in neighbors)
 
     def is_at_air_level(self, neighbors):
         """
