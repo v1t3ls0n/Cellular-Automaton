@@ -274,18 +274,18 @@ class Particle:
 
         # Gain water mass from neighbors
         # self.exchange_water_mass(neighbors)
-        if self.temperature >= self.config["baseline_temperature"][self.cell_type]:
+        # if self.temperature >= self.config["baseline_temperature"][self.cell_type]:
             # self.convert_to_ocean()
-            dz = -1
+            # dz = -1
         # Convert to ice if below freezing point
-        elif self.temperature <= freezing_point:
-            logging.info(f"Cloud at elevation {
-                         self.elevation} converted into ice due to low temperature.")
-            self.convert_to_ice()
-            dz = -1
+        # elif self.temperature <= freezing_point:
+        #     logging.info(f"Cloud at elevation {
+        #                  self.elevation} converted into ice due to low temperature.")
+        #     self.convert_to_ice()
+        #     dz = -1
 
         # Convert to rain if water mass exceeds saturation threshold
-        elif self.water_mass >= cloud_saturation_threshold:
+        if self.water_mass >= cloud_saturation_threshold:
             logging.info(f"Cloud at elevation {
                          self.elevation} converted into rain due to water saturation.")
             self.convert_to_rain()
