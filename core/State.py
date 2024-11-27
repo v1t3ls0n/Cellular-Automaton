@@ -240,70 +240,24 @@ class State:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = self.grid[i,
-                                                  j, k].clone()  # Default to Air
+                    new_grid[i, j, k] = self.grid[i,j, k].clone()  
+        
         position_map = {}
 
         # Compute next states and positions
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    current_cell = new_grid[i, j, k]
+                    cell = new_grid[i, j, k] 
                     neighbors = self.get_neighbors(i, j, k)
-                    next_cell = current_cell.update_state(
-                        neighbors, (i, j, k), self.grid_size)
-                    next_position = next_cell.move((i, j, k), self.grid_size)
-                    position_map[next_position] = next_cell
+                    cell.update_state(neighbors)
+                    next_position = cell.get_next_position((i, j, k), self.grid_size)
+                    position_map[next_position] = cell
 
         # Fill new grid and resolve collisions
         for (ni, nj, nk), updated_cell in position_map.items():
             new_grid[ni, nj, nk] = updated_cell
 
-        self.grid = new_grid
-        self._recalculate_global_attributes()
-
-    def move_cells_on_grid(self):
-        """
-        Move cells in the grid based on their direction property.
-        This modifies the grid in place, ensuring all cells, including air, are moved.
-        """
-        x, y, z = self.grid_size
-        # Properly initialize new_grid
-        new_grid = np.empty((x, y, z), dtype=object)
-
-        # Initialize the new grid with Air cells
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    new_grid[i, j, k] = self.grid[i,
-                                                  j, k].clone()  # Default to Air
-
-        # Step 1: Compute new positions for each cell
-        position_map = {}
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    current_cell = self.grid[i, j, k]
-
-                    if current_cell:
-                        # Compute new position
-                        new_position = current_cell.move(
-                            (i, j, k), self.grid_size)
-                        ni, nj, nk = new_position
-
-                        # Resolve collisions if needed
-                        if (ni, nj, nk) in position_map:
-                            position_map[(ni, nj, nk)] = self.resolve_collision(
-                                position_map[(ni, nj, nk)], current_cell
-                            )
-                        else:
-                            position_map[(ni, nj, nk)] = current_cell
-
-        # Step 2: Update the new grid with computed positions
-        for (ni, nj, nk), cell in position_map.items():
-            new_grid[ni, nj, nk] = cell
-
-        # Step 3: Replace the grid with the updated one
         self.grid = new_grid
         self._recalculate_global_attributes()
 

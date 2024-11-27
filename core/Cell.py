@@ -43,7 +43,7 @@ class Cell:
             elevation=self.elevation
         )
 
-    def move(self, current_position, grid_size):
+    def get_next_position(self, current_position, grid_size):
 
         if self.direction == (0, 0, 0):  # No movement for static cells
             return current_position
@@ -100,7 +100,7 @@ class Cell:
 ####################################################################################################################
 
 
-    def update_state(self, neighbors, current_position, grid_size):
+    def update_state(self, neighbors):
         """
         Compute the next state of the cell based on its neighbors and position.
         """
@@ -142,17 +142,17 @@ class Cell:
             0, self.pollution_level - pollution_absorption_rate * self.pollution_level)
         self.temperature = self.temperature - self.temperature * cooling_effect
         if self.is_below_sea_level(neighbors):
-            self.sink_to_ocean(neighbors)
+            self.go_down()
         elif (self.temperature >= abs(evaporation_point) or self.pollution_level >= 100):
-            self.convert_to_desert(neighbors)
+            self.convert_to_desert()
         elif (self.pollution_level == 0 and 0 < self.temperature <= baseline_temperature[self.cell_type]):
-            self.convert_to_city(neighbors)
+            self.convert_to_city()
 
     def _update_desert(self, neighbors):
         if self.is_surrounded_by_sea_cells(neighbors):
-            self.convert_to_ocean(neighbors)
+            self.convert_to_ocean()
         elif self.is_above_sea_level(neighbors) and self.pollution_level == 0 and self.temperature in range(baseline_temperature[self.cell_type]):
-            self.convert_to_forest(neighbors)
+            self.convert_to_forest()
 
     def _update_city(self, neighbors):
         pollution_increase_rate = 0.4
@@ -163,9 +163,11 @@ class Cell:
         self.temperature = self.temperature + \
             max(self.temperature * warming_effect, 1.0)
         if self.is_surrounded_by_sea_cells(neighbors):
-            self.convert_to_ocean(neighbors)
+            self.convert_to_desert()
+            self.go_down()
+            self.convert_to_ocean()
         elif self.pollution_level > 100 or abs(self.temperature) >= evaporation_point:
-            self.convert_to_desert(neighbors)
+            self.convert_to_desert()
 
     def _update_ice(self, neighbors):
         # Ice melts into ocean if temperature exceeds melting point
@@ -191,78 +193,76 @@ class Cell:
                 self.convert_to_desert(neighbors)
         elif self.is_below_ground_level(neighbors):
             logging.debug("Rain sinking to ocean...")
-            self.sink_to_ocean(neighbors)
+            self.go_down()
 
     def _update_air(self, neighbors):
         # If air is at cloud level, attempt conversion to cloud
         if self.is_at_clouds_level(neighbors):
-            self.convert_to_cloud(neighbors)
+            self.convert_to_cloud()
         elif self.water_mass > 0.2:  # Threshold for cloud formation
             # Move upward for cloud formation
-            self.elevate_to_clouds_height(neighbors)
+            self.go_up()
         else:
-            self.stop_elevation_change(neighbors)  # Stabilize air
+            self.go_static()  # Stabilize air
 
     def _update_cloud(self, neighbors):
         # Clouds should form at specific heights and stabilize
         if self.is_at_clouds_level(neighbors):
             # Convert to rain if conditions for rain are met
             if self.water_mass > 0.5:  # Threshold for rain formation
-                self.convert_to_rain(neighbors)
+                self.convert_to_rain()
             else:
-                self.stop_elevation_change(neighbors)  # Stabilize cloud
+                self.go_static()  # Stabilize cloud
         else:
-            self.elevate_to_clouds_height(
-                neighbors)  # Move upward to stabilize
+            self.go_up()  # Move upward to stabilize
 
 
 ####################################################################################################################
 ###################################### CELL  CONVERSIONS ###########################################################
 ####################################################################################################################
 
-    def convert_to_forest(self, neighbors):
+    def convert_to_forest(self):
         self.cell_type = 4
         self.water_mass = 0
         self.direction = (0, 0, 0)
         self.temperature = baseline_temperature[self.cell_type]
 
-    def convert_to_city(self, neighbors):
+    def convert_to_city(self):
         self.cell_type = 5
         self.water_mass = 0
         self.direction = (0, 0, 0)
         self.temperature = baseline_temperature[self.cell_type]
 
-    def convert_to_desert(self, neighbors):
+    def convert_to_desert(self):
         self.cell_type = 1
         self.water_mass = 0
         self.direction = (0, 0, 0)
         self.temperature -= 0.2 * self.temperature
 
-    def convert_to_ocean(self, neighbors):
+    def convert_to_ocean(self):
         self.cell_type = 0
         self.water_mass = 1.0
         self.temperature = baseline_temperature[self.cell_type]
-        # self.sink_to_ocean(neighbors)
 
-    def convert_to_ice(self, neighbors):
+    def convert_to_ice(self):
         self.cell_type = 3
         self.water_mass = 1.0
         self.temperature = baseline_temperature[self.cell_type]
-        self.sink_to_ocean(neighbors)
+        self.go_down()
 
-    def convert_to_rain(self, neighbors):
+    def convert_to_rain(self):
         self.cell_type = 7
         self.water_mass = 1.0  # Rain drops
-        self.sink_to_ocean(neighbors)
+        self.go_down()
 
-    def convert_to_air(self, neighbors):
+    def convert_to_air(self):
         self.cell_type = 6
         self.water_mass = 0.0
 
-    def convert_to_cloud(self, neighbors):
+    def convert_to_cloud(self):
         self.cell_type = 2
         self.water_mass = 1.0  # Clouds hold water
-        self.elevate_to_clouds_height(neighbors)
+        self.go_up()
 
 
 ####################################################################################################################
@@ -303,29 +303,18 @@ class Cell:
 ###################################### CELL ELEVATION ##############################################################
 ####################################################################################################################
 
-    def sink_to_ocean(self, neighbors):
+    def go_down(self):
         dx, dy, _ = self.direction
         self.direction = (dx, dy, -1)  # Move downward
 
-    def elevate_to_clouds_height(self, neighbors):
-        if not self.is_at_clouds_level(neighbors):
-            dx, dy, _ = self.direction
-            self.direction = (dx, dy, 1)  # Move upward
-        else:
-            self.stop_elevation_change(neighbors)  # Stabilize at cloud height
+    def go_up(self):
+        dx, dy, _ = self.direction
+        self.direction = (dx, dy, 1)  # Move upward
 
-    def stop_elevation_change(self, neighbors):
+
+    def go_static(self):
         dx, dy, _ = self.direction
         self.direction = (dx, dy, 0)  # Stop vertical movement
-
-    def elevate_to_sea_surface(self, neighbors):
-        dx, dy, _ = self.direction
-        dz = 0 if self.is_below_ground_level(neighbors) else -1
-        self.direction = (dx, dy, dz)
-
-    def elevate_air(self, neighbors):
-        dx, dy, _ = self.direction
-        self.direction = (dx, dy, 1)
 
 
 ####################################################################################################################
