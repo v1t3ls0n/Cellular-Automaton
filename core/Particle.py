@@ -205,10 +205,10 @@ class Particle:
         # Rain moves downward
         if neighbors_below:
             if self.is_above_ground_level(neighbors_below):
-                # self.go_left_or_right_only()
+                self.go_left_or_right_only()
                 self.go_down()  # Continue downward movement
 
-            elif self.is_surrounded_by_sea_cells(neighbors_below):
+            elif self.is_surrounded_by_sea_cells(neighbors):
                 logging.info(f"Rain at elevation {
                              self.elevation} converted into ocean.")
                 self.convert_to_ocean()
@@ -218,7 +218,7 @@ class Particle:
                 self.go_left_or_right_only()
             else:
                 # self.convert_to_air()
-                # self.go_left_or_right_only()
+                self.go_left_or_right_only()
                 self.go_down()  # Continue downward movement
         else:
             # If no neighbors below, rain evaporates if the temperature is too high
