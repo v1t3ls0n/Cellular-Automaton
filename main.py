@@ -72,11 +72,11 @@ except ValueError as e:
 
 # Set the pollution threshold from user input
 try:
-    config["pollution_threshold"] = float(input("Enter pollution threshold (default: 1.0): ") or 1.0)
+    config["pollution_threshold"] = float(input("Enter pollution threshold (default: 10.0): ") or 10.0)
     print(f"Pollution threshold set to: {config['pollution_threshold']}")
 except ValueError:
-    print("Invalid input! Using default value for pollution threshold (1.0).")
-    config["pollution_threshold"] = 1.0
+    print("Invalid input! Using default value for pollution threshold (10.0).")
+    config["pollution_threshold"] = 10.0
 
 
 

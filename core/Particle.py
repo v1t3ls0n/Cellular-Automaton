@@ -108,11 +108,11 @@ class Particle:
             self._update_ice(neighbors)
 
         elif self.cell_type == 4:  # Forest
-            self.equilibrate_pollution_level(neighbors)
+            # self.equilibrate_pollution_level(neighbors)
             self._update_forest(neighbors)
 
         elif self.cell_type == 5:  # City
-            self.equilibrate_pollution_level(neighbors)
+            # self.equilibrate_pollution_level(neighbors)
             self._update_city(neighbors)
 
         elif self.cell_type == 6:  # Air
