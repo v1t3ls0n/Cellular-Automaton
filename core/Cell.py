@@ -105,7 +105,7 @@ class Cell:
         base_color = base_colors.get(self.cell_type)
         # Ensure the base_color has exactly 4 components (RGBA)
 
-        # return base_color
+        return base_color
 
         if len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type { self.cell_type}: {base_color}")
@@ -186,8 +186,9 @@ class Cell:
     ############################## Above level ######################################################
 
     def is_at_clouds_level(self, neighbors):
-        clouds_cells_count = sum(1 for nei in neighbors if nei.cell_type == 2)
-        return clouds_cells_count >= 1
+        clouds_cells_count = sum(1 for nei in neighbors if nei.cell_type in {2})
+        air_cells_count = sum(1 for nei in neighbors if nei.cell_type in {6})
+        return clouds_cells_count > air_cells_count
 
     def is_at_air_level(self, neighbors):
         non_air_nor_rain_cells_count = [
@@ -278,21 +279,18 @@ class Cell:
     def _update_air(self, neighbors):
         # if self.water_mass == 1.0:
         if self.is_at_clouds_level(neighbors):
-            if self.water_mass == 0.0:
+            # if self.water_mass == 0.0:
                 self.convert_to_cloud(neighbors)
-            else:
-                self.convert_to_rain(neighbors)
-
-        elif self.is_above_sea_level(neighbors):
-            self.convert_to_air(neighbors)
-
 
     def _update_rain(self, neighbors):
         if self.is_above_sea_level(neighbors):
             self.convert_to_ocean(neighbors)
+        else:
+            self.sink_to_ocean(neighbors)
 
     def _update_cloud(self, neighbors):
         if self.is_at_clouds_level(neighbors):
+            # self.water_mass = 0.0
             self.convert_to_rain(neighbors)
         else:
             self.elevate_to_clouds_height(neighbors)
@@ -322,7 +320,7 @@ class Cell:
     def elevate_to_clouds_height(self, neighbors):
         self.randomize_xy_direction()
         dx, dy, _ = self.direction
-        dz = 1 if not self.is_at_clouds_level(neighbors) else 0
+        dz = 1 
         self.direction = (dx, dy, dz)
     
     def stop_elevation_change(self,neighbors):
@@ -369,9 +367,9 @@ class Cell:
 
     def convert_to_ocean(self, neighbors):
         self.cell_type = 0
-        self.water_mass = 0.0
+        self.water_mass = 1.0
         self.temperature = baseline_temperature[self.cell_type]
-        self.sink_to_ocean(neighbors)
+        # self.sink_to_ocean(neighbors)
 
     def convert_to_ice(self, neighbors):
         self.cell_type = 3
@@ -381,7 +379,7 @@ class Cell:
 
     def convert_to_rain(self, neighbors):
         self.cell_type = 7
-        self.water_mass = 1.0
+        # self.water_mass = 1.0
         self.temperature = baseline_temperature[self.cell_type]
         self.sink_to_ocean(neighbors)
 
@@ -392,8 +390,8 @@ class Cell:
 
     def convert_to_cloud(self, neighbors):
         self.cell_type = 2
-        self.water_mass = 1.0
-        self.temperature = baseline_temperature[self.cell_type]
+        # self.water_mass = 1.0
+        # self.temperature = baseline_temperature[self.cell_type]
         self.elevate_to_clouds_height(neighbors)
 
 
