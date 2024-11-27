@@ -212,34 +212,64 @@ class World:
         return elevation_map
 
     def update_cells_on_grid(self):
+        """
+        Update the cells on the grid to compute their next states and resolve collisions.
+        """
         x, y, z = self.grid_size
-        # Properly initialize new_grid
+        # Properly initialize a new grid to hold the updated state
         new_grid = np.empty((x, y, z), dtype=object)
 
-        # Initialize the new grid with Air cells
+        # Clone the current grid to initialize new cells
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = self.grid[i,j, k].clone()  
-        
+                    new_grid[i, j, k] = self.grid[i, j, k].clone()
+
         position_map = {}
 
-        # Compute next states and positions
+        # First pass: Compute the next state for all cells
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    cell = new_grid[i, j, k] 
-                    neighbors = self.get_neighbors(i, j, k)
-                    cell.update_state(neighbors)
-                    next_position = cell.get_next_position((i, j, k), self.grid_size)
-                    position_map[next_position] = cell
+                    cell = self.grid[i, j, k]  # Use original grid for neighbor lookup
+                    neighbors = self.get_neighbors(i, j, k)  # Retrieve neighbors
+                    new_grid[i, j, k].update_state(neighbors)  # Update state of the cell
 
-        # Fill new grid and resolve collisions
+        # Second pass: Determine new positions and resolve collisions
+        for i in range(x):
+            for j in range(y):
+                for k in range(z):
+                    cell = new_grid[i, j, k]  # Use updated grid for next position calculation
+                    next_position = cell.get_next_position((i, j, k), self.grid_size)
+                    if next_position not in position_map:
+                        position_map[next_position] = cell
+                    else:
+                        # Handle collision by averaging attributes (e.g., water_mass, temperature)
+                        other_cell = position_map[next_position]
+                        self.resolve_collision(cell, other_cell)
+
+        # Populate the new grid with updated cells
         for (ni, nj, nk), updated_cell in position_map.items():
             new_grid[ni, nj, nk] = updated_cell
 
-        self.grid = new_grid
+        self.grid = new_grid  # Replace the current grid with the updated one
         self._recalculate_global_attributes()
+
+    def resolve_collision(self, cell1, cell2):
+        """
+        Handle collisions between two cells. Adjust attributes accordingly.
+        """
+        # Example logic: Average water_mass and temperature
+        cell1.water_mass = (cell1.water_mass + cell2.water_mass) / 2
+        cell1.temperature = (cell1.temperature + cell2.temperature) / 2
+        cell2.water_mass = cell1.water_mass
+        cell2.temperature = cell1.temperature
+
+        # Keep the higher pollution level
+        cell1.pollution_level = max(cell1.pollution_level, cell2.pollution_level)
+        cell2.pollution_level = cell1.pollution_level
+
+        # Optionally adjust other attributes or preserve one cell's state
 
     def get_neighbors(self, i, j, k):
         """
