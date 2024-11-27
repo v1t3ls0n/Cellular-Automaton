@@ -208,7 +208,7 @@ class Particle:
             # Move upward for cloud formation
             self.go_up()
         else:
-            self.go_left_or_right_only()  # Stabilize air
+            self.stabilize()  # Stabilize air
 
     def _update_cloud(self, neighbors):
         """
@@ -233,7 +233,7 @@ class Particle:
 
         # Stabilize clouds at the proper height
         if self.is_at_clouds_level(neighbors):
-            self.go_left_or_right_only()
+            self.stabilize()
         else:
             self.go_up()  # Move upward if not yet at cloud level
 
