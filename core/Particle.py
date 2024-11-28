@@ -170,9 +170,11 @@ class Particle:
             self.stabilize()
 
     def _update_desert(self, neighbors):
-        neighbors_above = [
-            n for n in neighbors if n.position[2] > self.position[2]]
-        if self.is_surrounded_by_sea_cells(neighbors_above):
+        neighbors_below = self.get_below_neighbors(neighbors)
+        neighbors_above = self.get_above_neighbors(neighbors)
+        neighbors_aligned = self.get_aligned_neighbors(neighbors)
+
+        if self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
             self.convert_to_ocean()
         elif self.is_above_sea_level(neighbors) and self.pollution_level == 0 and self.temperature in range(self.config["baseline_temperature"][self.cell_type]):
             self.convert_to_forest()
@@ -213,13 +215,15 @@ class Particle:
         absorption_rate = self.config["forest_pollution_absorption_rate"]
         cooling_effect = self.config["forest_cooling_effect"]
         pollution_level_tipping_point = self.config["pollution_level_tipping_point"]
-        neighbors_above = [
-            n for n in neighbors if n.position[2] > self.position[2]]
-        
+
+        neighbors_below = self.get_below_neighbors(neighbors)
+        neighbors_above = self.get_above_neighbors(neighbors)
+        neighbors_aligned = self.get_aligned_neighbors(neighbors)
+
         if self.pollution_level > pollution_level_tipping_point:
             absorption_rate *= 0.5
             cooling_effect *= 0.5
-        if self.is_surrounded_by_sea_cells(neighbors_above):
+        if self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
             self.convert_to_ocean()
         elif self.temperature >= abs(self.config["evaporation_point"]) or self.pollution_level >= 100:
             self.convert_to_desert()
@@ -248,9 +252,10 @@ class Particle:
         ))
         self.temperature += self.pollution_level * warming_effect
 
-        neighbors_above = [
-            n for n in neighbors if n.position[2] > self.position[2]]
-        if self.is_surrounded_by_sea_cells(neighbors_above):
+        neighbors_below = self.get_below_neighbors(neighbors)
+        neighbors_above = self.get_above_neighbors(neighbors)
+        neighbors_aligned = self.get_aligned_neighbors(neighbors)
+        if self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
             self.convert_to_ocean()
         elif self.pollution_level > 100 or abs(self.temperature) >= self.config["extinction_point"]:
             self.convert_to_desert()
@@ -273,18 +278,15 @@ class Particle:
         """
         Rain moves downward and converts to ocean or land.
         """
-        neighbors_below = [
-            n for n in neighbors if n.position[2] < self.position[2]]
+        neighbors_below = self.get_below_neighbors(neighbors)
+        neighbors_above = self.get_above_neighbors(neighbors)
+        neighbors_aligned = self.get_aligned_neighbors(neighbors)
 
-        if self.position[2] == 0:  # If at the lowest level, convert to ocean or land
+        if self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):  # If at the lowest level, convert to ocean or land
             if self.cell_type == 0:  # Ocean
                 self.convert_to_ocean()
             else:
                 self.convert_to_forest_or_desert()
-        # elif self.contains_sea(neighbors_below):
-        #     self.convert_to_ocean()
-        # elif self.contains_land(neighbors_below):
-        #     self.convert_to_forest_or_desert()
         else:
             self.go_down()
 
@@ -581,3 +583,12 @@ class Particle:
         Check if the cell is below ground level.
         """
         return all(self.position[2] < n.position[2] for n in neighbors if n.cell_type in {1, 4, 5})
+
+    def get_above_neighbors(self,neighbors):
+         return [n for n in neighbors if n.position[2] > self.position[2]]
+    def get_below_neighbors(self,neighbors):
+         return [n for n in neighbors if n.position[2] < self.position[2]]
+    def get_aligned_neighbors(self,neighbors):
+         return [n for n in neighbors if n.position[2] == self.position[2]]
+
+
