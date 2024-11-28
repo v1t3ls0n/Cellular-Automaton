@@ -26,7 +26,6 @@ logging.basicConfig(
 )
 logging.info("Simulation started.")
 
-# config["tint"] = False
 
 # Prompt the user for grid size
 grid_size_input = input(

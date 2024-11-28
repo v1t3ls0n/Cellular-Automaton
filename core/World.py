@@ -183,8 +183,8 @@ class World:
                         water_mass=1 if cell_type in {0, 2, 3} else 0,
                         pollution_level=pollution,
                         direction=direction,
-                        elevation=elevation_map[i, j],
-                        position=(i, j, k)
+                        position=(i, j, k),
+                        grid_size = self.grid_size
                     )
 
         self._recalculate_global_attributes()
@@ -269,8 +269,8 @@ class World:
                 for k in range(z):
                     # Use updated grid for next position calculation
                     cell = new_grid[i, j, k]
-                    next_position = cell.get_next_position(
-                        (i, j, k), self.grid_size)
+                    next_position = cell.get_next_position()
+                    cell.position = next_position
                     if next_position not in position_map:
                         position_map[next_position] = cell
                     else:
