@@ -31,7 +31,7 @@ config = {
 
     "extinction_point": 80,
     "freezing_point": -10,  # Temperature that causes ocean freeze and converts into ice
-    "melting_point": 10,  # Temperature threshold for melting ice
+    "melting_point": 40,  # Temperature threshold for melting ice
     "evaporation_point": 30,  # Temperature threshold for evaporation
     "water_transfer_threshold": 0.5,
 
