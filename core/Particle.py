@@ -127,7 +127,7 @@ class Particle:
         # if self.pollution_level < self.config["pollution_damage_threshold"]:
         self._apply_natural_decay()
         self.equilibrate_temperature(neighbors)
-        if self.cell_type in {1,4,5,6}:
+        if self.cell_type in {5,6}:
             self.equilibrate_pollution_level(neighbors)
 
 
@@ -367,14 +367,14 @@ class Particle:
         )
 
         # Temperature decay towards baseline
-        baseline_temp = self.config["baseline_temperature"][self.cell_type]
-        if self.temperature > baseline_temp:
-            self.temperature -= (self.temperature -
-                                 baseline_temp) * temperature_decay_rate
+        # baseline_temp = self.config["baseline_temperature"][self.cell_type]
+        # if self.temperature > baseline_temp:
+        #     self.temperature -= (self.temperature -
+        #                          baseline_temp) * temperature_decay_rate
 
-        elif self.temperature < baseline_temp:
-            self.temperature += (baseline_temp -
-                                 self.temperature) * temperature_decay_rate
+        # elif self.temperature < baseline_temp:
+        #     self.temperature += (baseline_temp -
+        #                          self.temperature) * temperature_decay_rate
 
     ####################################################################################################################
     ############################################### CELL EQUILIBRATE ###################################################
@@ -388,8 +388,7 @@ class Particle:
         weighted_temperature_sum = 0
 
         for neighbor in neighbors:
-            weight = self.config["cell_type_weights"].get(
-                neighbor.cell_type, 1.0)
+            weight = self.config["cell_type_weights"][neighbor.cell_type]
             weighted_temperature_sum += neighbor.temperature * weight
             total_weight += weight
 
