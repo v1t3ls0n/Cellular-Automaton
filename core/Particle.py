@@ -252,7 +252,7 @@ class Particle:
             n for n in neighbors if n.position[2] > self.position[2]]
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
-        elif self.pollution_level > 100 or abs(self.temperature) >= self.config["evaporation_point"]:
+        elif self.pollution_level > 100 or abs(self.temperature) >= self.config["extinction_point"]:
             self.convert_to_desert()
 
     def _update_air(self, neighbors):

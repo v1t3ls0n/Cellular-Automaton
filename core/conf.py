@@ -29,6 +29,7 @@ config = {
         5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
     },
 
+    "extinction_point": 80,
     "freezing_point": -10,  # Temperature that causes ocean freeze and converts into ice
     "melting_point": 10,  # Temperature threshold for melting ice
     "evaporation_point": 30,  # Temperature threshold for evaporation
