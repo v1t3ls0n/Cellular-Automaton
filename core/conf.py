@@ -19,7 +19,7 @@ config = {
     "baseline_pollution_level": [0, 0, 0, 0, 0, 20, 10, 0],
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.01),  # Air (transparent white)
+        6: (1.0, 1.0, 1.0, 0.1),  # Air (transparent white)
         2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
         0: (0.0, 0.0, 1.0, 1.0),  # Ocean (blue)
         3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)

@@ -127,7 +127,7 @@ class Particle:
         # if self.pollution_level < self.config["pollution_damage_threshold"]:
         self._apply_natural_decay()
         self.equilibrate_temperature(neighbors)
-        if self.cell_type in {5,6}:
+        if self.cell_type in {1,4,5,6}:
             self.equilibrate_pollution_level(neighbors)
 
 
@@ -202,7 +202,7 @@ class Particle:
         """
         Ice behavior: melts, stabilizes, or converts.
         """
-        dx, dy, _ = self.calculate_dominant_wind_direction(neighbors)
+        # dx, dy, _ = self.calculate_dominant_wind_direction(neighbors)
         melting_rate = self.config["melting_rate"]
 
         if self.temperature > self.config["melting_point"] - 5:
@@ -210,7 +210,7 @@ class Particle:
             if self.water_mass <= 0:
                 self.convert_to_ocean()
 
-        self.direction = (dx, dy, 0)
+        # self.direction = (dx, dy, 0)
 
     def _update_forest(self, neighbors):
         absorption_rate = self.config["forest_pollution_absorption_rate"]
@@ -228,7 +228,7 @@ class Particle:
             self.convert_to_ocean()
         elif self.temperature >= abs(self.config["evaporation_point"]) or self.pollution_level >= 100:
             self.convert_to_desert()
-        elif self.pollution_level == 0 and 0 < self.temperature <= self.config["baseline_temperature"][self.cell_type]:
+        elif self.pollution_level == 0 and int(self.temperature) == self.config["baseline_temperature"][self.cell_type]:
             self.convert_to_city()
         else:
             self.pollution_level = max(0, self.pollution_level - absorption_rate * self.pollution_level)
@@ -308,7 +308,7 @@ class Particle:
         self.cell_type = 0  # Set cell type to ocean
         self.water_mass = 1.0  # Oceans are full of water by default
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-        self.stabilize()  # Stabilize motion
+        self.stablizie_elevation() # Stabilize motion
 
     def convert_to_desert(self):
         self.cell_type = 1  # Set cell type to desert
@@ -330,7 +330,7 @@ class Particle:
         self.water_mass = 1.0  # Ice retains full water mass
         # Set to freezing temperature
         self.temperature = self.config["freezing_point"]
-        # self.stabilize()  # Stabilize motion
+        self.stabilize()  # Stabilize motion
 
     def convert_to_forest(self):
         self.cell_type = 4  # Set cell type to forest
@@ -464,6 +464,11 @@ class Particle:
         Stabilize the particle, halting movement.
         """
         self.direction = (0, 0, 0)
+   
+    def stablizie_elevation(self):
+        dx,dy,_= self.direction
+        self.direction = (dx,dy, 0)
+
 
     ####################################################################################################################
     ######################################  CALC HELPER FUNCTIONS: #####################################################
