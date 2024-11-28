@@ -209,7 +209,7 @@ class Particle:
             if self.water_mass <= 0:
                 self.convert_to_ocean()
 
-        self.direction = (dx, dy, self.position[2])
+        self.direction = (dx, dy, 0)
 
     def _update_forest(self, neighbors):
         absorption_rate = self.config["forest_pollution_absorption_rate"]
@@ -320,7 +320,7 @@ class Particle:
         self.water_mass = 1.0  # Ice retains full water mass
         # Set to freezing temperature
         self.temperature = self.config["freezing_point"]
-        self.stabilize()  # Stabilize motion
+        # self.stabilize()  # Stabilize motion
 
     def convert_to_forest(self):
         self.cell_type = 4  # Set cell type to forest

@@ -56,5 +56,5 @@ config = {
     "city_temperature_upper_limit": 60,
     "city_pollution_upper_limit": 100,
 
-    "tint": False
+    "tint": True
 }
