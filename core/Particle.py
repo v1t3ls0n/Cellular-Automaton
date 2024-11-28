@@ -190,10 +190,10 @@ class Particle:
         self.direction = self.calculate_dominant_wind_direction(neighbors)
         if self.water_mass >= saturation_threshold:
             self.convert_to_rain()
-        elif not self.is_surrounded_by_cloud_cells(neighbors):
-            self.go_up()
-        else:
-            self.stabilize_elevation()
+        # elif not self.is_surrounded_by_cloud_cells(neighbors):
+        #     self.go_up()
+        # else:
+        #     self.stabilize_elevation()
 
     def _update_ice(self, neighbors):
         """
