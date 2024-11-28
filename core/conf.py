@@ -9,14 +9,14 @@ config = {
         0: 1.0,  # Ocean
         1: 1.2,  # Desert
         2: 0.8,  # Cloud
-        3: 0.01,  # Ice
+        3: 0.9,  # Ice
         4: 1.5,  # Forest
         5: 2.0,  # City
         6: 0.5,  # Air
         7: 1.1,  # Rain
     },
 
-    "baseline_pollution_level": [1, 10, 0, 0, 2, 50, 0, 1],
+    "baseline_pollution_level": [0, 0, 0, 0, 0, 20, 10, 0],
 
     "base_colors": {
         6: (1.0, 1.0, 1.0, 0.01),  # Air (transparent white)

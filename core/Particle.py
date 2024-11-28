@@ -165,7 +165,7 @@ class Particle:
             self.water_mass -= evaporation_rate  # Partial melting
             if self.water_mass <= 0:
                 self.convert_to_air()
-        elif self.temperature <= self.config["freezing_point"]:
+        elif self.temperature < self.config["freezing_point"] - 1:
             self.convert_to_ice()
         else:
             self.stabilize()
