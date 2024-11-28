@@ -9,7 +9,7 @@ config = {
         0: 1.0,  # Ocean
         1: 1.2,  # Desert
         2: 0.8,  # Cloud
-        3: 0.1,  # Ice
+        3: 0.01,  # Ice
         4: 1.5,  # Forest
         5: 2.0,  # City
         6: 0.5,  # Air
@@ -31,9 +31,9 @@ config = {
 
     "extinction_point": 80,
     "freezing_point": -10,  # Temperature that causes ocean freeze and converts into ice
-    "melting_point": 40,  # Temperature threshold for melting ice
+    "melting_point": 45,  # Temperature threshold for melting ice
     "evaporation_point": 30,  # Temperature threshold for evaporation
-    "water_transfer_threshold": 0.5,
+    "water_transfer_threshold": 0.1,
 
 
     "pollution_damage_threshold": 10.0,

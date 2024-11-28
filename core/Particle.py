@@ -126,8 +126,9 @@ class Particle:
         """
         # if self.pollution_level < self.config["pollution_damage_threshold"]:
         self._apply_natural_decay()
-        self.equilibrate_temperature(neighbors)
-        if self.cell_type in {4,5,6}:
+        if self.cell_type in {0,3}:
+            self.equilibrate_temperature(neighbors)
+        if self.cell_type in {1,4,5,6}:
             self.equilibrate_pollution_level(neighbors)
 
 
