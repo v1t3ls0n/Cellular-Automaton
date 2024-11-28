@@ -265,6 +265,7 @@ class Particle:
         """
         Air updates behavior to rise, stabilize, or convert into clouds.
         """
+        
         self.direction = self.calculate_dominant_wind_direction(neighbors)
 
         if self.position[2] <= 2 or self.is_below_ground_level(neighbors) or self.is_below_sea_level(neighbors):  
@@ -523,7 +524,8 @@ class Particle:
         dominant_dy = 1 if total_dy > 0 else (-1 if total_dy < 0 else 0)
         dominant_dz = 1 if total_dz > 0 else (-1 if total_dz < 0 else 0)
 
-        return dominant_dx, dominant_dy, dominant_dz
+        # return dominant_dx, dominant_dy, dominant_dz
+        return dominant_dx, dominant_dy, 0
 
     ######################################  SURROUNDINGS: ##############################################################
 
