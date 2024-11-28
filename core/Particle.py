@@ -175,7 +175,7 @@ class Particle:
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
 
-        if self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
+        if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
         elif self.is_surrounded_by_land_cells(neighbors_aligned) and self.pollution_level == 0 and self.temperature in range(self.config["baseline_temperature"][self.cell_type]):
             self.convert_to_forest()
@@ -280,13 +280,22 @@ class Particle:
         Rain moves downward and converts to ocean or land.
         """
         neighbors_below = self.get_below_neighbors(neighbors)
-        neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
 
-        if self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):  # If at the lowest level, convert to ocean or land
+        if self.is_at_ground_level(neighbors) or self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):  # If at the lowest level, convert to ocean or land
             self.convert_to_ocean()
-        else:
+        elif self.is_surrounded_by_land_cells(neighbors_aligned):
+            self.exchange_water_mass(neighbors)
+            self.convert_to_air()
+        elif self.is_surrounded_by_air_cells(neighbors_aligned):
+            self.exchange_water_mass(neighbors)
             self.go_down()
+        else:
+            dx,dy, _  = self.calculate_dominant_wind_direction(neighbors)
+            self.direction = (dx,dy,-1)
+
+        
+        
 
         if self.temperature > self.config["evaporation_point"]:
             self.convert_to_air()
@@ -554,6 +563,18 @@ class Particle:
         Check if the air particle is at cloud level.
         """
         return sum(n.cell_type in {1,4,5,6} for n in neighbors) == len(neighbors)   # Majority are sea cells
+
+    def is_surrounded_by_air_cells(self, neighbors):
+        """
+        Check if the air particle is at cloud level.
+        """
+        return sum(n.cell_type in {6} for n in neighbors) == len(neighbors)   # Majority are sea cells
+
+    def is_surrounded_by_rain_cells(self, neighbors):
+        """
+        Check if the air particle is at cloud level.
+        """
+        return sum(n.cell_type in {7} for n in neighbors) == len(neighbors)   # Majority are sea cells
 
     def is_at_ground_level(self, neighbors):
         """
