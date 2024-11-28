@@ -9,7 +9,7 @@ config = {
         0: 1.0,  # Ocean
         1: 1.2,  # Desert
         2: 0.8,  # Cloud
-        3: 0.9,  # Ice
+        3: 0.1,  # Ice
         4: 1.5,  # Forest
         5: 2.0,  # City
         6: 0.5,  # Air
@@ -56,5 +56,5 @@ config = {
     "city_temperature_upper_limit": 60,
     "city_pollution_upper_limit": 100,
 
-    "tint": True
+    "tint": False
 }
