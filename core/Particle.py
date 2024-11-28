@@ -184,15 +184,12 @@ class Particle:
         """
         Update cloud behavior based on water mass, temperature, and neighbors.
         """
-        freezing_point = self.config["freezing_point"]
         saturation_threshold = self.config["cloud_saturation_threshold"]
 
         self.exchange_water_mass(neighbors)
-
+        self.direction = self.calculate_dominant_wind_direction(neighbors)
         if self.water_mass >= saturation_threshold:
             self.convert_to_rain()
-        elif self.temperature <= freezing_point:
-            self.convert_to_ice()
         elif not self.is_surrounded_by_cloud_cells(neighbors):
             self.go_up()
         else:
@@ -267,13 +264,15 @@ class Particle:
         """
         
         self.direction = self.calculate_dominant_wind_direction(neighbors)
-
-        if self.position[2] <= 2 or self.is_below_ground_level(neighbors) or self.is_below_sea_level(neighbors):  
-            self.go_up()
         
         # Convert to cloud if saturated and in realistic height
-        elif self.water_mass > self.config["cloud_saturation_threshold"] and self.position[2] >= (self.grid_size[2] - 3):
+        if self.water_mass > self.config["cloud_saturation_threshold"] and self.position[2] >= (self.grid_size[2] - 3):
             self.convert_to_cloud()
+        
+        elif self.position[2] <= 2 or self.is_below_ground_level(neighbors) or self.is_below_sea_level(neighbors):  
+            self.go_up()
+        
+
 
 
     def _update_rain(self, neighbors):
@@ -282,18 +281,17 @@ class Particle:
         """
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
+        self.direction = self.calculate_dominant_wind_direction(neighbors)
 
         if self.is_at_ground_level(neighbors) or self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):  # If at the lowest level, convert to ocean or land
             self.convert_to_ocean()
         elif self.is_surrounded_by_land_cells(neighbors_aligned):
             self.exchange_water_mass(neighbors)
             self.convert_to_air()
-        elif self.is_surrounded_by_air_cells(neighbors_aligned):
-            self.exchange_water_mass(neighbors)
-            self.go_down()
-        else:
-            dx,dy, _  = self.calculate_dominant_wind_direction(neighbors)
-            self.direction = (dx,dy,-1)
+        # elif self.is_surrounded_by_air_cells(neighbors_aligned):
+        #     self.exchange_water_mass(neighbors)
+        #     self.go_down()
+        
 
         
         
@@ -524,8 +522,12 @@ class Particle:
         dominant_dy = 1 if total_dy > 0 else (-1 if total_dy < 0 else 0)
         dominant_dz = 1 if total_dz > 0 else (-1 if total_dz < 0 else 0)
 
-        # return dominant_dx, dominant_dy, dominant_dz
-        return dominant_dx, dominant_dy, 0
+        if self.cell_type in {0,1,3,4,5}:
+            return dominant_dx, dominant_dy, 0
+        elif self.cell_type in {7}:
+            return 0,0,-1
+        else:
+            return dominant_dx, dominant_dy, dominant_dz
 
     ######################################  SURROUNDINGS: ##############################################################
 

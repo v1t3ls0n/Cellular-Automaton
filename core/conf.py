@@ -42,7 +42,7 @@ config = {
     "natural_temperature_decay_rate":  0.4,
 
 
-    "cloud_saturation_threshold": 3.0,
+    "cloud_saturation_threshold": 1.5,
 
     "melting_rate" : 0.2,
     "evaporation_rate" : 0.1,
