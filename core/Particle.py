@@ -170,7 +170,9 @@ class Particle:
             self.stabilize()
 
     def _update_desert(self, neighbors):
-        if self.is_surrounded_by_sea_cells(neighbors):
+        neighbors_above = [
+            n for n in neighbors if n.position[2] > self.position[2]]
+        if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
         elif self.is_above_sea_level(neighbors) and self.pollution_level == 0 and self.temperature in range(self.config["baseline_temperature"][self.cell_type]):
             self.convert_to_forest()
@@ -211,20 +213,22 @@ class Particle:
         absorption_rate = self.config["forest_pollution_absorption_rate"]
         cooling_effect = self.config["forest_cooling_effect"]
         pollution_level_tipping_point = self.config["pollution_level_tipping_point"]
-
+        neighbors_above = [
+            n for n in neighbors if n.position[2] > self.position[2]]
+        
         if self.pollution_level > pollution_level_tipping_point:
             absorption_rate *= 0.5
             cooling_effect *= 0.5
-
-        self.pollution_level = max(
-            0, self.pollution_level - absorption_rate * self.pollution_level
-        )
-        self.temperature -= self.temperature * cooling_effect
-
-        if self.temperature >= abs(self.config["evaporation_point"]) or self.pollution_level >= 100:
+        if self.is_surrounded_by_sea_cells(neighbors_above):
+            self.convert_to_ocean()
+        elif self.temperature >= abs(self.config["evaporation_point"]) or self.pollution_level >= 100:
             self.convert_to_desert()
         elif self.pollution_level == 0 and 0 < self.temperature <= self.config["baseline_temperature"][self.cell_type]:
             self.convert_to_city()
+        else:
+            self.pollution_level = max(0, self.pollution_level - absorption_rate * self.pollution_level)
+            self.temperature -= self.temperature * cooling_effect
+
 
     def _update_city(self, neighbors):
         pollution_increase_rate = self.config["city_pollution_increase_rate"]
@@ -234,6 +238,7 @@ class Particle:
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
         city_temperature_upper_limit = self.config["city_temperature_upper_limit"]
         city_pollution_upper_limit = self.config["city_pollution_upper_limit"]
+
 
         self.temperature = min(city_temperature_upper_limit, max(
             baseline_temperature, self.temperature + warming_effect * self.temperature))
@@ -245,9 +250,8 @@ class Particle:
 
         neighbors_above = [
             n for n in neighbors if n.position[2] > self.position[2]]
-        
         if self.is_surrounded_by_sea_cells(neighbors_above):
-            self.convert_to_desert()
+            self.convert_to_ocean()
         elif self.pollution_level > 100 or abs(self.temperature) >= self.config["evaporation_point"]:
             self.convert_to_desert()
 
