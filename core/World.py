@@ -82,10 +82,10 @@ class World:
                             if k < elevation_map[i, j]:
                                 cell_type = np.random.choice(
                                     # Mostly sea, some ice
-                                    [0, 3], p=[0.95, 0.05])
+                                    [0, 3], p=[0.99, 0.01])
                             elif k == elevation_map[i, j]:
                                 cell_type = np.random.choice(
-                                    [0, 3, 6], p=[0.6, 0.1, 0.3])  # Sea/Ice/Air
+                                    [0, 3, 6], p=[0.65, 0.05, 0.3])  # Sea/Ice/Air
                             elif k > elevation_map[i, j]:  # Above sea
                                 if k >= 0.9 * z:
                                     cell_type = np.random.choice(
