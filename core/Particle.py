@@ -186,14 +186,14 @@ class Particle:
         """
         saturation_threshold = self.config["cloud_saturation_threshold"]
 
-        self.exchange_water_mass(neighbors)
+        # self.exchange_water_mass(neighbors)
         self.direction = self.calculate_dominant_wind_direction(neighbors)
         if self.water_mass >= saturation_threshold:
             self.convert_to_rain()
         elif not self.is_surrounded_by_cloud_cells(neighbors):
             self.go_up()
         else:
-            self.stabilize()
+            self.stabilize_elevation()
 
     def _update_ice(self, neighbors):
         """
@@ -281,16 +281,16 @@ class Particle:
         """
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
-        self.direction = self.calculate_dominant_wind_direction(neighbors)
+        # self.direction = self.calculate_dominant_wind_direction(neighbors)
 
         if self.is_at_ground_level(neighbors) or self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):  # If at the lowest level, convert to ocean or land
             self.convert_to_ocean()
         elif self.is_surrounded_by_land_cells(neighbors_aligned):
             self.exchange_water_mass(neighbors)
             self.convert_to_air()
-        # elif self.is_surrounded_by_air_cells(neighbors_aligned):
-        #     self.exchange_water_mass(neighbors)
-        #     self.go_down()
+        elif self.is_surrounded_by_air_cells(neighbors_aligned):
+            # self.exchange_water_mass(neighbors)
+            self.go_down()
         
 
         
@@ -307,7 +307,7 @@ class Particle:
         self.cell_type = 0  # Set cell type to ocean
         self.water_mass = 1.0  # Oceans are full of water by default
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-        self.stablizie_elevation() # Stabilize motion
+        self.stabilize_elevation() # Stabilize motion
 
     def convert_to_desert(self):
         self.cell_type = 1  # Set cell type to desert
@@ -464,7 +464,7 @@ class Particle:
         """
         self.direction = (0, 0, 0)
    
-    def stablizie_elevation(self):
+    def stabilize_elevation(self):
         dx,dy,_= self.direction
         self.direction = (dx,dy, 0)
 
