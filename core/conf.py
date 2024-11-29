@@ -3,6 +3,12 @@
 # Configuration settings for the simulation
 
 config = {
+
+    
+    # Default simulation parameters
+    "default_grid_size": (10, 10, 10), # Increased grid size for more detailed simulation
+    "default_days": 10, # Longer default simulation duration
+
     # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
     "baseline_temperature": [
         15,  # Sea: Warm
@@ -70,7 +76,7 @@ config = {
     "city_pollution_increase_rate": 0.1, # Cities emit pollution at a steady rate
     "city_warming_effect": 0.1, # Slightly reduced warming effect for balance
     "city_temperature_upper_limit": 60, # Cities remain hot but capped lower
-    "city_pollution_upper_limit": 100, # Cities can accumulate significant pollution
+    "city_pollution_upper_limit": 500, # Cities can accumulate significant pollution
 
     # Ratios for land cell types
     "initial_ratios": {
@@ -79,10 +85,6 @@ config = {
         "desert": 0.2,  # Balance deserts and forests
         "vacuum": 0.2,  # Significant amount of vacuum for realism
     },
-
-    # Default simulation parameters
-    "default_grid_size": (10, 10, 10), # Increased grid size for more detailed simulation
-    "default_days": 10, # Longer default simulation duration
 
     # Visualization settings
     "tint": False, # Use tint for better visual representation
