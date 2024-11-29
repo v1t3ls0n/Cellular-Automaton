@@ -55,16 +55,40 @@ class MatplotlibDisplay:
         # Set the window close protocol
         root.protocol("WM_DELETE_WINDOW", on_close)
 
+        # Create a frame for the simulation plot and buttons
+        main_frame = tk.Frame(root)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Create the control frame for buttons
+        control_frame = tk.Frame(main_frame)
+        control_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
+
+        # Add control buttons to the main simulation window
+        bring_to_front_button = tk.Button(
+            control_frame,
+            text="Bring Config to Front",
+            command=lambda: self.bring_config_to_front(),
+        )
+        bring_to_front_button.pack(side=tk.LEFT, padx=5)
+
+        minimize_button = tk.Button(
+            control_frame,
+            text="Minimize Config Window",
+            command=lambda: self.minimize_config_window(),
+        )
+        minimize_button.pack(side=tk.LEFT, padx=5)
+
         # Create a frame for the simulation plot
-        frame = tk.Frame(root)
-        frame.pack(fill=tk.BOTH, expand=True)
+        plot_frame = tk.Frame(main_frame)
+        plot_frame.pack(fill=tk.BOTH, expand=True)
 
         # Create the main figure
-        self.fig = plt.figure(figsize=(18, 12))  # Larger size for better spacing
+        self.fig = plt.Figure(figsize=(18, 12))  # Larger size for better spacing
+        self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
+        self.canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Use GridSpec for flexible layout
         spec = gridspec.GridSpec(nrows=3, ncols=3, figure=self.fig)
-
 
         # Adjust the positions of subplots
         self.ax_3d = self.fig.add_subplot(231, projection="3d")  # 3D simulation
@@ -72,10 +96,7 @@ class MatplotlibDisplay:
         self.ax_temperature = self.fig.add_subplot(235)  # Temperature graph
         self.ax_population = self.fig.add_subplot(236)  # City Population graph
         self.ax_forests = self.fig.add_subplot(233)  # Forest graph
-        # self.ax_table = self.fig.add_subplot(232)  # Placeholder for compatibility
-
-        # Color map legend
-        self.ax_color_map = self.fig.add_subplot(spec[0, 1])
+        self.ax_color_map = self.fig.add_subplot(spec[0, 1])  # Color map legend
         self.ax_color_map.axis("off")  # Hide axes for the legend
         self.add_cell_type_legend()
 
@@ -92,31 +113,57 @@ class MatplotlibDisplay:
         # Render the initial day
         self.render_day(self.current_day)
 
-        # Add the matplotlib figure to the Tkinter canvas
-        canvas = FigureCanvasTkAgg(self.fig, frame)
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-        canvas.draw()
-
-        # Launch the configuration table in a separate window
+        # Display the configuration table
         self.add_config_table_with_scrollbar(root)
 
-        # Run the Tkinter main loop
+        # Start the Tkinter event loop
         root.mainloop()
 
+    def bring_config_to_front(self):
+        """Bring the configuration window to the front."""
+        if self.config_window and self.config_window.winfo_exists():
+            self.config_window.deiconify()
+            self.config_window.lift()
+            self.config_window.focus_force()
 
+    def minimize_config_window(self):
+        """Minimize the configuration window."""
+        if self.config_window and self.config_window.winfo_exists():
+            self.config_window.iconify()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
     def add_config_table_with_scrollbar(self, root=None):
-        """Create a configuration table window with scrollbars."""
+        """Create a configuration table window with scrollbars and add control buttons."""
         # Create a new window for the configuration table
-        config_window = tk.Toplevel(root)
-        config_window.title("Configuration Table")
+        self.config_window = tk.Toplevel(root)
+        self.config_window.title("Configuration Table")
 
-        # Ensure the configuration window stays on top of the main window
-        config_window.attributes("-topmost", True)  # Keeps the window in front
-        config_window.lift()  # Brings it to the top
-        config_window.focus_force()  # Sets focus to this window
+        # Ensure the configuration window stays on top of the main window initially
+        self.config_window.attributes("-topmost", True)  # Keeps the window in front
+        self.config_window.lift()  # Brings it to the top
+        self.config_window.focus_force()  # Sets focus to this window
 
         # Create a frame to hold the table and scrollbars
-        frame = tk.Frame(config_window)
+        frame = tk.Frame(self.config_window)
         frame.pack(fill=tk.BOTH, expand=True)
 
         # Add vertical scrollbar
@@ -155,7 +202,7 @@ class MatplotlibDisplay:
                 parameter_width = max(parameter_width, len(key_labels[key]) * 10)
 
                 # Calculate maximum width for the Value column
-                value_width = max(value_width, len(formatted_value) * 10)
+                value_width = max(value_width, len(formatted_value) * 7)
 
         # Set the column widths to fit the data
         tree.column("Parameter", width=parameter_width, anchor="w")
@@ -172,42 +219,12 @@ class MatplotlibDisplay:
         window_width = min(table_width, screen_width * 0.9)
         window_height = min(table_height, screen_height * 0.9)
 
-        config_window.geometry(f"{int(window_width)}x{int(window_height)}")
+        self.config_window.geometry(f"{int(window_width)}x{int(window_height)}")
 
         # Remove the topmost attribute after focusing on the window
-        config_window.after(1000, lambda: config_window.attributes("-topmost", False))
+        self.config_window.after(1000, lambda: self.config_window.attributes("-topmost", False))
 
 
-
-        # Add control buttons to the simulation window
-        control_frame = tk.Frame(root)
-        control_frame.pack(side="top", fill="x", pady=5)
-
-        bring_to_front_button = tk.Button(
-            control_frame,
-            text="Bring Config to Front",
-            command=lambda: self.bring_config_to_front(),
-        )
-        bring_to_front_button.pack(side="left", padx=5)
-
-        minimize_button = tk.Button(
-            control_frame,
-            text="Minimize Config Window",
-            command=lambda: self.minimize_config_window(),
-        )
-        minimize_button.pack(side="left", padx=5)
-
-    def bring_config_to_front(self):
-        """Bring the configuration window to the front."""
-        if self.config_window and self.config_window.winfo_exists():
-            self.config_window.deiconify()
-            self.config_window.lift()
-            self.config_window.focus_force()
-
-    def minimize_config_window(self):
-        """Minimize the configuration window."""
-        if self.config_window and self.config_window.winfo_exists():
-            self.config_window.iconify()
 
 
 
