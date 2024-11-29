@@ -13,7 +13,7 @@ config = {
         35,  # City: Hot due to urban heat
         10,  # Air: Cool
         12,  # Rain: Mild
-        -270 # Vacuum: Near absolute zero
+        -20 # Vacuum: Near absolute zero
     ],
 
     "cell_type_weights": {
@@ -85,10 +85,10 @@ config = {
 
     # Ratios for land cell types
     "initial_ratios": {
-        "forest": 0.2,  # Increased forest proportion
+        "forest": 0.3,  # Increased forest proportion
         "city": 0.3,    # Slightly fewer cities
         "desert": 0.2,  # Balance deserts and forests
-        "vacuum": 0.3,  # Significant amount of vacuum for realism
+        "vacuum": 0.2,  # Significant amount of vacuum for realism
     },
 
     # Default simulation parameters
