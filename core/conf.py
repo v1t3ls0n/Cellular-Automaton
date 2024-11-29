@@ -56,7 +56,7 @@ config = {
     "temperature_extinction_point": 60,  # Maximum temperature before extinction effects
     "freezing_point": -15,              # Temperature at which water freezes
     "melting_point": 20,                # Temperature at which ice melts
-    "melting_point": 35,            # Temperature at which water evaporates
+    "evaporation_point": 35,            # Temperature at which water evaporates
 
     # Thresholds and rates for water transfer and pollution effects
     "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
