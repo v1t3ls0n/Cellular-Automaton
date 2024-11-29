@@ -132,24 +132,14 @@ key_labels = {
     "tint": "Visualization Tint",
 }
 
-temperature_mapping = {
-    0: "Ocean",
-    1: "Desert",
-    2: "Cloud",
-    3: "Ice",
-    4: "Forest",
-    5: "City",
-    6: "Air",
-    7: "Rain",
-    8: "Vacuum",
-}
+
 
 def format_config_value(key, value):
     if key == "baseline_temperature":
         return ", ".join(
             [f"{temperature_mapping[i]}: {temp}°C" for i, temp in enumerate(value)]
         )
-    elif key == "initial_ratios":
+    if key == "initial_ratios":
         return ", ".join([f"{k.capitalize()}: {v}" for k, v in value.items()])
     elif key == "cell_type_weights":
         return ", ".join(
@@ -161,3 +151,16 @@ def format_config_value(key, value):
         )
     else:
         return str(value)
+    
+    
+temperature_mapping = {
+    0: "Ocean",
+    1: "Desert",
+    2: "Cloud",
+    3: "Ice",
+    4: "Forest",
+    5: "City",
+    6: "Air",
+    7: "Rain",
+    8: "Vacuum",
+}

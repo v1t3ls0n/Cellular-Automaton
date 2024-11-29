@@ -3,7 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
 import numpy as np
 import logging
-from core.conf import config, key_labels, temperature_mapping, format_config_value
+from core.conf import config, key_labels,  format_config_value 
 import matplotlib.gridspec as gridspec
 import tkinter as tk
 from tkinter import ttk
@@ -118,6 +118,93 @@ class MatplotlibDisplay:
 
 
 
+
+
+    def add_config_table_with_scrollbar(self, root=None):
+        # Create a new window if root is not provided
+        if root is None:
+            root = tk.Tk()
+            root.title("Configuration Table")
+
+        # Get screen dimensions for dynamic window sizing
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+
+        # Adjust the window size based on screen dimensions
+        window_width = int(screen_width * 0.8)  # Use 80% of screen width
+        window_height = int(screen_height * 0.8)  # Use 80% of screen height
+        root.geometry(f"{window_width}x{window_height}")
+
+        # Add a frame for scrolling
+        frame = ttk.Frame(root)
+        frame.grid(row=0, column=0, sticky="nsew")
+
+        # Create a vertical scrollbar using tk.Scrollbar
+        vsb = tk.Scrollbar(frame, orient="vertical")
+        vsb.grid(row=0, column=1, sticky="ns")
+
+        # Create a horizontal scrollbar using tk.Scrollbar
+        hsb = tk.Scrollbar(frame, orient="horizontal")
+        hsb.grid(row=1, column=0, sticky="ew")
+
+        # Create the treeview (table)
+        tree = ttk.Treeview(
+            frame,
+            columns=("Parameter", "Value"),
+            show="headings",
+            yscrollcommand=vsb.set,
+            xscrollcommand=hsb.set,
+        )
+        tree.grid(row=0, column=0, sticky="nsew")
+
+        # Configure scrollbars to work with the treeview
+        vsb.config(command=tree.yview)
+        hsb.config(command=tree.xview)
+
+        # Define column headings
+        tree.heading("Parameter", text="Parameter")
+        tree.heading("Value", text="Value")
+
+        # Define column widths
+        tree.column("Parameter", width=window_width*0.9, anchor="w")
+        tree.column("Value", width=window_width*0.9, anchor="w")
+
+
+        # Add data to the table
+        for key, value in self.config.items():
+            
+            if key == "base_colors":
+                continue
+
+            # Use key_labels for meaningful names
+            parameter_name = key_labels.get(key, key)
+            
+            # Format the value using format_config_value
+            formatted_value = format_config_value(key, value)
+            
+            # Add the row to the treeview
+            tree.insert("", "end", values=(parameter_name, formatted_value))
+
+        # Adjust layout of root
+        root.grid_rowconfigure(0, weight=1)
+        root.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=2)
+        frame.grid_columnconfigure(0, weight=2)
+
+        # Run the Tkinter main loop if no parent root was provided
+        if root is None:
+            root.mainloop()
+
+
+
+
+
+
+
+
+
+
+
     def add_cell_type_legend(self):
         """Add a legend explaining the cell colors and cell type numbers."""
         legend_elements = [
@@ -140,91 +227,19 @@ class MatplotlibDisplay:
 
 
 
-    def add_config_table_with_scrollbar(self, root=None):
-        if root is None:
-            root = tk.Toplevel()
-            root.title("Configuration Table")
-            root.geometry("1200x600")  # Adjusted width for multiple columns
 
-        # Filter and format config parameters
-        filtered_config = {
-            key_labels.get(k, k): v for k, v in self.config.items() if k != "base_colors"
-        }
 
-        # Prepare dynamic columns for specific keys
-        extra_columns = []
-        for key, value in filtered_config.items():
-            if isinstance(value, (list, dict)):
-                if isinstance(value, list):
-                    extra_columns.extend([f"{key}_{i}" for i in range(len(value))])
-                elif isinstance(value, dict):
-                    extra_columns.extend([f"{key}_{k}" for k in value.keys()])
 
-        # Create Treeview columns dynamically
-        main_columns = ["Parameter", "Value"]
-        all_columns = main_columns + extra_columns
 
-        # Create a Frame for the table
-        frame = ttk.Frame(root)
-        frame.pack(fill=tk.BOTH, expand=True)
 
-        # Add scrollbars
-        scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        h_scrollbar = ttk.Scrollbar(frame, orient=tk.HORIZONTAL)
-        h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
 
-        # Create Treeview
-        tree = ttk.Treeview(
-            frame,
-            columns=all_columns,
-            show="headings",
-            yscrollcommand=scrollbar.set,
-            xscrollcommand=h_scrollbar.set,
-        )
-        tree.pack(fill=tk.BOTH, expand=True)
 
-        # Configure scrollbars
-        scrollbar.config(command=tree.yview)
-        h_scrollbar.config(command=tree.xview)
 
-        # Define column headings
-        tree.heading("Parameter", text="Parameter")
-        tree.heading("Value", text="Value")
-        tree.column("Parameter", width=300, anchor=tk.W)
-        tree.column("Value", width=400, anchor=tk.W)
 
-        for column in extra_columns:
-            tree.heading(column, text=column.split("_")[-1].capitalize())
-            tree.column(column, width=100, anchor=tk.CENTER)
 
-        # Insert data into Treeview
-        for param, value in filtered_config.items():
-            if isinstance(value, list):
-                flattened_values = {f"{param}_{i}": v for i, v in enumerate(value)}
-            elif isinstance(value, dict):
-                flattened_values = {f"{param}_{k}": v for k, v in value.items()}
-            else:
-                flattened_values = {}
 
-            row_data = [param, ""]
-            for col in extra_columns:
-                row_data.append(flattened_values.get(col, ""))
 
-            tree.insert("", "end", values=row_data)
-
-        # Style Treeview
-        style = ttk.Style()
-        style.configure("Treeview", rowheight=25)
-        style.map(
-            "Treeview",
-            background=[("selected", "#cce5ff")],  # Selected row background
-        )
-        style.configure(
-            "Treeview.Heading",
-            font=("Helvetica", 12, "bold"),
-        )
 
 
 
