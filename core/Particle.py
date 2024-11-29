@@ -243,10 +243,15 @@ class Particle:
         #     self.direction = self.calculate_dominant_wind_direction(neighbors)
 
     def _update_rain(self, neighbors):
-        logging.info(f"Rain at {self.position} moving down.")
         self.go_down()
-        if self.is_at_ground_level(neighbors):
-            self.convert_to_ocean()
+
+        # Check if the cell is still valid and within the grid
+        x, y, z = self.position
+        if z == 0:  # Ground level
+            if self.is_surrounded_by_sea_cells(neighbors):
+                self.convert_to_ocean()
+            elif self.is_surrounded_by_land_cells(neighbors):
+                self.convert_to_air()  # Dry up
 
     ####################################################################################################################
     ###################################### CELL  CONVERSIONS ###########################################################
@@ -400,10 +405,12 @@ class Particle:
     ####################################################################################################################
 
     def go_down(self):
-        if self.position[2] != 0:
-            dx, dy, _ = self.direction
-            self.direction = (dx, dy, -1)
-            self.direction = (0, 0, -1)
+        """
+        Move the particle downward.
+        """
+        x, y, z = self.position
+        if z > 0:  # Ensure it doesn't go below the ground
+            self.position = (x, y, z - 1)
 
     def go_up(self):
         """
@@ -420,8 +427,9 @@ class Particle:
         self.direction = (0, 0, 0)
 
     def stabilize_elevation(self):
-        dx, dy, _ = self.direction
-        self.direction = (dx, dy, 0)
+        if self.cell_type == 7:  # Rain
+            self.direction = (0, 0, 0)  # Stop movement
+
 
     ####################################################################################################################
     ######################################  CALC HELPER FUNCTIONS: #####################################################

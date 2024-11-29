@@ -302,24 +302,15 @@ class World:
 
 
     def resolve_collision(self, cell1, cell2):
-        """
-        פותר התנגשויות בין שני תאים, מעדכן את המצב בהתאם לחוקים.
-        """
-        if cell1.cell_type == 7:  # Prioritize rain
+        if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Rain falls through air or vacuum
             return cell1
-        elif cell2.cell_type == 7:
+        elif cell2.cell_type == 7 and cell1.cell_type in {6, 8}:
             return cell2
-        elif cell1.cell_type == cell2.cell_type:
-            # מיזוג תכונות כאשר סוג התא זהה
+        elif cell1.cell_type == 7 and cell2.cell_type == 7:  # Merge rain cells
             cell1.water_mass += cell2.water_mass
-            cell1.temperature = (cell1.temperature + cell2.temperature) / 2
             return cell1
-        else:
-            # קביעת קדימות לפי משקל הסוג
-            if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type]:
-                return cell1
-            else:
-                return cell2
+        # Default collision resolution
+        return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
 
 
 
@@ -352,23 +343,6 @@ class World:
 
 
 
-
-
-
-    # def get_neighbors(self, x, y, z):
-    #     """
-    #     Get the neighbors of the cell at position (x, y, z) and their positions.
-    #     """
-    #     neighbors = []
-    #     positions = []
-    #     for dx, dy, dz in [(-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1), (0, 0, 1)]:
-    #         nx, ny, nz = x + dx, y + dy, z + dz
-    #         if 0 <= nx < self.grid_size[0] and 0 <= ny < self.grid_size[1] and 0 <= nz < self.grid_size[2]:
-    #             neighbors.append(self.grid[nx, ny, nz])
-    #             positions.append((nx, ny, nz))
-    #     # Return both neighbors and positions
-    #     return list(zip(neighbors, positions))
-    
 
 
     def _recalculate_global_attributes(self):
