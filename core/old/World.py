@@ -279,10 +279,27 @@ class World:
                     if next_position not in position_map:
                         position_map[next_position] = cell
                     else:
-                        # Handle collision by averaging attributes
+                        # Handle collision by resolving interactions
                         other_cell = position_map[next_position]
+                        logging.debug(f"Collision detected between {cell} and {
+                                      other_cell} at {next_position}")
+
                         self.resolve_collision(cell, other_cell)
 
+                        # Save both resolved cells back to the position map
+                        # Assume `resolve_collision` modifies `cell` and `other_cell` in place
+                        resolved_positions = [
+                            cell.position, other_cell.position]
+                        resolved_cells = [cell, other_cell]
+
+                        for pos, resolved_cell in zip(resolved_positions, resolved_cells):
+                            if pos:
+                                position_map[pos] = resolved_cell
+                        logging.debug(f"Day {self.day_number}: Cell ({
+                                      i}, {j}, {k}) state: {cell}")
+                        logging.debug(f"Collision resolved: {
+                                      cell} with {other_cell}")
+                        logging.debug(f"Transfer applied: {transfer_map}")
         # Populate the new grid with updated cells
         for (ni, nj, nk), updated_cell in position_map.items():
             new_grid[ni, nj, nk] = updated_cell
