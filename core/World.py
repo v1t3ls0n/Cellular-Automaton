@@ -242,8 +242,7 @@ class World:
                     for k in range(z):
                         # Use updated grid for next position calculation
                         cell = new_grid[i, j, k]
-                        next_position = cell.get_next_position(
-                            (i, j, k), self.grid_size)
+                        next_position = cell.get_next_position()
                         if next_position not in position_map:
                             position_map[next_position] = cell
                         else:
