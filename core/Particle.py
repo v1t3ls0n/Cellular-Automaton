@@ -128,7 +128,7 @@ class Particle:
         self._apply_natural_decay()
         self.equilibrate_temperature(neighbors)
 
-        if self.cell_type in {1, 4, 5, 6}:
+        if self.cell_type in {4,6}:
             self.equilibrate_pollution_level(neighbors)
 
         if self.cell_type == 0:  # Ocean
