@@ -1,6 +1,3 @@
-
----
-
 ### Maman 11 Question 2 (Computational Biology Course) By Guy Vitelson (203379706)
 # Environmental Simulation Project
 
@@ -8,9 +5,6 @@
 
 This project is a simulation of environmental dynamics using a **cellular automaton** approach. The goal is to model and analyze the interactions between various environmental components, such as oceans, forests, deserts, cities, clouds, air, rain, and vacuum. It incorporates realistic environmental processes like pollution dynamics, temperature changes, and water cycles.
 
-The simulation is designed with an academic focus to study the theoretical and technical aspects of environmental modeling, making it suitable for research and educational purposes.
-
----
 
 ## Features
 
