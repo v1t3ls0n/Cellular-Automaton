@@ -136,17 +136,17 @@ key_labels = {
 
 def format_config_value(key, value):
     if key == "baseline_temperature":
-        return ", ".join(
+        return "  |  ".join(
             [f"{temperature_mapping[i]}: {temp}°C" for i, temp in enumerate(value)]
         )
     if key == "initial_ratios":
-        return ", ".join([f"{k.capitalize()}: {v}" for k, v in value.items()])
+        return "  |  ".join([f"{k.capitalize()}: {v}" for k, v in value.items()])
     elif key == "cell_type_weights":
-        return ", ".join(
+        return "  |  ".join(
             [f"{temperature_mapping[k]}: {v}" for k, v in value.items()]
         )
     elif key == "baseline_pollution_level":
-        return ", ".join(
+        return "  |  ".join(
             [f"{temperature_mapping[i]}: {level}" for i, level in enumerate(value)]
         )
     else:
