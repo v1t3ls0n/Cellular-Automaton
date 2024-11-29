@@ -98,3 +98,71 @@ config = {
     # Visualization settings
     "tint": True, # Use tint for better visual representation
 }
+
+
+# Cell type mapping with initial values for easy reference
+config["cell_type_mapping"] = {
+    0: {  # Sea
+        "name": "Sea",
+        "temperature": config["baseline_temperature"][0],
+        "pollution": config["baseline_pollution_level"][0],
+        "weight": config["cell_type_weights"][0],
+        "color": config["base_colors"][0],
+    },
+    1: {  # Desert
+        "name": "Desert",
+        "temperature": config["baseline_temperature"][1],
+        "pollution": config["baseline_pollution_level"][1],
+        "weight": config["cell_type_weights"][1],
+        "color": config["base_colors"][1],
+    },
+    2: {  # Cloud
+        "name": "Cloud",
+        "temperature": config["baseline_temperature"][2],
+        "pollution": config["baseline_pollution_level"][2],
+        "weight": config["cell_type_weights"][2],
+        "color": config["base_colors"][2],
+    },
+    3: {  # Ice
+        "name": "Ice",
+        "temperature": config["baseline_temperature"][3],
+        "pollution": config["baseline_pollution_level"][3],
+        "weight": config["cell_type_weights"][3],
+        "color": config["base_colors"][3],
+    },
+    4: {  # Forest
+        "name": "Forest",
+        "temperature": config["baseline_temperature"][4],
+        "pollution": config["baseline_pollution_level"][4],
+        "weight": config["cell_type_weights"][4],
+        "color": config["base_colors"][4],
+    },
+    5: {  # City
+        "name": "City",
+        "temperature": config["baseline_temperature"][5],
+        "pollution": config["baseline_pollution_level"][5],
+        "weight": config["cell_type_weights"][5],
+        "color": config["base_colors"][5],
+    },
+    6: {  # Air
+        "name": "Air",
+        "temperature": config["baseline_temperature"][6],
+        "pollution": config["baseline_pollution_level"][6],
+        "weight": config["cell_type_weights"][6],
+        "color": config["base_colors"][6],
+    },
+    7: {  # Rain
+        "name": "Rain",
+        "temperature": config["baseline_temperature"][7],
+        "pollution": config["baseline_pollution_level"][7],
+        "weight": config["cell_type_weights"][7],
+        "color": config["base_colors"][7],
+    },
+    8: {  # Vacuum
+        "name": "Vacuum",
+        "temperature": config["baseline_temperature"][8],
+        "pollution": config["baseline_pollution_level"][8],
+        "weight": config["cell_type_weights"][8],
+        "color": config["base_colors"][8],
+    },
+}
