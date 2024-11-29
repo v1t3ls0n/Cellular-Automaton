@@ -179,6 +179,35 @@ class MatplotlibDisplay:
 
 
 
+        # Add control buttons to the simulation window
+        control_frame = tk.Frame(root)
+        control_frame.pack(side="top", fill="x", pady=5)
+
+        bring_to_front_button = tk.Button(
+            control_frame,
+            text="Bring Config to Front",
+            command=lambda: self.bring_config_to_front(),
+        )
+        bring_to_front_button.pack(side="left", padx=5)
+
+        minimize_button = tk.Button(
+            control_frame,
+            text="Minimize Config Window",
+            command=lambda: self.minimize_config_window(),
+        )
+        minimize_button.pack(side="left", padx=5)
+
+    def bring_config_to_front(self):
+        """Bring the configuration window to the front."""
+        if self.config_window and self.config_window.winfo_exists():
+            self.config_window.deiconify()
+            self.config_window.lift()
+            self.config_window.focus_force()
+
+    def minimize_config_window(self):
+        """Minimize the configuration window."""
+        if self.config_window and self.config_window.winfo_exists():
+            self.config_window.iconify()
 
 
 
