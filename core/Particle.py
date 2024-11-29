@@ -304,23 +304,19 @@ class Particle:
 
     def _update_rain(self, neighbors):
         """
-        Update rain behavior: moves downward and converts to ocean or land.
-        Returns:
-            dict: Transfer map with positions and transfer amounts.
+        Rain-specific behavior to ensure it moves downward.
         """
         transfer_map = {}
         below_neighbors = self.get_below_neighbors(neighbors)
 
-        # If rain can move down, prioritize that
         for neighbor in below_neighbors:
-            if neighbor.cell_type in {8, 0, 1}:  # Vacuum, Ocean, Land
+            if neighbor.cell_type in {0, 1, 4, 8}:  # Ocean, Desert, Forest, or Vacuum
                 transfer_map[neighbor.position] = min(self.water_mass, self.config["rain_transfer_rate"])
-                self.water_mass -= transfer_map[neighbor.position]
-                if self.water_mass <= 0:
-                    self.cell_type = 8  # Convert to vacuum after moving
+                self.cell_type = 8  # Convert to Vacuum after moving
                 break
-        else:
-            # If rain is blocked and cannot move downward, stabilize
+
+        # Stabilize if no valid downward movement
+        if not below_neighbors:
             self.stabilize()
 
         return transfer_map

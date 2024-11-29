@@ -58,6 +58,12 @@ config = {
     "water_transfer_threshold": 0.1,  # Increased for faster water dynamics
     "rain_transfer_rate": 0.1,  # Transfer rate for rain to other cells (new key)
 
+    # Rates for environmental changes
+    "melting_rate": 0.15,  # Ice melts slower
+    "evaporation_rate": 0.05,  # Reduced evaporation rate for balance
+    "rain_transfer_rate": 0.1,  # Transfer rate for rain to other cells (new key)
+
+
     # Pollution-related thresholds
     "pollution_damage_threshold": 3.0,  # Lowered for faster damage
     "pollution_level_tipping_point": 30,  # More sensitive ecosystem changes
@@ -78,17 +84,17 @@ config = {
     "forest_cooling_effect": 0.05,  # More pronounced cooling effect
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.3,  # Cities emit pollution rapidly
-    "city_warming_effect": 0.2,  # Increased warming effect
+    "city_pollution_increase_rate": 0.03,  # Cities emit pollution rapidly
+    "city_warming_effect": 0.02,  # Increased warming effect
     "city_temperature_upper_limit": 70,  # Cities remain very hot
     "city_pollution_upper_limit": 200,  # Cities can accumulate extreme pollution
 
     # Ratios for land cell types
     "initial_ratios": {
-        "forest": 0.4,  # Increased forest proportion
-        "city": 0.2,  # Fewer cities
-        "desert": 0.3,  # Increased deserts
-        "vacuum": 0.1,  # Reduced vacuum
+        "forest": 0.35,  # More forests
+        "city": 0.25,    # Fewer cities
+        "desert": 0.2,
+        "vacuum": 0.2,
     },
 
     "ambient_temperature": 25,  # Warmer base temperature

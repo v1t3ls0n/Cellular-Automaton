@@ -245,7 +245,7 @@ class World:
         """
         Update the cells on the grid to compute their next states and resolve collisions.
         """
-        self.apply_day_night_cycle(self.day_number)
+        # self.apply_day_night_cycle(self.day_number)
         x, y, z = self.grid_size
         new_grid = np.empty((x, y, z), dtype=object)
 
