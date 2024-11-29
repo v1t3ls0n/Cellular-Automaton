@@ -110,6 +110,10 @@ class MatplotlibDisplay:
         self.render_forests_graph()
         self.add_cell_type_legend()
 
+
+        # Add keyboard navigation
+        self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
+
         # Render the initial day
         self.render_day(self.current_day)
 
