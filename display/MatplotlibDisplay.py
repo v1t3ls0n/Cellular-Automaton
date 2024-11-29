@@ -131,8 +131,8 @@ class MatplotlibDisplay:
         screen_height = root.winfo_screenheight()
 
         # Adjust the window size based on screen dimensions
-        window_width = int(screen_width * 0.8)  # Use 80% of screen width
-        window_height = int(screen_height * 0.8)  # Use 80% of screen height
+        window_width = int(screen_width * 0.5)  # Use 80% of screen width
+        window_height = int(screen_height * 0.5)  # Use 80% of screen height
         root.geometry(f"{window_width}x{window_height}")
 
         # Add a frame for scrolling
@@ -140,11 +140,11 @@ class MatplotlibDisplay:
         frame.grid(row=0, column=0, sticky="nsew")
 
         # Create a vertical scrollbar using tk.Scrollbar
-        vsb = tk.Scrollbar(frame, orient="vertical")
+        vsb = tk.Scrollbar(frame, orient="vertical", width = 20)
         vsb.grid(row=0, column=1, sticky="ns")
 
         # Create a horizontal scrollbar using tk.Scrollbar
-        hsb = tk.Scrollbar(frame, orient="horizontal")
+        hsb = tk.Scrollbar(frame, orient="horizontal", width = 20)
         hsb.grid(row=1, column=0, sticky="ew")
 
         # Create the treeview (table)
@@ -166,8 +166,8 @@ class MatplotlibDisplay:
         tree.heading("Value", text="Value")
 
         # Define column widths
-        tree.column("Parameter", width=window_width*0.9, anchor="w")
-        tree.column("Value", width=window_width*0.9, anchor="w")
+        tree.column("Parameter", width=window_width//4, anchor="w")
+        tree.column("Value", width=window_width//4, anchor="w")
 
 
         # Add data to the table
