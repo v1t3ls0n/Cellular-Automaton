@@ -39,8 +39,6 @@ class MatplotlibDisplay:
 
     def plot_3d(self):
         """Create the plot with all relevant graphs, including the configuration window."""
-        # import tkinter as tk
-        # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
         # Create the main Tkinter root window for the simulation
         root = tk.Tk()
@@ -61,11 +59,12 @@ class MatplotlibDisplay:
         frame = tk.Frame(root)
         frame.pack(fill=tk.BOTH, expand=True)
 
+        # Create the main figure
+        self.fig = plt.figure(figsize=(18, 12))  # Larger size for better spacing
 
+        # Use GridSpec for flexible layout
+        spec = gridspec.GridSpec(nrows=3, ncols=3, figure=self.fig)
 
-
-        # Create the matplotlib figure
-        self.fig = plt.figure(figsize=(16, 10))
 
         # Adjust the positions of subplots
         self.ax_3d = self.fig.add_subplot(231, projection="3d")  # 3D simulation
@@ -73,7 +72,12 @@ class MatplotlibDisplay:
         self.ax_temperature = self.fig.add_subplot(235)  # Temperature graph
         self.ax_population = self.fig.add_subplot(236)  # City Population graph
         self.ax_forests = self.fig.add_subplot(233)  # Forest graph
-        self.ax_table = self.fig.add_subplot(232)  # Placeholder for compatibility
+        # self.ax_table = self.fig.add_subplot(232)  # Placeholder for compatibility
+
+        # Color map legend
+        self.ax_color_map = self.fig.add_subplot(spec[0, 1])
+        self.ax_color_map.axis("off")  # Hide axes for the legend
+        self.add_cell_type_legend()
 
         # Precompute 3D visualizations
         self.precompute_visualizations()
@@ -83,6 +87,7 @@ class MatplotlibDisplay:
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
+        self.add_cell_type_legend()
 
         # Render the initial day
         self.render_day(self.current_day)
@@ -99,12 +104,8 @@ class MatplotlibDisplay:
         root.mainloop()
 
 
-
     def add_config_table_with_scrollbar(self, root=None):
         """Create a configuration table window with scrollbars."""
-        # import tkinter as tk
-        # from tkinter import ttk
-
         # Create a new window for the configuration table
         config_window = tk.Toplevel(root)
         config_window.title("Configuration Table")
@@ -114,81 +115,67 @@ class MatplotlibDisplay:
         config_window.lift()  # Brings it to the top
         config_window.focus_force()  # Sets focus to this window
 
-        # Dynamically adjust the size of the config window to fit content
-        config_window.geometry(f"{min(800, config_window.winfo_screenwidth())}x{min(600, config_window.winfo_screenheight())}")
-
-
-
-
-
-        # # Auto-adjust the window size based on the screen size
-        # screen_width = config_window.winfo_screenwidth()
-        # screen_height = config_window.winfo_screenheight()
-        # config_window.geometry(f"{int(screen_width * 0.5)}x{int(screen_height * 0.5)}")
-
         # Create a frame to hold the table and scrollbars
         frame = tk.Frame(config_window)
         frame.pack(fill=tk.BOTH, expand=True)
 
-        # Create the Treeview widget for the table
-        tree = ttk.Treeview(frame, columns=("Parameter", "Value"), show="headings")
+        # Add vertical scrollbar
+        vsb = tk.Scrollbar(frame, orient="vertical", width=20)
+        vsb.pack(side="right", fill="y")
+
+        # Add horizontal scrollbar
+        hsb = tk.Scrollbar(frame, orient="horizontal", width=20)
+        hsb.pack(side="bottom", fill="x")
+
+        # Create a treeview for the table
+        tree = ttk.Treeview(
+            frame,
+            columns=("Parameter", "Value"),
+            show="headings",
+            yscrollcommand=vsb.set,
+            xscrollcommand=hsb.set,
+        )
         tree.heading("Parameter", text="Parameter")
         tree.heading("Value", text="Value")
 
-        # Auto-adjust column widths
-        tree.column("Parameter", width=200, anchor=tk.W)
-        tree.column("Value", anchor=tk.W)
+        # Attach the scrollbars
+        vsb.config(command=tree.yview)
+        hsb.config(command=tree.xview)
+
         # Add data to the table
         parameter_width = 0
         value_width = 0
 
-        # Add data to the table
+        # Populate the treeview with formatted data
         for key, value in self.config.items():
-            if key == "base_colors":
-                continue
-            # Use key_labels for meaningful names
-            parameter_name = key_labels.get(key, key)
-            
-            # Format the value using format_config_value
-            formatted_value = format_config_value(key, value)
-            
-            # Insert the row into the treeview
-            tree.insert("", "end", values=(parameter_name, formatted_value))
-            
-            # Calculate maximum width for the Parameter column
-            parameter_width = max(parameter_width, len(parameter_name))
-            
-            # Calculate maximum width for the Value column
-            value_width = max(value_width, len(formatted_value))
+            if key in key_labels:
+                formatted_value = format_config_value(key, value)
+                tree.insert("", "end", values=(key_labels[key], formatted_value))
+                # Calculate maximum width for the Parameter column
+                parameter_width = max(parameter_width, len(key_labels[key]) * 10)
+
+                # Calculate maximum width for the Value column
+                value_width = max(value_width, len(formatted_value) * 10)
 
         # Set the column widths to fit the data
-        font_width = 10  # Adjust as needed to match your font size and style
+        tree.column("Parameter", width=parameter_width, anchor="w")
+        tree.column("Value", width=value_width, anchor="w")
+        tree.pack(fill=tk.BOTH, side="top", expand=True)
 
         # Dynamically adjust the window size based on table content
-        table_width = (parameter_width + value_width) * font_width + 50  # Extra padding
-        table_height = len(self.config) * 25 + 50  # Row height times the number of rows
+        table_width = parameter_width + value_width + 50  # Extra padding
+        table_height = min(500, len(self.config) * 25 + 100)  # Adjust height to avoid oversized windows
 
-        # Set minimum and maximum dimensions for usability
+        # Apply the calculated dimensions to the window
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
         window_width = min(table_width, screen_width * 0.9)
         window_height = min(table_height, screen_height * 0.9)
 
-        # Apply the calculated dimensions to the window
-        root.geometry(f"{int(window_width)}x{int(window_height)}")
+        config_window.geometry(f"{int(window_width)}x{int(window_height)}")
 
-        # Adjust layout of root
-        root.grid_rowconfigure(0, weight=1)
-        root.grid_columnconfigure(0, weight=1)
-        frame.grid_rowconfigure(0, weight=1)
-        frame.grid_columnconfigure(0, weight=1)
-
-        # Run the Tkinter main loop if no parent root was provided
-        if root is None:
-            root.mainloop()
-            config_window.after(1000, lambda: config_window.attributes("-topmost", False))
-
-
+        # Remove the topmost attribute after focusing on the window
+        config_window.after(1000, lambda: config_window.attributes("-topmost", False))
 
 
 
