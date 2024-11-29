@@ -189,21 +189,60 @@ class MatplotlibDisplay:
             logging.error("Data length mismatch in pollution graph.")
 
 
+
+
+
+
+
+
+
+
     def add_legend(self):
-        """Add a legend explaining the cell colors and cell type numbers."""
-        legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', label='0: Ocean', markersize=10, markerfacecolor=self.config["base_colors"][0]),
-            plt.Line2D([0], [0], marker='o', color='w', label='1: Desert', markersize=10, markerfacecolor=self.config["base_colors"][1]),
-            plt.Line2D([0], [0], marker='o', color='w', label='2: Cloud', markersize=10, markerfacecolor=self.config["base_colors"][2]),
-            plt.Line2D([0], [0], marker='o', color='w', label='3: Ice', markersize=10, markerfacecolor=self.config["base_colors"][3]),
-            plt.Line2D([0], [0], marker='o', color='w', label='4: Forest', markersize=10, markerfacecolor=self.config["base_colors"][4]),
-            plt.Line2D([0], [0], marker='o', color='w', label='5: City', markersize=10, markerfacecolor=self.config["base_colors"][5]),
-            plt.Line2D([0], [0], marker='o', color='w', label='6: Air (Sky)', markersize=10, markerfacecolor=self.config["base_colors"][6]),
-            plt.Line2D([0], [0], marker='o', color='w', label='7: Rain', markersize=10, markerfacecolor=self.config["base_colors"][7]),
-            plt.Line2D([0], [0], marker='o', color='w', label='8: Vacuum', markersize=10, markerfacecolor=self.config["base_colors"][8]),
+        """Add legends explaining the cell colors, cell type numbers, and configuration values."""
+
+        # Legend for cell types
+        cell_type_legend_elements = [
+            plt.Line2D(
+                [0], [0], marker='o', color='w',
+                label=f"{cell_type}: {label}", markersize=10,
+                markerfacecolor=self.config["base_colors"][cell_type]
+            )
+            for cell_type, label in enumerate([
+                "Ocean", "Desert", "Cloud", "Ice", "Forest", "City", "Air (Sky)", "Rain", "Vacuum"
+            ])
         ]
 
-        self.ax_3d.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1.05))
+        # Legend for initial config values
+        config_text_lines = [
+            f"{cell_type}: {label} - Temp={self.config['baseline_temperature'][cell_type]}°C, "
+            f"Pollution={self.config['baseline_pollution_level'][cell_type]}, "
+            f"Weight={self.config['cell_type_weights'][cell_type]}"
+            for cell_type, label in enumerate([
+                "Ocean", "Desert", "Cloud", "Ice", "Forest", "City", "Air (Sky)", "Rain", "Vacuum"
+            ])
+        ]
+        config_text = "\n".join(config_text_lines)
+
+        # Add the cell type legend
+        self.ax_3d.legend(
+            handles=cell_type_legend_elements,
+            loc='upper left', bbox_to_anchor=(1.1, 1.05),
+            title="Cell Types"
+        )
+
+        # Add a text box for configuration values
+        self.ax_3d.text(
+            1.1, 0.5, config_text,
+            transform=self.ax_3d.transAxes,
+            fontsize=8,
+            bbox=dict(facecolor='white', alpha=0.7),
+            verticalalignment='center',
+            horizontalalignment='left'
+        )
+
+
+
+
 
     def handle_key_press(self, event):
         """Handle key presses for navigating and zooming/panning the graphs."""

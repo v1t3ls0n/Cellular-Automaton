@@ -92,11 +92,11 @@ config = {
     },
 
     # Default simulation parameters
-    "default_grid_size": (20, 20, 20), # Increased grid size for more detailed simulation
-    "default_days": 100, # Longer default simulation duration
+    "default_grid_size": (10, 10, 10), # Increased grid size for more detailed simulation
+    "default_days": 10, # Longer default simulation duration
 
     # Visualization settings
-    "tint": True, # Use tint for better visual representation
+    "tint": False, # Use tint for better visual representation
 }
 
 
