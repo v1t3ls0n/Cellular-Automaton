@@ -385,8 +385,8 @@ class Particle:
             or self.is_below_sea_level(neighbors)
         ):
             self.go_up()
-        else:
-            self.direction = self.calculate_dynamic_wind_direction(neighbors)
+        # else:
+        #     self.direction = self.calculate_dynamic_wind_direction(neighbors)
 
 
     def _update_rain(self, neighbors):
