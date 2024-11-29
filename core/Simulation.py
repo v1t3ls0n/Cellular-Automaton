@@ -1,15 +1,13 @@
-import logging
 from core.World import World  # Import the World class
+import logging
 
 class Simulation:
-    def __init__(self, initial_cities_ratio, initial_forests_ratio, initial_deserts_ratio, grid_size, days):
+    def __init__(self, grid_size, initial_ratios, days):
         """
         Initialize the Simulation class with initial conditions.
         """
         self.grid_size = grid_size
-        self.initial_cities_ratio = initial_cities_ratio
-        self.initial_forests_ratio = initial_forests_ratio
-        self.initial_deserts_ratio = initial_deserts_ratio
+        self.initial_ratios = initial_ratios
         self.days = days
 
         self.states = []  # Store the history of World objects
@@ -18,7 +16,6 @@ class Simulation:
         self.temperature_over_time = []
         self.city_population_over_time = []
         self.forest_count_over_time = []
-
 
     def _update_aggregates(self, state):
         """
@@ -29,28 +26,17 @@ class Simulation:
         self.city_population_over_time.append(state.total_cities)
         self.forest_count_over_time.append(state.total_forests)
 
-
-
     def precompute(self):
         """
         Run the simulation for the specified number of days.
         """
-        
         # Initialize the first state
         initial_state = World(
-            grid_size = self.grid_size, 
-            initial_cities_ratio = self.initial_cities_ratio,
-            initial_forests_ratio = self.initial_forests_ratio,
-            initial_deserts_ratio = self.initial_deserts_ratio,
-            day_number = 0
+            grid_size=self.grid_size,
+            initial_ratios=self.initial_ratios,
+            day_number=0
         )
-
-        initial_state.initialize_grid(
-            initial_cities_ratio = self.initial_cities_ratio,
-            initial_forests_ratio = self.initial_forests_ratio,
-            initial_deserts_ratio = self.initial_deserts_ratio,
-        )
-
+        initial_state.initialize_grid()
         self.states.append(initial_state)
         self._update_aggregates(initial_state)
 
@@ -63,7 +49,6 @@ class Simulation:
             self.states.append(next_state)
             self._update_aggregates(next_state)
             logging.debug(f"Next state (Day {day + 1}) added.")
-
 
     def analyze(self):
         """

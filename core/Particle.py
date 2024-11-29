@@ -56,7 +56,7 @@ class Particle:
         new_y = (y + dy) % grid_size[1]
         new_z = max(0, min(grid_size[2] - 1, z + dz))
 
-        return new_x, new_y, new_z
+        return (new_x, new_y, new_z)
 
     def get_color(self):
         """
@@ -186,14 +186,14 @@ class Particle:
         """
         saturation_threshold = self.config["cloud_saturation_threshold"]
 
-        # self.exchange_water_mass(neighbors)
+        self.exchange_water_mass(neighbors)
         self.direction = self.calculate_dominant_wind_direction(neighbors)
         if self.water_mass >= saturation_threshold:
             self.convert_to_rain()
-        # elif not self.is_surrounded_by_cloud_cells(neighbors):
-        #     self.go_up()
-        # else:
-        #     self.stabilize_elevation()
+        elif not self.is_surrounded_by_cloud_cells(neighbors):
+            self.go_up()
+        else:
+            self.stabilize_elevation()
 
     def _update_ice(self, neighbors):
         """

@@ -68,12 +68,16 @@ class MatplotlibDisplay:
                         cell = state.grid[x][y][z]
                         if cell.get_color() is not None:
                             # Interpolate multiple points for "densification"
-                            for dx in np.linspace(-0.1, 0.1, 2):  # Fine-tune interpolation
-                                for dy in np.linspace(-0.1, 0.1, 2):
-                                    for dz in np.linspace(-0.1, 0.1, 2):
-                                        points.append((x + dx, y + dy, z + dz))
-                                        colors.append(to_rgba(cell.get_color()))
-                                        sizes.append(80)  # Larger size for denser appearance
+                            # for dx in np.linspace(-0.1, 0.1, 2):  # Fine-tune interpolation
+                            #     for dy in np.linspace(-0.1, 0.1, 2):
+                            #         for dz in np.linspace(-0.1, 0.1, 2):
+                            #             points.append((x + dx, y + dy, z + dz))
+                            #             colors.append(to_rgba(cell.get_color()))
+                            #             sizes.append(80)  # Larger size for denser appearance
+                            
+                            points.append((x , y , z ))
+                            colors.append(to_rgba(cell.get_color()))
+                            sizes.append(80)  # Larger size for denser appearance
 
             self.precomputed_data.append((points, colors, sizes))
         logging.info("3D Precomputation complete.")

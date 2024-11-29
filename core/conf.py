@@ -1,8 +1,9 @@
 # config.py
 
-# 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air  | 7: Rain
+# Configuration settings for the simulation
 
 config = {
+    # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain
     "baseline_temperature": [15, 25, 5, -10, 20, 30, 10, 12],
 
     "cell_type_weights": {
@@ -16,10 +17,10 @@ config = {
         7: 1.1,  # Rain
     },
 
-    "baseline_pollution_level": [0, 0, 0, 0, 0, 20, 10, 0],
+    "baseline_pollution_level": [10, 10, 10, 10, 10, 10, 10, 10],
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.1),  # Air (transparent white)
+        6: (1.0, 1.0, 1.0, 0.5),  # Air (transparent white)
         2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
         0: (0.0, 0.0, 1.0, 1.0),  # Ocean (blue)
         3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
@@ -30,31 +31,47 @@ config = {
     },
 
     "extinction_point": 80,
-    "freezing_point": -10,  # Temperature that causes ocean freeze and converts into ice
-    "melting_point": 45,  # Temperature threshold for melting ice
-    "evaporation_point": 30,  # Temperature threshold for evaporation
+    "freezing_point": -10,
+    "melting_point": 45,
+    "evaporation_point": 30,
     "water_transfer_threshold": 0.1,
 
-
-    "pollution_damage_threshold": 10.0,
+    # Pollution-related thresholds
+    "pollution_damage_threshold": 1.0,  # Default pollution threshold
     "pollution_level_tipping_point": 60,
     "natural_pollution_decay_rate": 0.4,
-    "natural_temperature_decay_rate":  0.4,
 
+    # Temperature decay
+    "natural_temperature_decay_rate": 0.01,
 
+    # Cloud-specific settings
     "cloud_saturation_threshold": 1.5,
 
-    "melting_rate" : 0.2,
-    "evaporation_rate" : 0.1,
+    # Rates for environmental changes
+    "melting_rate": 0.2,
+    "evaporation_rate": 0.1,
 
+    # Forest-specific settings
     "forest_pollution_absorption_rate": 0.2,
     "forest_cooling_effect": 0.2,
 
-
-    "city_pollution_increase_rate": 0.01,
-    "city_warming_effect": 0.01,
+    # City-specific settings
+    "city_pollution_increase_rate": 0.1,
+    "city_warming_effect": 0.1,
     "city_temperature_upper_limit": 60,
     "city_pollution_upper_limit": 100,
 
-    "tint": False
+    # Ratios for land cell types
+    "initial_ratios": {
+        "forest": 0.0,
+        "city": 0.6,
+        "desert": 0.4,
+    },
+
+    # Default simulation parameters
+    "default_grid_size": (10,10,10),
+    "default_days": 50,
+
+    # Visualization settings
+    "tint": True,
 }
