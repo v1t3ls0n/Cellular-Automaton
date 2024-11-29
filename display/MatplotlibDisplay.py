@@ -38,22 +38,31 @@ class MatplotlibDisplay:
 
 
     def plot_3d(self):
-        """Create the plot with all relevant graphs."""
-        import tkinter as tk
+        """Create the plot with all relevant graphs, including the configuration window."""
+        # import tkinter as tk
+        # from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-        # Create a new Tkinter window for the simulation
+        # Create the main Tkinter root window for the simulation
         root = tk.Tk()
         root.title("Simulation")
 
-        # Set the window to full screen
-        root.attributes("-fullscreen", True)
+        # Maximize the window without entering full-screen mode
+        root.state("zoomed")  # 'zoomed' state maximizes the window on most platforms
 
-        # Add a close button or escape functionality to exit full-screen mode
-        root.bind("<Escape>", lambda event: root.attributes("-fullscreen", True))
+        # Define a clean exit function
+        def on_close():
+            root.destroy()  # Close the main simulation window
+            exit(0)  # Ensure the Python script exits
 
-        # Add your simulation's matplotlib figure to the Tkinter window
+        # Set the window close protocol
+        root.protocol("WM_DELETE_WINDOW", on_close)
+
+        # Create a frame for the simulation plot
         frame = tk.Frame(root)
         frame.pack(fill=tk.BOTH, expand=True)
+
+
+
 
         # Create the matplotlib figure
         self.fig = plt.figure(figsize=(16, 10))
@@ -64,7 +73,7 @@ class MatplotlibDisplay:
         self.ax_temperature = self.fig.add_subplot(235)  # Temperature graph
         self.ax_population = self.fig.add_subplot(236)  # City Population graph
         self.ax_forests = self.fig.add_subplot(233)  # Forest graph
-        self.ax_table = self.fig.add_subplot(232)  # Table for configuration
+        self.ax_table = self.fig.add_subplot(232)  # Placeholder for compatibility
 
         # Precompute 3D visualizations
         self.precompute_visualizations()
@@ -79,109 +88,79 @@ class MatplotlibDisplay:
         self.render_day(self.current_day)
 
         # Add the matplotlib figure to the Tkinter canvas
-        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
         canvas = FigureCanvasTkAgg(self.fig, frame)
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         canvas.draw()
+
+        # Launch the configuration table in a separate window
+        self.add_config_table_with_scrollbar(root)
 
         # Run the Tkinter main loop
         root.mainloop()
 
 
 
-
-
-
     def add_config_table_with_scrollbar(self, root=None):
-        import tkinter as tk
-        from tkinter import ttk
+        """Create a configuration table window with scrollbars."""
+        # import tkinter as tk
+        # from tkinter import ttk
 
-        # Create a new window if root is not provided
-        if root is None:
-            root = tk.Tk()
-            root.title("Configuration Table")
+        # Create a new window for the configuration table
+        config_window = tk.Toplevel(root)
+        config_window.title("Configuration Table")
 
-        # Add a frame for scrolling
-        frame = ttk.Frame(root)
-        frame.grid(row=0, column=0, sticky="nsew")
+        # Ensure the configuration window stays on top of the main window
+        config_window.attributes("-topmost", True)  # Keeps the window in front
+        config_window.lift()  # Brings it to the top
+        config_window.focus_force()  # Sets focus to this window
 
-        # Create a vertical scrollbar using tk.Scrollbar
-        vsb = tk.Scrollbar(frame, orient="vertical")
-        vsb.grid(row=0, column=1, sticky="ns")
+        # Dynamically adjust the size of the config window to fit content
+        config_window.geometry(f"{min(800, config_window.winfo_screenwidth())}x{min(600, config_window.winfo_screenheight())}")
 
-        # Create a horizontal scrollbar using tk.Scrollbar
-        hsb = tk.Scrollbar(frame, orient="horizontal")
-        hsb.grid(row=1, column=0, sticky="ew")
 
-        # Create the treeview (table)
-        tree = ttk.Treeview(
-            frame,
-            columns=("Parameter", "Value"),
-            show="headings",
-            yscrollcommand=vsb.set,
-            xscrollcommand=hsb.set,
-        )
-        tree.grid(row=0, column=0, sticky="nsew")
 
-        # Configure scrollbars to work with the treeview
-        vsb.config(command=tree.yview)
-        hsb.config(command=tree.xview)
 
-        # Define column headings
+
+        # # Auto-adjust the window size based on the screen size
+        # screen_width = config_window.winfo_screenwidth()
+        # screen_height = config_window.winfo_screenheight()
+        # config_window.geometry(f"{int(screen_width * 0.5)}x{int(screen_height * 0.5)}")
+
+        # Create a frame to hold the table and scrollbars
+        frame = tk.Frame(config_window)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        # Create the Treeview widget for the table
+        tree = ttk.Treeview(frame, columns=("Parameter", "Value"), show="headings")
         tree.heading("Parameter", text="Parameter")
         tree.heading("Value", text="Value")
 
+        # Auto-adjust column widths
+        tree.column("Parameter", width=200, anchor=tk.W)
+        tree.column("Value", anchor=tk.W)
+
         # Add data to the table
-        parameter_width = 0
-        value_width = 0
-
         for key, value in self.config.items():
-            # Use key_labels for meaningful names
-            parameter_name = key_labels.get(key, key)
-            
-            # Format the value using format_config_value
+            if key == "base_colors":
+                continue
+            formatted_key = key_labels.get(key, key.replace("_", " ").capitalize())
             formatted_value = format_config_value(key, value)
-            
-            # Insert the row into the treeview
-            tree.insert("", "end", values=(parameter_name, formatted_value))
-            
-            # Calculate maximum width for the Parameter column
-            parameter_width = max(parameter_width, len(parameter_name))
-            
-            # Calculate maximum width for the Value column
-            value_width = max(value_width, len(formatted_value))
+            tree.insert("", tk.END, values=(formatted_key, formatted_value))
 
-        # Set the column widths to fit the data
-        font_width = 10  # Adjust as needed to match your font size and style
-        tree.column("Parameter", width=parameter_width * font_width, anchor="w")
-        tree.column("Value", width=value_width * font_width, anchor="w")
+        # Add vertical and horizontal scrollbars
+        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
+        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
 
-        # Dynamically adjust the window size based on table content
-        table_width = (parameter_width + value_width) * font_width + 50  # Extra padding
-        table_height = len(self.config) * 25 + 50  # Row height times the number of rows
+        # Place the Treeview and scrollbars
+        tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+        hsb.grid(row=1, column=0, sticky="ew")
 
-        # Set minimum and maximum dimensions for usability
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-        window_width = min(table_width, screen_width * 0.9)
-        window_height = min(table_height, screen_height * 0.9)
-
-        # Apply the calculated dimensions to the window
-        root.geometry(f"{int(window_width)}x{int(window_height)}")
-
-        # Adjust layout of root
-        root.grid_rowconfigure(0, weight=1)
-        root.grid_columnconfigure(0, weight=1)
+        # Make the frame resizable
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
-
-        # Run the Tkinter main loop if no parent root was provided
-        if root is None:
-            root.mainloop()
-
-
-
+        config_window.after(1000, lambda: config_window.attributes("-topmost", False))
 
 
 
