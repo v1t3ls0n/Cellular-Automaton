@@ -120,44 +120,6 @@ class Particle:
     ###################################### CELL UPDATES: ###############################################################
     ####################################################################################################################
 
-    def update_state(self, neighbors):
-        """
-        Compute the next state of the cell based on its neighbors and position.
-        """
-        # if self.pollution_level < self.config["pollution_damage_threshold"]:
-        self._apply_natural_decay()
-        self.equilibrate_temperature(neighbors)
-        self.equilibrate_pollution_level(neighbors)
-
-
-        if self.cell_type == 0:  # Ocean
-            self._update_ocean(neighbors)
-
-        elif self.cell_type == 1:  # Desert
-            self._update_desert(neighbors)
-
-        elif self.cell_type == 2:  # Cloud
-            self._update_cloud(neighbors)
-
-        elif self.cell_type == 3:  # Ice
-            self._update_ice(neighbors)
-
-        elif self.cell_type == 4:  # Forest
-            self._update_forest(neighbors)
-
-        elif self.cell_type == 5:  # City
-            self._update_city(neighbors)
-
-        elif self.cell_type == 6:  # Air
-            self._update_air(neighbors)
-
-        elif self.cell_type == 7:  # Rain
-            self._update_rain(neighbors)
-
-
-
-
-
 
     def _update_ocean(self, neighbors):
         """
@@ -185,37 +147,23 @@ class Particle:
         elif self.is_surrounded_by_land_cells(neighbors_aligned) and self.pollution_level < pollution_damage_threshold and self.temperature and forest_baseline_temperature <= self.temperature <= forest_baseline_temperature + 1:
             self.convert_to_forest()
 
+
     def _update_cloud(self, neighbors):
-        """
-        Update cloud behavior based on water mass, temperature, and neighbors.
-        """
         saturation_threshold = self.config["cloud_saturation_threshold"]
-
-        # self.exchange_water_mass(neighbors)
-        rain = [n for n in neighbors if n.cell_type == 7]
-        rain_aligned = self.get_aligned_neighbors(rain)
-        rain_above = self.get_above_neighbors(rain)
-        rain_below = self.get_below_neighbors(rain)
-
-        if not rain_above and not rain_aligned and self.water_mass >= saturation_threshold:
+        if self.water_mass >= saturation_threshold:
+            logging.info(f"Cloud at {self.position} converting to rain.")
             self.convert_to_rain()
-        # elif not self.is_surrounded_by_cloud_cells(neighbors):
-        #     self.direction = self.calculate_dominant_wind_direction(neighbors)
-
 
     def _update_ice(self, neighbors):
         """
         Ice behavior: melts, stabilizes, or converts.
         """
-        # dx, dy, _ = self.calculate_dominant_wind_direction(neighbors)
         melting_rate = self.config["melting_rate"]
 
         if self.temperature > self.config["melting_point"] - 5:
             self.water_mass -= melting_rate  # Partial melting
             if self.water_mass <= 0:
                 self.convert_to_ocean()
-
-        # self.direction = (dx, dy, 0)
 
     def _update_forest(self, neighbors):
         absorption_rate = self.config["forest_pollution_absorption_rate"]
@@ -229,7 +177,7 @@ class Particle:
         if self.pollution_level > pollution_level_tipping_point:
             absorption_rate *= 0.5
             cooling_effect *= 0.5
-        if self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
+        if self.is_surrounded_by_sea_cells(neighbors_above + neighbors_aligned):
             self.convert_to_ocean()
         elif self.temperature >= abs(self.config["temperature_extinction_point"]) or self.pollution_level >= 100:
             self.convert_to_desert()
@@ -240,6 +188,7 @@ class Particle:
                 0, self.pollution_level - absorption_rate * self.pollution_level)
             self.temperature -= self.temperature * cooling_effect
 
+    # The same approac
     def _update_city(self, neighbors):
         pollution_increase_rate = self.config["city_pollution_increase_rate"]
         warming_effect = self.config["city_warming_effect"]
@@ -269,9 +218,12 @@ class Particle:
         """
         Air updates behavior to rise, stabilize, or convert into clouds.
         """
-        rain_above = self.get_above_neighbors([n for n in neighbors if n.cell_type == 7])
-        rain_below = self.get_below_neighbors([n for n in neighbors if n.cell_type == 7])
-        rain_aligned = self.get_aligned_neighbors([n for n in neighbors if n.cell_type == 7])
+        rain_above = self.get_above_neighbors(
+            [n for n in neighbors if n.cell_type == 7])
+        rain_below = self.get_below_neighbors(
+            [n for n in neighbors if n.cell_type == 7])
+        rain_aligned = self.get_aligned_neighbors(
+            [n for n in neighbors if n.cell_type == 7])
         self.exchange_water_mass(neighbors)
 
         # Convert to cloud if saturated and in realistic height
@@ -290,32 +242,11 @@ class Particle:
         # else:
         #     self.direction = self.calculate_dominant_wind_direction(neighbors)
 
- 
-
     def _update_rain(self, neighbors):
-        """
-        Rain moves downward and converts to ocean or land.
-        """
-        
-        neighbors_below = self.get_below_neighbors(neighbors)
-        neighbors_aligned = self.get_aligned_neighbors(neighbors)
-        neighbors_above = self.get_above_neighbors(neighbors)
-        # self.direction = self.calculate_dominant_wind_direction(neighbors)
-        self.go_down()
-        self.exchange_water_mass(neighbors)
-
-        # If at the lowest level, convert to ocean or land
-        if self.is_at_ground_level(neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_aligned):
+        logging.info(f"Rain at {self.position} moving down.")
+        self.go_down(new_cell)
+        if self.is_at_ground_level(neighbors):
             self.convert_to_ocean()
-        elif self.is_surrounded_by_land_cells(neighbors_aligned):
-            # self.exchange_water_mass(neighbors)
-            self.convert_to_air()
-            self.stabilize_elevation()
-            # self.convert_to_vacuum()
-        elif self.is_surrounded_by_rain_cells(neighbors_above):
-            self.convert_to_vacuum()
-
-
 
     ####################################################################################################################
     ###################################### CELL  CONVERSIONS ###########################################################
@@ -369,13 +300,12 @@ class Particle:
         self.water_mass = max(0.0, self.water_mass - 0.5)
         self.temperature += 2  # Air warms during evaporation
         self.go_up()  # Air moves upward
-   
+
     def convert_to_vacuum(self):
         self.cell_type = 8
         self.water_mass = 0
         self.pollution_level = 0
-        self.direction = (0,0,0)
-
+        self.direction = (0, 0, 0)
 
     def convert_to_rain(self):
         self.cell_type = 7  # Set cell type to rain
@@ -399,14 +329,14 @@ class Particle:
         )
 
         # Temperature decay towards baseline
-        # baseline_temp = self.config["baseline_temperature"][self.cell_type]
-        # if self.temperature > baseline_temp:
-        #     self.temperature -= (self.temperature -
-        #                          baseline_temp) * temperature_decay_rate
+        baseline_temp = self.config["baseline_temperature"][self.cell_type]
+        if self.temperature > baseline_temp:
+            self.temperature -= (self.temperature -
+                                 baseline_temp) * temperature_decay_rate
 
-        # elif self.temperature < baseline_temp:
-        #     self.temperature += (baseline_temp -
-        #                          self.temperature) * temperature_decay_rate
+        elif self.temperature < baseline_temp:
+            self.temperature += (baseline_temp -
+                                 self.temperature) * temperature_decay_rate
 
     ####################################################################################################################
     ############################################### CELL EQUILIBRATE ###################################################
@@ -565,7 +495,7 @@ class Particle:
         """
         result = any(neighbor.cell_type in {0, 3}
                      for neighbor in neighbors_below)
-        logging.debug(f"Neighbors below contain sea: {result}")
+        logging.info(f"Neighbors below contain sea: {result}")
         return result
 
     def contains_land(self, neighbors_below):
@@ -574,7 +504,7 @@ class Particle:
         """
         result = any(neighbor.cell_type in {1, 4, 5}
                      for neighbor in neighbors_below)
-        logging.debug(f"Neighbors below contain land: {result}")
+        logging.info(f"Neighbors below contain land: {result}")
         return result
 
     def is_surrounded_by_sea_cells(self, neighbors):
@@ -583,7 +513,7 @@ class Particle:
         """
         # return all(neighbor.cell_type in {0, 3} for neighbor in neighbors)
         # Majority are sea cells
-        return sum(n.cell_type in {0,3} for n in neighbors) > len(neighbors) / 2
+        return sum(n.cell_type in {0, 3} for n in neighbors) > len(neighbors) / 2
 
     def is_surrounded_by_cloud_cells(self, neighbors):
         """
@@ -601,7 +531,7 @@ class Particle:
         """
         Check if the air particle is at cloud level.
         """
-        return sum(n.cell_type in {6,8} for n in neighbors) == len(neighbors)   # Majority are sea cells
+        return sum(n.cell_type in {6, 8} for n in neighbors) == len(neighbors)   # Majority are sea cells
 
     def is_surrounded_by_rain_cells(self, neighbors):
         """
@@ -642,8 +572,6 @@ class Particle:
     def get_aligned_neighbors(self, neighbors):
         return [n for n in neighbors if n.position[2] == self.position[2]]
 
-
-
     def compute_next_state(self, neighbors):
         """
         Compute the next state of the particle based on its type and neighbors.
@@ -652,7 +580,6 @@ class Particle:
         new_cell._apply_natural_decay()
         new_cell.equilibrate_temperature(neighbors)
         new_cell.equilibrate_pollution_level(neighbors)
-
 
         # Apply specific update logic based on the cell type
         if self.cell_type == 0:  # Ocean

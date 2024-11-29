@@ -100,7 +100,7 @@ config = {
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
         3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
-        7: (0.3, 0.4, 0.6, 1.0),  # Rain (grayish-blue)
+        7: (0.5, 0.5, 1.0, 1.0), # Rain (grayish-blue)
         1: (1.0, 0.8, 0.5, 1.0),  # Desert (sandy gold)
         4: (0.0, 0.6, 0.0, 1.0),  # Forest (lush green)
         5: (0.4, 0.0, 0.4, 1.0),  # City (dark purple)

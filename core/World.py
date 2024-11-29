@@ -190,7 +190,7 @@ class World:
                         )
 
         self._recalculate_global_attributes()
-        logging.debug(f"Grid initialized successfully with dimensions: {
+        logging.info(f"Grid initialized successfully with dimensions: {
                       self.grid_size}")
 
     def _get_dynamic_air_or_cloud_type(self, k, z):
@@ -305,7 +305,11 @@ class World:
         """
         פותר התנגשויות בין שני תאים, מעדכן את המצב בהתאם לחוקים.
         """
-        if cell1.cell_type == cell2.cell_type:
+        if cell1.cell_type == 7:  # Prioritize rain
+            return cell1
+        elif cell2.cell_type == 7:
+            return cell2
+        elif cell1.cell_type == cell2.cell_type:
             # מיזוג תכונות כאשר סוג התא זהה
             cell1.water_mass += cell2.water_mass
             cell1.temperature = (cell1.temperature + cell2.temperature) / 2
@@ -377,6 +381,7 @@ class World:
         total_cities = 0
         total_forests = 0
         total_cells = 0
+        total_rain = 0
 
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
@@ -393,6 +398,10 @@ class World:
                             total_cities += 1
                     elif cell.cell_type == 4:  # Forest
                             total_forests += 1
+                    elif cell.cell_type == 7:  # Rain
+                            total_rain += 1
+                    
+                    
                     total_cells += 1
 
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
@@ -400,6 +409,6 @@ class World:
         self.avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
         self.total_cities = total_cities
         self.total_forests = total_forests
-
-        logging.debug(f"Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={
-                      self.avg_pollution}, Avg Water Mass={self.avg_water_mass}")
+        self.total_rain = total_rain
+        logging.info(f"""Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={
+                      self.avg_pollution}, Avg Water Mass={self.avg_water_mass} Total Cities={self.total_cities} Total Forests={self.total_forests}  Total Rain={total_rain}""")
