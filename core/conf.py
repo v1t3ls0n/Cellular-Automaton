@@ -3,8 +3,8 @@
 # Configuration settings for the simulation
 
 config = {
-    # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain
-    "baseline_temperature": [15, 25, 5, -10, 20, 30, 10, 12],
+    # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
+    "baseline_temperature": [15, 25, 5, -10, 20, 30, 10, 12, 0],  # Vacuum temperature set to 0
 
     "cell_type_weights": {
         0: 1.0,  # Ocean
@@ -15,10 +15,21 @@ config = {
         5: 2.0,  # City
         6: 0.5,  # Air
         7: 1.1,  # Rain
+        8: 0.0,  # Vacuum has no weight
     },
 
-    "baseline_pollution_level": [10, 10, 10, 10, 10, 10, 10, 10],
-
+    "baseline_pollution_level": [
+        5,   # 0: Sea - Some pollution due to industrial waste and ocean pollution.
+        15,  # 1: Land (desert) - Minimal pollution but may contain dust particles or localized pollution.
+        2,   # 2: Cloud - Very low pollution, mainly water vapor.
+        1,   # 3: Ice - Negligible pollution in frozen areas.
+        3,   # 4: Forest - Forests absorb pollution, so they typically have low levels.
+        50,  # 5: City - High pollution due to industrial activities, vehicles, etc.
+        10,  # 6: Air - Moderate pollution depending on proximity to cities and other sources.
+        0,   # 7: Rain - Negligible pollution as rain often helps clean the air.
+        0,   # 8: Vacuum - No pollution in empty space.
+    ],
+    
     "base_colors": {
         6: (1.0, 1.0, 1.0, 0.5),  # Air (transparent white)
         2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
@@ -28,6 +39,7 @@ config = {
         1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
         4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
         5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
+        8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (transparent/black for empty space)
     },
 
     "extinction_point": 80,
@@ -56,22 +68,23 @@ config = {
     "forest_cooling_effect": 0.2,
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.1,
-    "city_warming_effect": 0.1,
+    "city_pollution_increase_rate": 0.5,
+    "city_warming_effect": 0.5,
     "city_temperature_upper_limit": 60,
     "city_pollution_upper_limit": 100,
 
     # Ratios for land cell types
     "initial_ratios": {
-        "forest": 0.0,
-        "city": 0.6,
-        "desert": 0.4,
+        "forest": 0.2,  
+        "city": 0.4,
+        "desert": 0.2,
+        "vacuum": 0.2,  #
     },
 
     # Default simulation parameters
-    "default_grid_size": (10,10,10),
+    "default_grid_size": (10, 10, 10),
     "default_days": 50,
 
     # Visualization settings
-    "tint": True,
+    "tint": False,
 }

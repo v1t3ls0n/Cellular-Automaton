@@ -125,10 +125,10 @@ class Particle:
         Compute the next state of the cell based on its neighbors and position.
         """
         # if self.pollution_level < self.config["pollution_damage_threshold"]:
-        self._apply_natural_decay()
-        self.equilibrate_temperature(neighbors)
-        if self.cell_type in {1,4,5,6}:
-            self.equilibrate_pollution_level(neighbors)
+        # self._apply_natural_decay()
+        # self.equilibrate_temperature(neighbors)
+        # if self.cell_type in {1,4,5,6}:
+            # self.equilibrate_pollution_level(neighbors)
 
 
         if self.cell_type == 0:  # Ocean
@@ -242,8 +242,7 @@ class Particle:
         city_pollution_upper_limit = self.config["city_pollution_upper_limit"]
 
 
-        self.temperature = min(city_temperature_upper_limit, max(
-            baseline_temperature, self.temperature + warming_effect * self.temperature))
+        self.temperature = min(city_temperature_upper_limit, max(baseline_temperature, self.temperature + warming_effect * self.temperature))
         self.pollution_level = min(city_pollution_upper_limit, max(
             baseline_pollution_level, self.pollution_level +
             pollution_increase_rate * self.pollution_level

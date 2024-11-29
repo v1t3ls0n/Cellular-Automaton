@@ -16,6 +16,8 @@ class World:
         self.initial_cities_ratio = initial_ratios["city"]
         self.initial_forests_ratio = initial_ratios["forest"]
         self.initial_deserts_ratio = initial_ratios["desert"]
+        self.initial_deserts_ratio = initial_ratios["desert"]
+        self.initial_vacuum_ratio = initial_ratios["vacuum"]
         
         self.day_number = day_number
 
@@ -48,11 +50,12 @@ class World:
         x, y, z = self.grid_size
         elevation_map = self._generate_elevation_map()
 
-        # Normalize the initial land ratios
-        total_land_ratio = self.initial_cities_ratio + self.initial_forests_ratio + self.initial_deserts_ratio
-        cities_ratio = self.initial_cities_ratio / total_land_ratio
-        forests_ratio = self.initial_forests_ratio / total_land_ratio
-        deserts_ratio = self.initial_deserts_ratio / total_land_ratio
+        # Normalize all land ratios including vacuum
+        total_ratio = cities_ratio + forests_ratio + deserts_ratio + vacuum_ratio
+        cities_ratio /= total_ratio
+        forests_ratio /= total_ratio
+        deserts_ratio /= total_ratio
+        vacuum_ratio /= total_ratio
 
         plane_surfaces_map = {}  # Use a dictionary to track the surface type
 
@@ -63,7 +66,7 @@ class World:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    cell_type = 6  # Default to Air
+                    cell_type = 8  # Default to Vacuum
                     direction = (0, 0, 0)
 
                     if k == 0:
@@ -116,10 +119,12 @@ class World:
                         plane_surfaces_map[(i, j, k)] = 'used_land'
                     elif cell_type in {2, 6}:  # Cloud or Air
                         plane_surfaces_map[(i, j, k)] = 'sky'
+                    elif cell_type == 8:  # Vacuum
+                        plane_surfaces_map[(i, j, k)] = 'vacuum'
 
                     # Set direction for dynamic cells
                     if cell_type in {0, 3}:  # Sea/Ice
-                        direction = (0, 0, 0)
+                        # direction = (0, 0, 0)
                         np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])
                     elif cell_type in {2, 6}:  # Cloud/Air
                         dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])
@@ -144,18 +149,24 @@ class World:
 
     def _get_dynamic_air_or_cloud_type(self, k, z):
         """
-        Determine the type of air or cloud based on elevation.
+        Determine the type of air, cloud, or vacuum based on elevation.
         """
+        vacuum_ratio = self.initial_vacuum_ratio
+        
         if k >= 0.9 * z:
-            return np.random.choice([6, 2], p=[0.6, 0.4])  # Air or Cloud
+            return np.random.choice(
+                [6, 2, 8], p=[0.5 - vacuum_ratio, 0.4, vacuum_ratio]
+            )  # Air, Cloud, or Vacuum
         elif k >= 0.8 * z:
-            return np.random.choice([6, 2], p=[0.7, 0.3])  # Air or Cloud
+            return np.random.choice(
+                [6, 2, 8], p=[0.6 - vacuum_ratio, 0.3, vacuum_ratio]
+            )  # Air, Cloud, or Vacuum
         elif k >= 0.7 * z:
-            return np.random.choice([6, 2], p=[0.9, 0.1])  # Air or Cloud
+            return np.random.choice(
+                [6, 2, 8], p=[0.8 - vacuum_ratio, 0.1, vacuum_ratio]
+            )  # Air, Cloud, or Vacuum
         else:
             return 6  # Default to Air
-
-
 
     def _generate_elevation_map(self):
         """
@@ -206,6 +217,8 @@ class World:
             for i in range(x):
                 for j in range(y):
                     for k in range(z):
+                        if cell.cell_type == 8:  # Skip Vacuum cells
+                            continue
                         # Use original grid for neighbor lookup
                         cell = self.grid[i, j, k]
                         neighbors = self.get_neighbors(
