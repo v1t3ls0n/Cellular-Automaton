@@ -128,9 +128,8 @@ class Particle:
         self._apply_natural_decay()
         self.equilibrate_temperature(neighbors)
 
-        if self.cell_type in {1,4,5,6}:
+        if self.cell_type in {1, 4, 5, 6}:
             self.equilibrate_pollution_level(neighbors)
-
 
         if self.cell_type == 0:  # Ocean
             self._update_ocean(neighbors)
@@ -176,9 +175,10 @@ class Particle:
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         pollution_damage_threshold = self.config["pollution_damage_threshold"]
+        forest_baseline_temperature = self.config["baseline_temperature"][4]
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
-        elif self.is_surrounded_by_land_cells(neighbors_aligned) and self.pollution_level < pollution_damage_threshold and self.temperature and self.config["baseline_temperature"][4] <= self.temperature <= self.config["baseline_temperature"][self.cell_type]:
+        elif self.is_surrounded_by_land_cells(neighbors_aligned) and self.pollution_level < pollution_damage_threshold and self.temperature and forest_baseline_temperature <= self.temperature <= forest_baseline_temperature + 1:
             self.convert_to_forest()
 
     def _update_cloud(self, neighbors):
@@ -229,9 +229,9 @@ class Particle:
         elif self.pollution_level == 0 and int(self.temperature) == self.config["baseline_temperature"][self.cell_type]:
             self.convert_to_city()
         else:
-            self.pollution_level = max(0, self.pollution_level - absorption_rate * self.pollution_level)
+            self.pollution_level = max(
+                0, self.pollution_level - absorption_rate * self.pollution_level)
             self.temperature -= self.temperature * cooling_effect
-
 
     def _update_city(self, neighbors):
         pollution_increase_rate = self.config["city_pollution_increase_rate"]
@@ -242,8 +242,8 @@ class Particle:
         city_temperature_upper_limit = self.config["city_temperature_upper_limit"]
         city_pollution_upper_limit = self.config["city_pollution_upper_limit"]
 
-
-        self.temperature = min(city_temperature_upper_limit, max(baseline_temperature, self.temperature + warming_effect * self.temperature))
+        self.temperature = min(city_temperature_upper_limit, max(
+            baseline_temperature, self.temperature + warming_effect * self.temperature))
         self.pollution_level = min(city_pollution_upper_limit, max(
             baseline_pollution_level, self.pollution_level +
             pollution_increase_rate * self.pollution_level
@@ -262,18 +262,15 @@ class Particle:
         """
         Air updates behavior to rise, stabilize, or convert into clouds.
         """
-        
+
         self.direction = self.calculate_dominant_wind_direction(neighbors)
-        
+
         # Convert to cloud if saturated and in realistic height
         if self.water_mass > self.config["cloud_saturation_threshold"] and self.position[2] >= (self.grid_size[2] - 3):
             self.convert_to_cloud()
-        
-        elif self.position[2] <= 2 or self.is_below_ground_level(neighbors) or self.is_below_sea_level(neighbors):  
+
+        elif self.position[2] <= 2 or self.is_below_ground_level(neighbors) or self.is_below_sea_level(neighbors):
             self.go_up()
-        
-
-
 
     def _update_rain(self, neighbors):
         """
@@ -283,7 +280,8 @@ class Particle:
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         # self.direction = self.calculate_dominant_wind_direction(neighbors)
 
-        if self.is_at_ground_level(neighbors) or self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):  # If at the lowest level, convert to ocean or land
+        # If at the lowest level, convert to ocean or land
+        if self.is_at_ground_level(neighbors) or self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):
             self.convert_to_ocean()
         elif self.is_surrounded_by_land_cells(neighbors_aligned):
             self.exchange_water_mass(neighbors)
@@ -291,10 +289,6 @@ class Particle:
         elif self.is_surrounded_by_air_cells(neighbors_aligned):
             # self.exchange_water_mass(neighbors)
             self.go_down()
-        
-
-        
-        
 
         if self.temperature > self.config["evaporation_point"]:
             self.convert_to_air()
@@ -307,7 +301,7 @@ class Particle:
         self.cell_type = 0  # Set cell type to ocean
         self.water_mass = 1.0  # Oceans are full of water by default
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-        self.stabilize_elevation() # Stabilize motion
+        self.stabilize_elevation()  # Stabilize motion
 
     def convert_to_desert(self):
         self.cell_type = 1  # Set cell type to desert
@@ -357,7 +351,6 @@ class Particle:
         self.water_mass = 1.0  # Rain has full water mass
         self.temperature -= 1  # Rain cools during formation
         self.direction = (0, 0, -1)  # Move downward
-
 
     ####################################################################################################################
     ##################################### CELL NATURAL DECAY : #########################################################
@@ -447,27 +440,26 @@ class Particle:
 
     def go_down(self):
         if self.position[2] != 0:
-            dx,dy,_= self.direction
-            self.direction = (dx,dy, -1)
+            dx, dy, _ = self.direction
+            self.direction = (dx, dy, -1)
 
     def go_up(self):
         """
         Move the particle upward.
         """
         if self.position[2] < self.grid_size[2]:
-            dx,dy,_ = self.direction
-            self.direction = (dx,dy,1)
+            dx, dy, _ = self.direction
+            self.direction = (dx, dy, 1)
 
     def stabilize(self):
         """
         Stabilize the particle, halting movement.
         """
         self.direction = (0, 0, 0)
-   
-    def stabilize_elevation(self):
-        dx,dy,_= self.direction
-        self.direction = (dx,dy, 0)
 
+    def stabilize_elevation(self):
+        dx, dy, _ = self.direction
+        self.direction = (dx, dy, 0)
 
     ####################################################################################################################
     ######################################  CALC HELPER FUNCTIONS: #####################################################
@@ -522,10 +514,10 @@ class Particle:
         dominant_dy = 1 if total_dy > 0 else (-1 if total_dy < 0 else 0)
         dominant_dz = 1 if total_dz > 0 else (-1 if total_dz < 0 else 0)
 
-        if self.cell_type in {0,1,3,4,5}:
+        if self.cell_type in {0, 1, 3, 4, 5}:
             return dominant_dx, dominant_dy, 0
         elif self.cell_type in {7}:
-            return 0,0,-1
+            return 0, 0, -1
         else:
             return dominant_dx, dominant_dy, dominant_dz
 
@@ -571,7 +563,7 @@ class Particle:
         """
         Check if the air particle is at cloud level.
         """
-        return sum(n.cell_type in {1,4,5,6} for n in neighbors) == len(neighbors)   # Majority are sea cells
+        return sum(n.cell_type in {1, 4, 5, 6} for n in neighbors) == len(neighbors)   # Majority are sea cells
 
     def is_surrounded_by_air_cells(self, neighbors):
         """
@@ -609,11 +601,11 @@ class Particle:
         """
         return all(self.position[2] < n.position[2] for n in neighbors if n.cell_type in {1, 4, 5})
 
-    def get_above_neighbors(self,neighbors):
-         return [n for n in neighbors if n.position[2] > self.position[2]]
-    def get_below_neighbors(self,neighbors):
-         return [n for n in neighbors if n.position[2] < self.position[2]]
-    def get_aligned_neighbors(self,neighbors):
-         return [n for n in neighbors if n.position[2] == self.position[2]]
+    def get_above_neighbors(self, neighbors):
+        return [n for n in neighbors if n.position[2] > self.position[2]]
 
+    def get_below_neighbors(self, neighbors):
+        return [n for n in neighbors if n.position[2] < self.position[2]]
 
+    def get_aligned_neighbors(self, neighbors):
+        return [n for n in neighbors if n.position[2] == self.position[2]]
