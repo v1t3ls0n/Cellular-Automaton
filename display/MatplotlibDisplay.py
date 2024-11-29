@@ -37,59 +37,39 @@ class MatplotlibDisplay:
         self.current_azim = 45  # Default azimuth
 
 
-
     def plot_3d(self):
-        """Create the plot with all relevant graphs, legends, and tables."""
-        plt.ion()  # Enable interactive mode
+        """Create the plot with all relevant graphs."""
+        import tkinter as tk
 
-
-
-        # Create the main figure
-        self.fig = plt.figure(figsize=(18, 12))  # Larger size for better spacing
-
-        # Use GridSpec for flexible layout
-        spec = gridspec.GridSpec(nrows=3, ncols=3, figure=self.fig)
-
-        # Create a Tkinter root window
+        # Create a new Tkinter window for the simulation
         root = tk.Tk()
-        root.title("Configuration Table")
+        root.title("Simulation")
 
-        # Add the scrollable table
-        self.add_config_table_with_scrollbar(root)
+        # Set the window to full screen
+        root.attributes("-fullscreen", True)
 
-        # 3D Simulation plot
-        self.ax_3d = self.fig.add_subplot(spec[0, 0], projection="3d")
-        self.ax_3d.set_title("3D Simulation")
+        # Add a close button or escape functionality to exit full-screen mode
+        root.bind("<Escape>", lambda event: root.attributes("-fullscreen", True))
 
-        # Pollution graph
-        self.ax_pollution = self.fig.add_subplot(spec[1, 0])
-        self.ax_pollution.set_title("Pollution Over Time")
+        # Add your simulation's matplotlib figure to the Tkinter window
+        frame = tk.Frame(root)
+        frame.pack(fill=tk.BOTH, expand=True)
 
-        # Temperature graph
-        self.ax_temperature = self.fig.add_subplot(spec[1, 1])
-        self.ax_temperature.set_title("Temperature Over Time")
+        # Create the matplotlib figure
+        self.fig = plt.figure(figsize=(16, 10))
 
-        # City Population graph
-        self.ax_population = self.fig.add_subplot(spec[1, 2])
-        self.ax_population.set_title("City Population Over Time")
-
-        # Forest Count graph
-        self.ax_forests = self.fig.add_subplot(spec[2, 0])
-        self.ax_forests.set_title("Forest Count Over Time")
-
-        # Color map legend
-        self.ax_color_map = self.fig.add_subplot(spec[0, 1])
-        self.ax_color_map.axis("off")  # Hide axes for the legend
-        self.add_cell_type_legend()
-
-        # Configuration table
-        self.ax_table = self.fig.add_subplot(spec[2, 1:])  # Spans two columns
-        self.ax_table.axis("off")  # Hide axes for the table
+        # Adjust the positions of subplots
+        self.ax_3d = self.fig.add_subplot(231, projection="3d")  # 3D simulation
+        self.ax_pollution = self.fig.add_subplot(234)  # Pollution graph
+        self.ax_temperature = self.fig.add_subplot(235)  # Temperature graph
+        self.ax_population = self.fig.add_subplot(236)  # City Population graph
+        self.ax_forests = self.fig.add_subplot(233)  # Forest graph
+        self.ax_table = self.fig.add_subplot(232)  # Table for configuration
 
         # Precompute 3D visualizations
         self.precompute_visualizations()
 
-        # Render graphs
+        # Render the graphs
         self.render_pollution_graph()
         self.render_temperature_graph()
         self.render_population_graph()
@@ -98,19 +78,14 @@ class MatplotlibDisplay:
         # Render the initial day
         self.render_day(self.current_day)
 
-        # Adjust layout
-        plt.subplots_adjust(
-            left=0.05,    # Left margin
-            right=0.95,   # Right margin
-            top=0.95,     # Top margin
-            bottom=0.05,  # Bottom margin
-            wspace=0.4,   # Width space between subplots
-            hspace=0.6    # Height space between subplots
-        )
+        # Add the matplotlib figure to the Tkinter canvas
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-        plt.ioff()  # Disable interactive mode to ensure `plt.show()` holds the program
-        plt.show()
-        # Start the Tkinter loop
+        canvas = FigureCanvasTkAgg(self.fig, frame)
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        canvas.draw()
+
+        # Run the Tkinter main loop
         root.mainloop()
 
 
@@ -118,33 +93,25 @@ class MatplotlibDisplay:
 
 
 
-
-
     def add_config_table_with_scrollbar(self, root=None):
+        import tkinter as tk
+        from tkinter import ttk
+
         # Create a new window if root is not provided
         if root is None:
             root = tk.Tk()
             root.title("Configuration Table")
-
-        # Get screen dimensions for dynamic window sizing
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-
-        # Adjust the window size based on screen dimensions
-        window_width = int(screen_width * 0.5)  # Use 80% of screen width
-        window_height = int(screen_height * 0.5)  # Use 80% of screen height
-        root.geometry(f"{window_width}x{window_height}")
 
         # Add a frame for scrolling
         frame = ttk.Frame(root)
         frame.grid(row=0, column=0, sticky="nsew")
 
         # Create a vertical scrollbar using tk.Scrollbar
-        vsb = tk.Scrollbar(frame, orient="vertical", width = 20)
+        vsb = tk.Scrollbar(frame, orient="vertical")
         vsb.grid(row=0, column=1, sticky="ns")
 
         # Create a horizontal scrollbar using tk.Scrollbar
-        hsb = tk.Scrollbar(frame, orient="horizontal", width = 20)
+        hsb = tk.Scrollbar(frame, orient="horizontal")
         hsb.grid(row=1, column=0, sticky="ew")
 
         # Create the treeview (table)
@@ -165,31 +132,49 @@ class MatplotlibDisplay:
         tree.heading("Parameter", text="Parameter")
         tree.heading("Value", text="Value")
 
-        # Define column widths
-        tree.column("Parameter", width=window_width//4, anchor="w")
-        tree.column("Value", width=window_width//4, anchor="w")
-
-
         # Add data to the table
-        for key, value in self.config.items():
-            
-            if key == "base_colors":
-                continue
+        parameter_width = 0
+        value_width = 0
 
+        for key, value in self.config.items():
             # Use key_labels for meaningful names
             parameter_name = key_labels.get(key, key)
             
             # Format the value using format_config_value
             formatted_value = format_config_value(key, value)
             
-            # Add the row to the treeview
+            # Insert the row into the treeview
             tree.insert("", "end", values=(parameter_name, formatted_value))
+            
+            # Calculate maximum width for the Parameter column
+            parameter_width = max(parameter_width, len(parameter_name))
+            
+            # Calculate maximum width for the Value column
+            value_width = max(value_width, len(formatted_value))
+
+        # Set the column widths to fit the data
+        font_width = 10  # Adjust as needed to match your font size and style
+        tree.column("Parameter", width=parameter_width * font_width, anchor="w")
+        tree.column("Value", width=value_width * font_width, anchor="w")
+
+        # Dynamically adjust the window size based on table content
+        table_width = (parameter_width + value_width) * font_width + 50  # Extra padding
+        table_height = len(self.config) * 25 + 50  # Row height times the number of rows
+
+        # Set minimum and maximum dimensions for usability
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        window_width = min(table_width, screen_width * 0.9)
+        window_height = min(table_height, screen_height * 0.9)
+
+        # Apply the calculated dimensions to the window
+        root.geometry(f"{int(window_width)}x{int(window_height)}")
 
         # Adjust layout of root
         root.grid_rowconfigure(0, weight=1)
         root.grid_columnconfigure(0, weight=1)
-        frame.grid_rowconfigure(0, weight=2)
-        frame.grid_columnconfigure(0, weight=2)
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_columnconfigure(0, weight=1)
 
         # Run the Tkinter main loop if no parent root was provided
         if root is None:
