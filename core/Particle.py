@@ -127,9 +127,10 @@ class Particle:
         # if self.pollution_level < self.config["pollution_damage_threshold"]:
         self._apply_natural_decay()
         self.equilibrate_temperature(neighbors)
+        self.equilibrate_pollution_level(neighbors)
 
-        if self.cell_type in {4,6}:
-            self.equilibrate_pollution_level(neighbors)
+        # if self.cell_type in {4,6}:
+            # self.equilibrate_pollution_level(neighbors)
 
         if self.cell_type == 0:  # Ocean
             self._update_ocean(neighbors)
@@ -224,7 +225,7 @@ class Particle:
             cooling_effect *= 0.5
         if self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
             self.convert_to_ocean()
-        elif self.temperature >= abs(self.config["evaporation_point"]) or self.pollution_level >= 100:
+        elif self.temperature >= abs(self.config["temperature_extinction_point"]) or self.pollution_level >= 100:
             self.convert_to_desert()
         elif self.pollution_level == 0 and int(self.temperature) == self.config["baseline_temperature"][self.cell_type]:
             self.convert_to_city()
@@ -255,7 +256,7 @@ class Particle:
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         if self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
             self.convert_to_ocean()
-        elif self.pollution_level > 100 or abs(self.temperature) >= self.config["extinction_point"]:
+        elif self.pollution_level > 100 or abs(self.temperature) >= self.config["temperature_extinction_point"]:
             self.convert_to_desert()
 
     def _update_air(self, neighbors):

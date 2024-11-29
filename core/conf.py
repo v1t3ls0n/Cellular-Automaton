@@ -52,7 +52,7 @@ config = {
         8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (fully transparent/black)
     },
 
-    "extinction_point": 80,
+    "temperature_extinction_point": 60,
     "freezing_point": -15,  # Lowered to account for extreme cold
     "melting_point": 10,
     "evaporation_point": 25,
