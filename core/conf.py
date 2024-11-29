@@ -78,7 +78,7 @@ config = {
         "forest": 0.2,  
         "city": 0.4,
         "desert": 0.2,
-        "vacuum": 0.2,  #
+        "vacuum": 0.2,  
     },
 
     # Default simulation parameters

@@ -46,18 +46,23 @@ except ValueError:
 logging.info(f"Number of days to track: {days}")
 
 # Prompt for initial ratios
-default_ratios = config.get("initial_ratios", {"forest": 0.3, "city": 0.3, "desert": 0.4})
+default_ratios = config.get("initial_ratios", {"forest": 0.3, "city": 0.3, "desert": 0.3, "vacuum": 0.1})
 try:
     ratios_input = input(
-        f"Enter ratios for forest, city, desert (default: {list(default_ratios.values())}): "
+        f"Enter ratios for forest, city, desert, vacuum (default: {list(default_ratios.values())}): "
     ).strip()
     if ratios_input:
-        forest_ratio, city_ratio, desert_ratio = map(float, ratios_input.split(","))
-        if round(forest_ratio + city_ratio + desert_ratio, 2) != 1.0:
+        forest_ratio, city_ratio, desert_ratio, vacuum_ratio = map(float, ratios_input.split(","))
+        if round(forest_ratio + city_ratio + desert_ratio + vacuum_ratio, 2) != 1.0:
             raise ValueError("The ratios must sum to 1.0.")
     else:
-        forest_ratio, city_ratio, desert_ratio = default_ratios.values()
-    initial_ratios = {"forest": forest_ratio, "city": city_ratio, "desert": desert_ratio}
+        forest_ratio, city_ratio, desert_ratio, vacuum_ratio = default_ratios.values()
+    initial_ratios = {
+        "forest": forest_ratio,
+        "city": city_ratio,
+        "desert": desert_ratio,
+        "vacuum": vacuum_ratio,
+    }
 except ValueError as e:
     print(f"Invalid input for ratios: {e}. Using default: {default_ratios}")
     initial_ratios = default_ratios
