@@ -64,7 +64,7 @@ config = {
     "natural_pollution_decay_rate": 0.02, # Pollution decreases more slowly over time
 
     # Temperature decay
-    "natural_temperature_decay_rate": 0.01, # Retains realistic cooling/heating dynamics
+    "natural_temperature_decay_rate": 0.05, # Retains realistic cooling/heating dynamics
 
     # Cloud-specific settings
     "cloud_saturation_threshold": 10,
@@ -78,8 +78,8 @@ config = {
     "forest_cooling_effect": 0.03, # Slightly more cooling effect from forests
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.1, # Cities emit pollution at a steady rate
-    "city_warming_effect": 0.1, # Slightly reduced warming effect for balance
+    "city_pollution_increase_rate": 0.01, # Cities emit pollution at a steady rate
+    "city_warming_effect": 0.01, # Slightly reduced warming effect for balance
     "city_temperature_upper_limit": 60, # Cities remain hot but capped lower
     "city_pollution_upper_limit": 100, # Cities can accumulate significant pollution
 

@@ -1,8 +1,8 @@
 import sys
 import subprocess
 from core.conf import config, particle_mapping, key_labels
-from core.Simulation import Simulation
-# from core.old.Simulation import Simulation
+# from core.Simulation import Simulation
+from core.old.Simulation import Simulation
 from display.MatplotlibDisplay import MatplotlibDisplay
 import logging
 

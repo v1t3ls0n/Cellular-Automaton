@@ -443,6 +443,7 @@ class Particle:
         if self.position[2] != 0:
             dx, dy, _ = self.direction
             self.direction = (dx, dy, -1)
+            self.direction = (0, 0, -1)
 
     def go_up(self):
         """
