@@ -244,7 +244,7 @@ class Particle:
 
     def _update_rain(self, neighbors):
         logging.info(f"Rain at {self.position} moving down.")
-        self.go_down(new_cell)
+        self.go_down()
         if self.is_at_ground_level(neighbors):
             self.convert_to_ocean()
 
