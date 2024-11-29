@@ -236,6 +236,7 @@ class Particle:
         Args:
             neighbors (list): List of neighboring particles.
         """
+        self.direction = self.calculate_dynamic_wind_direction(neighbors)
         self.exchange_water_mass(
             neighbors)  # Share water with neighboring cells
         saturation_threshold = self.config["cloud_saturation_threshold"]
@@ -384,6 +385,9 @@ class Particle:
             or self.is_below_sea_level(neighbors)
         ):
             self.go_up()
+        else:
+            self.direction = self.calculate_dynamic_wind_direction(neighbors)
+
 
     def _update_rain(self, neighbors):
         """
@@ -645,6 +649,38 @@ class Particle:
     ####################################################################################################################
     ###################################### CELL ELEVATION ##############################################################
     ####################################################################################################################
+
+    def calculate_dynamic_wind_direction(self, neighbors):
+        """
+        Calculate the dominant wind direction based on neighbors' attributes.
+
+        Args:
+            neighbors (list of Particle): Neighboring particles around the current cell.
+
+        Returns:
+            tuple: A direction vector (dx, dy, dz) indicating the wind direction.
+        """
+        # Initialize accumulators for directional influence
+        total_dx, total_dy, total_dz = 0, 0, 0
+
+        for neighbor in neighbors:
+            if neighbor.cell_type in {2, 6, 7}:  # Cloud, Air, Rain
+                # Weight influence by water mass or temperature to simulate wind currents
+                influence = max(neighbor.water_mass, neighbor.temperature / 10.0)
+
+                # Add neighbor's direction influence
+                dx, dy, dz = neighbor.direction
+                total_dx += dx * influence
+                total_dy += dy * influence
+                total_dz += dz * influence
+
+        # Determine dominant wind direction
+        dominant_dx = 1 if total_dx > 0 else (-1 if total_dx < 0 else 0)
+        dominant_dy = 1 if total_dy > 0 else (-1 if total_dy < 0 else 0)
+        dominant_dz = 1 if total_dz > 0 else (-1 if total_dz < 0 else 0)
+
+        # Return the dominant wind direction
+        return (dominant_dx, dominant_dy, dominant_dz)
 
     def go_down(self):
         """
