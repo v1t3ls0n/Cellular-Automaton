@@ -120,7 +120,6 @@ class Particle:
     ###################################### CELL UPDATES: ###############################################################
     ####################################################################################################################
 
-
     def _update_ocean(self, neighbors):
         """
         Ocean behavior: evaporates, freezes, or stabilizes.
@@ -146,7 +145,6 @@ class Particle:
             self.convert_to_ocean()
         elif self.is_surrounded_by_land_cells(neighbors_aligned) and self.pollution_level < pollution_damage_threshold and self.temperature and forest_baseline_temperature <= self.temperature <= forest_baseline_temperature + 1:
             self.convert_to_forest()
-
 
     def _update_cloud(self, neighbors):
         self.exchange_water_mass(neighbors)
@@ -431,7 +429,6 @@ class Particle:
         if self.cell_type == 7:  # Rain
             self.direction = (0, 0, 0)  # Stop movement
 
-
     ####################################################################################################################
     ######################################  CALC HELPER FUNCTIONS: #####################################################
     ####################################################################################################################
@@ -469,7 +466,6 @@ class Particle:
                     transfer_map[neighbor.position] = transfer_amount
 
         return transfer_map
-
 
     def calculate_dominant_wind_direction(self, neighbors):
         """
