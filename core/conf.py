@@ -67,9 +67,9 @@ config = {
     "forest_cooling_effect": 0.3, # Slightly more cooling effect from forests
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.6, # Cities emit pollution at a steady rate
-    "city_warming_effect": 0.4, # Slightly reduced warming effect for balance
-    "city_temperature_upper_limit": 50, # Cities remain hot but capped lower
+    "city_pollution_increase_rate": 0.1, # Cities emit pollution at a steady rate
+    "city_warming_effect": 0.1, # Slightly reduced warming effect for balance
+    "city_temperature_upper_limit": 60, # Cities remain hot but capped lower
     "city_pollution_upper_limit": 100, # Cities can accumulate significant pollution
 
     # Ratios for land cell types
