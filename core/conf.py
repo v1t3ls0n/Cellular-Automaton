@@ -53,10 +53,10 @@ config = {
     },
 
     # Temperature thresholds for specific behaviors
-    "temperature_extinction_point": 80,  # Maximum temperature before extinction effects
+    "temperature_extinction_point": 60,  # Maximum temperature before extinction effects
     "freezing_point": -15,              # Temperature at which water freezes
     "melting_point": 20,                # Temperature at which ice melts
-    "evaporation_point": 35,            # Temperature at which water evaporates
+    "melting_point": 35,            # Temperature at which water evaporates
 
     # Thresholds and rates for water transfer and pollution effects
     "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
@@ -91,10 +91,6 @@ config = {
         "desert": 0.1,  # Proportion of desert cells
         "vacuum": 0.1,  # Proportion of vacuum cells
     },
-
-    # Environmental conditions
-    "ambient_temperature": 20,  # Base ambient temperature (°C)
-    "cycle_amplitude": 5,       # Amplitude of day-night temperature variation (°C)
 
     # Base colors for visual representation of cell types
     "base_colors": {
