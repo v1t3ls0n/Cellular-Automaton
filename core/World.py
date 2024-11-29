@@ -155,18 +155,7 @@ class World:
         else:
             return 6  # Default to Air
 
-    def _get_dynamic_air_or_cloud_type(self, k, z):
-        """
-        Determine the type of air or cloud based on elevation.
-        """
-        if k >= 0.9 * z:
-            return np.random.choice([6, 2], p=[0.6, 0.4])  # Air or Cloud
-        elif k >= 0.8 * z:
-            return np.random.choice([6, 2], p=[0.7, 0.3])  # Air or Cloud
-        elif k >= 0.7 * z:
-            return np.random.choice([6, 2], p=[0.9, 0.1])  # Air or Cloud
-        else:
-            return 6  # Default to Air
+
 
     def _generate_elevation_map(self):
         """
@@ -189,93 +178,103 @@ class World:
 
         return elevation_map
     
+
+
+
+
+
+
+
     def update_cells_on_grid(self):
-        """
-        Update the cells on the grid to compute their next states and resolve collisions.
-        Handles non-air cells first to avoid illogical overwriting and processes air cells afterward.
-        """
-        x, y, z = self.grid_size
-        # Properly initialize a new grid to hold the updated state
-        new_grid = np.empty((x, y, z), dtype=object)
+            """
+            Update the cells on the grid to compute their next states and resolve collisions.
+            """
+            x, y, z = self.grid_size
+            # Properly initialize a new grid to hold the updated state
+            new_grid = np.empty((x, y, z), dtype=object)
 
-        # Clone the current grid to initialize new cells
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    new_grid[i, j, k] = self.grid[i, j, k].clone()
+            # Clone the current grid to initialize new cells
+            for i in range(x):
+                for j in range(y):
+                    for k in range(z):
+                        new_grid[i, j, k] = self.grid[i, j, k].clone()
 
-        position_map = {}
+            position_map = {}
+            transfer_map = {}
 
-        # First pass: Handle non-air cells (priority update for stability)
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    cell = self.grid[i, j, k]
+            # First pass: Compute the next state for all cells and collect transfers
+            for i in range(x):
+                for j in range(y):
+                    for k in range(z):
+                        # Use original grid for neighbor lookup
+                        cell = self.grid[i, j, k]
+                        neighbors = self.get_neighbors(
+                            i, j, k)  # Retrieve neighbors
 
-                    # Skip air cells for now
-                    if cell.cell_type == 6:
-                        continue
+                        # Unpack only the Particle objects
+                        unpacked_neighbors = [
+                            neighbor for neighbor, _ in neighbors]
+                        new_grid[i, j, k].update_state(
+                            unpacked_neighbors)  # Update state of the cell
 
-                    next_position = cell.get_next_position()
+                        # Compute water transfers and store in transfer map
+                        for neighbor, neighbor_pos in neighbors:
+                            if neighbor.cell_type in {2, 6}:  # Only clouds or air
+                                transfer_amount = (
+                                    neighbor.water_mass - cell.water_mass) * 0.05
+                                if transfer_amount != 0:
+                                    transfer_key = ((i, j, k), neighbor_pos)
+                                    transfer_map[transfer_key] = transfer_map.get(
+                                        transfer_key, 0) + transfer_amount
 
-                    if next_position not in position_map:
-                        position_map[next_position] = cell
-                    else:
-                        # Resolve collision logically
-                        other_cell = position_map[next_position]
-                        resolved_position = self.resolve_collision(cell, other_cell, position_map)
-                        position_map[resolved_position] = cell
+            # Apply transfers to update water mass
+            for (from_pos, to_pos), transfer in transfer_map.items():
+                fx, fy, fz = from_pos
+                tx, ty, tz = to_pos
+                if 0 <= fx < x and 0 <= fy < y and 0 <= fz < z:
+                    new_grid[fx, fy, fz].water_mass -= transfer
+                if 0 <= tx < x and 0 <= ty < y and 0 <= tz < z:
+                    new_grid[tx, ty, tz].water_mass += transfer
 
-        # Second pass: Handle air cells (less priority, fill gaps)
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    cell = self.grid[i, j, k]
-
-                    # Process only air cells
-                    if cell.cell_type != 6:
-                        continue
-
-                    next_position = cell.get_next_position()
-
-                    if next_position not in position_map:
-                        position_map[next_position] = cell
-                    else:
-                        # Find a nearby empty spot for the air cell
-                        empty_position = self.find_nearest_empty_position(next_position, position_map)
-                        if empty_position:
-                            position_map[empty_position] = cell
+            # Second pass: Determine new positions and resolve collisions
+            for i in range(x):
+                for j in range(y):
+                    for k in range(z):
+                        # Use updated grid for next position calculation
+                        cell = new_grid[i, j, k]
+                        next_position = cell.get_next_position(
+                            (i, j, k), self.grid_size)
+                        if next_position not in position_map:
+                            position_map[next_position] = cell
                         else:
-                            # Keep air cell static if no space is found
-                            position_map[(i, j, k)] = cell
+                            # Handle collision by averaging attributes
+                            other_cell = position_map[next_position]
+                            self.resolve_collision(cell, other_cell)
 
-        # Populate the new grid with updated cells
-        for (ni, nj, nk), updated_cell in position_map.items():
-            new_grid[ni, nj, nk] = updated_cell
+            # Populate the new grid with updated cells
+            for (ni, nj, nk), updated_cell in position_map.items():
+                new_grid[ni, nj, nk] = updated_cell
 
-        self.grid = new_grid  # Replace the current grid with the updated one
-        self._recalculate_global_attributes()
+            self.grid = new_grid  # Replace the current grid with the updated one
+            self._recalculate_global_attributes()
 
-    def resolve_collision(self, cell1, cell2, position_map):
-        """
-        Handle collisions between two cells. Adjust attributes and resolve positioning.
-        """
-        # Higher priority to non-air cells; air cells relocate
-        if cell1.cell_type == 6 or cell2.cell_type == 6:
-            air_cell = cell1 if cell1.cell_type == 6 else cell2
-            non_air_cell = cell2 if cell1.cell_type == 6 else cell1
+        def resolve_collision(self, cell1, cell2):
+            """
+            Handle collisions between two cells. Adjust attributes accordingly.
+            """
+            # Example logic: Average water_mass and temperature
+            cell1.water_mass = (cell1.water_mass + cell2.water_mass) / 2
+            cell1.temperature = (cell1.temperature + cell2.temperature) / 2
+            cell2.water_mass = cell1.water_mass
+            cell2.temperature = cell1.temperature
 
-            # Try to find a nearby empty position for the air cell
-            empty_position = self.find_nearest_empty_position(air_cell.position, position_map)
-            if empty_position:
-                return empty_position
-            else:
-                # If no space is found, keep the non-air cell in place
-                return non_air_cell.position
-        else:
-            # For two non-air cells, merge their attributes logically
-            self.merge_cells(cell1, cell2)
-            return cell2.position  # Keep one cell's position for the merged cell
+            # Keep the higher pollution level
+            cell1.pollution_level = max(
+                cell1.pollution_level, cell2.pollution_level)
+            cell2.pollution_level = cell1.pollution_level
+
+            # Optionally adjust other attributes or preserve one cell's state
+
 
     def merge_cells(self, cell1, cell2):
         """
@@ -292,8 +291,6 @@ class World:
         cell2.pollution_level = cell1.pollution_level
 
         # Optionally adjust other attributes
-
-
     def find_nearest_empty_position(self, position, position_map):
         """
         Find the nearest empty position to the given position within the grid bounds.
