@@ -40,17 +40,6 @@ config = {
         0,   # 8: Vacuum - No pollution in empty space
     ],
 
-    "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.2),  # Air (transparent white)
-        2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
-        0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
-        3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
-        7: (0.3, 0.4, 0.6, 1.0),  # Rain (grayish-blue)
-        1: (1.0, 0.8, 0.5, 1.0),  # Desert (sandy gold)
-        4: (0.0, 0.6, 0.0, 1.0),  # Forest (lush green)
-        5: (0.4, 0.0, 0.4, 1.0),  # City (dark purple)
-        8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (fully transparent/black)
-    },
 
     "temperature_extinction_point": 60,
     "freezing_point": -15,  # Lowered to account for extreme cold
@@ -97,72 +86,78 @@ config = {
 
     # Visualization settings
     "tint": False, # Use tint for better visual representation
+
+
+    "base_colors": {
+        6: (1.0, 1.0, 1.0, 0.2),  # Air (transparent white)
+        2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
+        0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
+        3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
+        7: (0.3, 0.4, 0.6, 1.0),  # Rain (grayish-blue)
+        1: (1.0, 0.8, 0.5, 1.0),  # Desert (sandy gold)
+        4: (0.0, 0.6, 0.0, 1.0),  # Forest (lush green)
+        5: (0.4, 0.0, 0.4, 1.0),  # City (dark purple)
+        8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (fully transparent/black)
+    },
+
 }
 
 
-# Cell type mapping with initial values for easy reference
-config["cell_type_mapping"] = {
-    0: {  # Sea
-        "name": "Sea",
-        "temperature": config["baseline_temperature"][0],
-        "pollution": config["baseline_pollution_level"][0],
-        "weight": config["cell_type_weights"][0],
-        "color": config["base_colors"][0],
-    },
-    1: {  # Desert
-        "name": "Desert",
-        "temperature": config["baseline_temperature"][1],
-        "pollution": config["baseline_pollution_level"][1],
-        "weight": config["cell_type_weights"][1],
-        "color": config["base_colors"][1],
-    },
-    2: {  # Cloud
-        "name": "Cloud",
-        "temperature": config["baseline_temperature"][2],
-        "pollution": config["baseline_pollution_level"][2],
-        "weight": config["cell_type_weights"][2],
-        "color": config["base_colors"][2],
-    },
-    3: {  # Ice
-        "name": "Ice",
-        "temperature": config["baseline_temperature"][3],
-        "pollution": config["baseline_pollution_level"][3],
-        "weight": config["cell_type_weights"][3],
-        "color": config["base_colors"][3],
-    },
-    4: {  # Forest
-        "name": "Forest",
-        "temperature": config["baseline_temperature"][4],
-        "pollution": config["baseline_pollution_level"][4],
-        "weight": config["cell_type_weights"][4],
-        "color": config["base_colors"][4],
-    },
-    5: {  # City
-        "name": "City",
-        "temperature": config["baseline_temperature"][5],
-        "pollution": config["baseline_pollution_level"][5],
-        "weight": config["cell_type_weights"][5],
-        "color": config["base_colors"][5],
-    },
-    6: {  # Air
-        "name": "Air",
-        "temperature": config["baseline_temperature"][6],
-        "pollution": config["baseline_pollution_level"][6],
-        "weight": config["cell_type_weights"][6],
-        "color": config["base_colors"][6],
-    },
-    7: {  # Rain
-        "name": "Rain",
-        "temperature": config["baseline_temperature"][7],
-        "pollution": config["baseline_pollution_level"][7],
-        "weight": config["cell_type_weights"][7],
-        "color": config["base_colors"][7],
-    },
-    8: {  # Vacuum
-        "name": "Vacuum",
-        "temperature": config["baseline_temperature"][8],
-        "pollution": config["baseline_pollution_level"][8],
-        "weight": config["cell_type_weights"][8],
-        "color": config["base_colors"][8],
-    },
+
+key_labels = {
+    "baseline_temperature": "Baseline Temperature (°C)",
+    "cell_type_weights": "Cell Type Weights",
+    "baseline_pollution_level": "Baseline Pollution Levels",
+    "temperature_extinction_point": "Temperature Extinction Point (°C)",
+    "freezing_point": "Freezing Point (°C)",
+    "melting_point": "Melting Point (°C)",
+    "evaporation_point": "Evaporation Point (°C)",
+    "water_transfer_threshold": "Water Transfer Threshold",
+    "pollution_damage_threshold": "Pollution Damage Threshold",
+    "pollution_level_tipping_point": "Pollution Tipping Point",
+    "natural_pollution_decay_rate": "Natural Pollution Decay Rate",
+    "natural_temperature_decay_rate": "Natural Temperature Decay Rate",
+    "cloud_saturation_threshold": "Cloud Saturation Threshold",
+    "melting_rate": "Melting Rate",
+    "evaporation_rate": "Evaporation Rate",
+    "forest_pollution_absorption_rate": "Forest Pollution Absorption Rate",
+    "forest_cooling_effect": "Forest Cooling Effect",
+    "city_pollution_increase_rate": "City Pollution Increase Rate",
+    "city_warming_effect": "City Warming Effect",
+    "city_temperature_upper_limit": "City Temperature Upper Limit (°C)",
+    "city_pollution_upper_limit": "City Pollution Upper Limit",
+    "initial_ratios": "Initial Ratios (Proportions)",
+    "default_grid_size": "Default Grid Size (X, Y, Z)",
+    "default_days": "Default Simulation Duration (Days)",
+    "tint": "Visualization Tint",
 }
+
+temperature_mapping = {
+    0: "Ocean",
+    1: "Desert",
+    2: "Cloud",
+    3: "Ice",
+    4: "Forest",
+    5: "City",
+    6: "Air",
+    7: "Rain",
+    8: "Vacuum",
+}
+
+def format_config_value(key, value):
+    if key == "baseline_temperature":
+        return ", ".join(
+            [f"{temperature_mapping[i]}: {temp}°C" for i, temp in enumerate(value)]
+        )
+    elif key == "initial_ratios":
+        return ", ".join([f"{k.capitalize()}: {v}" for k, v in value.items()])
+    elif key == "cell_type_weights":
+        return ", ".join(
+            [f"{temperature_mapping[k]}: {v}" for k, v in value.items()]
+        )
+    elif key == "baseline_pollution_level":
+        return ", ".join(
+            [f"{temperature_mapping[i]}: {level}" for i, level in enumerate(value)]
+        )
+    else:
+        return str(value)
