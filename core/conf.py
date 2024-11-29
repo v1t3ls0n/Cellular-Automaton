@@ -5,25 +5,26 @@
 config = {
 
     # Visualization settings
-    "tint": False, # Use tint for better visual representation
+    "tint": False,  # Use tint for better visual representation
 
- 
+
     # Default simulation parameters
-    "default_grid_size": (10, 10, 10), # Increased grid size for more detailed simulation
-    "default_days": 50, # Longer default simulation duration
-   
- 
+    # Increased grid size for more detailed simulation
+    "default_grid_size": (10, 10, 10),
+    "default_days": 50,  # Longer default simulation duration
+
+
     # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
     "baseline_temperature": [
         15,  # Sea: Warm
         30,  # Desert: Hot
         5,   # Cloud: Cool
-        -15, # Ice: Freezing
+        -15,  # Ice: Freezing
         20,  # Forest: Moderate
         35,  # City: Hot due to urban heat
         10,  # Air: Cool
         12,  # Rain: Mild
-        -20 # Vacuum: Near absolute zero
+        -20  # Vacuum: Near absolute zero
     ],
 
     "baseline_pollution_level": [
@@ -56,16 +57,19 @@ config = {
     "freezing_point": -15,  # Lowered to account for extreme cold
     "melting_point": 20,
     "evaporation_point": 35,
-        
+
     "water_transfer_threshold": 0.05,  # Adjusted for smoother transfer dynamics
 
     # Pollution-related thresholds
-    "pollution_damage_threshold": 10.0,  # Slightly higher threshold for visible damage
-    "pollution_level_tipping_point": 50, # Increased sensitivity for ecosystem changes
-    "natural_pollution_decay_rate": 0.1, # Pollution decreases more slowly over time
+    # Slightly higher threshold for visible damage
+    "pollution_damage_threshold": 10.0,
+    # Increased sensitivity for ecosystem changes
+    "pollution_level_tipping_point": 50,
+    "natural_pollution_decay_rate": 0.1,  # Pollution decreases more slowly over time
 
     # Temperature decay
-    "natural_temperature_decay_rate": 0.1, # Retains realistic cooling/heating dynamics
+    # Retains realistic cooling/heating dynamics
+    "natural_temperature_decay_rate": 0.1,
 
     # Cloud-specific settings
     "cloud_saturation_threshold": 3.0,
@@ -75,14 +79,14 @@ config = {
     "evaporation_rate": 0.05,  # Reduced evaporation rate for balance
 
     # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.2, # Forests absorb more pollution
-    "forest_cooling_effect": 0.2, # Slightly more cooling effect from forests
+    "forest_pollution_absorption_rate": 0.2,  # Forests absorb more pollution
+    "forest_cooling_effect": 0.2,  # Slightly more cooling effect from forests
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.1, # Cities emit pollution at a steady rate
-    "city_warming_effect": 0.1, # Slightly reduced warming effect for balance
-    "city_temperature_upper_limit": 100, # Cities remain hot but capped lower
-    "city_pollution_upper_limit": 100, # Cities can accumulate significant pollution
+    "city_pollution_increase_rate": 0.1,  # Cities emit pollution at a steady rate
+    "city_warming_effect": 0.1,  # Slightly reduced warming effect for balance
+    "city_temperature_upper_limit": 100,  # Cities remain hot but capped lower
+    "city_pollution_upper_limit": 100,  # Cities can accumulate significant pollution
 
     # Ratios for land cell types
     "initial_ratios": {
@@ -91,7 +95,7 @@ config = {
         "desert": 0.1,  # Balance deserts and forests
         "vacuum": 0.1,  # Significant amount of vacuum for realism
     },
-    
+
     "ambient_temperature": 20,  # Base temperature in degrees Celsius
     "cycle_amplitude": 5,       # Day-night temperature swing
 
@@ -100,7 +104,7 @@ config = {
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
         3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
-        7: (0.5, 0.5, 1.0, 1.0), # Rain (grayish-blue)
+        7: (0.5, 0.5, 1.0, 1.0),  # Rain (grayish-blue)
         1: (1.0, 0.8, 0.5, 1.0),  # Desert (sandy gold)
         4: (0.0, 0.6, 0.0, 1.0),  # Forest (lush green)
         5: (0.4, 0.0, 0.4, 1.0),  # City (dark purple)
@@ -111,7 +115,6 @@ config = {
 
 
 }
-
 
 
 key_labels = {
@@ -143,14 +146,14 @@ key_labels = {
 }
 
 
-
 def format_config_value(key, value):
-    
+
     if key == "baseline_temperature":
         return "  |  ".join(
-            [f"{particle_mapping[i]}: {temp}°C" for i, temp in enumerate(value)]
+            [f"{particle_mapping[i]}: {temp}°C" for i,
+                temp in enumerate(value)]
         )
-    
+
     if key == "initial_ratios":
         return "  |  ".join([f"{k.capitalize()}: {v}" for k, v in value.items()])
     elif key == "cell_type_weights":
@@ -159,12 +162,13 @@ def format_config_value(key, value):
         )
     elif key == "baseline_pollution_level":
         return "  |  ".join(
-            [f"{particle_mapping[i]}: {level}" for i, level in enumerate(value)]
+            [f"{particle_mapping[i]}: {level}" for i,
+                level in enumerate(value)]
         )
     else:
         return str(value)
-    
-    
+
+
 particle_mapping = {
     0: "Ocean",
     1: "Desert",
