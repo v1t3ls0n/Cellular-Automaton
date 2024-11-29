@@ -100,6 +100,9 @@ config = {
         8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (fully transparent/black)
     },
 
+
+
+
 }
 
 
@@ -135,25 +138,27 @@ key_labels = {
 
 
 def format_config_value(key, value):
+    
     if key == "baseline_temperature":
         return "  |  ".join(
-            [f"{temperature_mapping[i]}: {temp}°C" for i, temp in enumerate(value)]
+            [f"{particle_mapping[i]}: {temp}°C" for i, temp in enumerate(value)]
         )
+    
     if key == "initial_ratios":
         return "  |  ".join([f"{k.capitalize()}: {v}" for k, v in value.items()])
     elif key == "cell_type_weights":
         return "  |  ".join(
-            [f"{temperature_mapping[k]}: {v}" for k, v in value.items()]
+            [f"{particle_mapping[k]}: {v}" for k, v in value.items()]
         )
     elif key == "baseline_pollution_level":
         return "  |  ".join(
-            [f"{temperature_mapping[i]}: {level}" for i, level in enumerate(value)]
+            [f"{particle_mapping[i]}: {level}" for i, level in enumerate(value)]
         )
     else:
         return str(value)
     
     
-temperature_mapping = {
+particle_mapping = {
     0: "Ocean",
     1: "Desert",
     2: "Cloud",
