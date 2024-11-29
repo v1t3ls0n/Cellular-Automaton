@@ -39,7 +39,7 @@ config = {
         1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
         4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
         5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
-        8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (transparent/black for empty space)
+        8: (0.0, 0.0, 0.0, 1.0),  # Vacuum (transparent/black for empty space)
     },
 
     "extinction_point": 80,
@@ -49,12 +49,12 @@ config = {
     "water_transfer_threshold": 0.1,
 
     # Pollution-related thresholds
-    "pollution_damage_threshold": 1.0,  # Default pollution threshold
+    "pollution_damage_threshold": 10.0,  # Default pollution threshold
     "pollution_level_tipping_point": 60,
-    "natural_pollution_decay_rate": 0.4,
+    "natural_pollution_decay_rate": 0.01,
 
     # Temperature decay
-    "natural_temperature_decay_rate": 0.01,
+    "natural_temperature_decay_rate": 0.5,
 
     # Cloud-specific settings
     "cloud_saturation_threshold": 1.5,
@@ -68,17 +68,17 @@ config = {
     "forest_cooling_effect": 0.2,
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.5,
-    "city_warming_effect": 0.5,
+    "city_pollution_increase_rate": 0.8,
+    "city_warming_effect": 0.8,
     "city_temperature_upper_limit": 60,
     "city_pollution_upper_limit": 100,
 
     # Ratios for land cell types
     "initial_ratios": {
-        "forest": 0.2,  
+        "forest": 0.1,  
         "city": 0.4,
-        "desert": 0.2,
-        "vacuum": 0.2,  
+        "desert": 0.1,
+        "vacuum": 0.4,  
     },
 
     # Default simulation parameters

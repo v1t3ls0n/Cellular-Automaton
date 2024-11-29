@@ -125,10 +125,11 @@ class Particle:
         Compute the next state of the cell based on its neighbors and position.
         """
         # if self.pollution_level < self.config["pollution_damage_threshold"]:
-        # self._apply_natural_decay()
-        # self.equilibrate_temperature(neighbors)
-        # if self.cell_type in {1,4,5,6}:
-            # self.equilibrate_pollution_level(neighbors)
+        self._apply_natural_decay()
+        self.equilibrate_temperature(neighbors)
+
+        if self.cell_type in {1,4,5,6}:
+            self.equilibrate_pollution_level(neighbors)
 
 
         if self.cell_type == 0:  # Ocean
@@ -174,10 +175,10 @@ class Particle:
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
-
+        pollution_damage_threshold = self.config["pollution_damage_threshold"]
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
-        elif self.is_surrounded_by_land_cells(neighbors_aligned) and self.pollution_level == 0 and self.temperature in range(self.config["baseline_temperature"][self.cell_type]):
+        elif self.is_surrounded_by_land_cells(neighbors_aligned) and self.pollution_level < pollution_damage_threshold and self.temperature and self.config["baseline_temperature"][4] <= self.temperature <= self.config["baseline_temperature"][self.cell_type]:
             self.convert_to_forest()
 
     def _update_cloud(self, neighbors):
