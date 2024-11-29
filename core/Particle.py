@@ -33,24 +33,6 @@ class Particle:
             grid_size=self.grid_size
         )
 
-
-    def copy_state_from(self, other_particle):
-        """
-        Copies the state of another particle into this particle.
-        
-        Args:
-            other_particle (Particle): The particle to copy state from.
-        """
-        self.cell_type = other_particle.cell_type
-        self.position = other_particle.position
-        self.water_mass = other_particle.water_mass
-        self.temperature = other_particle.temperature
-        self.pollution_level = other_particle.pollution_level
-        self.direction = other_particle.direction
-        self.grid_size = other_particle.grid_size
-
-        # Add any other attributes that need to be copied
-
     def get_next_position(self):
         """
         Calculates the next position of the particle based on its direction and grid size.
@@ -141,55 +123,53 @@ class Particle:
     def update_state(self, neighbors):
         """
         Compute the next state of the cell based on its neighbors and position.
-        Returns:
-            dict: Transfer map containing positions and transfer amounts.
         """
-        # Apply natural decay and equilibrate state
+        # if self.pollution_level < self.config["pollution_damage_threshold"]:
         self._apply_natural_decay()
         self.equilibrate_temperature(neighbors)
         self.equilibrate_pollution_level(neighbors)
 
-        # Initialize transfer map
-        transfer_map = {}
+        # if self.cell_type in {4,6}:
+            # self.equilibrate_pollution_level(neighbors)
 
-        # Handle updates based on cell type
         if self.cell_type == 0:  # Ocean
-            transfer_map.update(self._update_ocean(neighbors))
-        elif self.cell_type == 1:  # Desert
-            transfer_map.update(self._update_desert(neighbors))
-        elif self.cell_type == 2:  # Cloud
-            transfer_map.update(self._update_cloud(neighbors))
-        elif self.cell_type == 3:  # Ice
-            transfer_map.update(self._update_ice(neighbors))
-        elif self.cell_type == 4:  # Forest
-            transfer_map.update(self._update_forest(neighbors))
-        elif self.cell_type == 5:  # City
-            transfer_map.update(self._update_city(neighbors))
-        elif self.cell_type == 6:  # Air
-            transfer_map.update(self._update_air(neighbors))
-        elif self.cell_type == 7:  # Rain
-            transfer_map.update(self._update_rain(neighbors))
+            self._update_ocean(neighbors)
 
-        return transfer_map
+        elif self.cell_type == 1:  # Desert
+            self._update_desert(neighbors)
+
+        elif self.cell_type == 2:  # Cloud
+            self._update_cloud(neighbors)
+
+        elif self.cell_type == 3:  # Ice
+            self._update_ice(neighbors)
+
+        elif self.cell_type == 4:  # Forest
+            self._update_forest(neighbors)
+
+        elif self.cell_type == 5:  # City
+            self._update_city(neighbors)
+
+        elif self.cell_type == 6:  # Air
+            self._update_air(neighbors)
+
+        elif self.cell_type == 7:  # Rain
+            self._update_rain(neighbors)
 
     def _update_ocean(self, neighbors):
         """
         Ocean behavior: evaporates, freezes, or stabilizes.
         """
-        evaporation_rate = self.config["evaporation_rate"]
-        freezing_point = self.config["freezing_point"]
-
-        if self.temperature > self.config["evaporation_point"]:
-            self.water_mass -= evaporation_rate
+        self.go_down()
+        if self.temperature > self.config["evaporation_point"] - 5:
+            evaporation_rate = self.config["evaporation_rate"]
+            self.water_mass -= evaporation_rate  # Partial melting
             if self.water_mass <= 0:
                 self.convert_to_air()
-        elif self.temperature < freezing_point:
+        elif self.temperature < self.config["freezing_point"] - 1:
             self.convert_to_ice()
         else:
             self.stabilize()
-
-        # Return empty map because ocean doesn't transfer water itself
-        return {}
 
     def _update_desert(self, neighbors):
         neighbors_below = self.get_below_neighbors(neighbors)
@@ -201,8 +181,6 @@ class Particle:
             self.convert_to_ocean()
         elif self.is_surrounded_by_land_cells(neighbors_aligned) and self.pollution_level < pollution_damage_threshold and self.temperature and forest_baseline_temperature <= self.temperature <= forest_baseline_temperature + 1:
             self.convert_to_forest()
-        return {}
-        
 
     def _update_cloud(self, neighbors):
         """
@@ -218,8 +196,6 @@ class Particle:
             self.go_up()
         else:
             self.stabilize_elevation()
-        return {}
-        
 
     def _update_ice(self, neighbors):
         """
@@ -234,8 +210,6 @@ class Particle:
                 self.convert_to_ocean()
 
         # self.direction = (dx, dy, 0)
-        return {}
-
 
     def _update_forest(self, neighbors):
         absorption_rate = self.config["forest_pollution_absorption_rate"]
@@ -259,7 +233,6 @@ class Particle:
             self.pollution_level = max(
                 0, self.pollution_level - absorption_rate * self.pollution_level)
             self.temperature -= self.temperature * cooling_effect
-        return {}
 
     def _update_city(self, neighbors):
         pollution_increase_rate = self.config["city_pollution_increase_rate"]
@@ -285,7 +258,6 @@ class Particle:
             self.convert_to_ocean()
         elif self.pollution_level > 100 or abs(self.temperature) >= self.config["temperature_extinction_point"]:
             self.convert_to_desert()
-        return {}
 
     def _update_air(self, neighbors):
         """
@@ -300,27 +272,27 @@ class Particle:
 
         elif self.position[2] <= 2 or self.is_below_ground_level(neighbors) or self.is_below_sea_level(neighbors):
             self.go_up()
-        return {}
 
     def _update_rain(self, neighbors):
         """
-        Rain-specific behavior to ensure it moves downward.
+        Rain moves downward and converts to ocean or land.
         """
-        transfer_map = {}
-        below_neighbors = self.get_below_neighbors(neighbors)
+        neighbors_below = self.get_below_neighbors(neighbors)
+        neighbors_aligned = self.get_aligned_neighbors(neighbors)
+        # self.direction = self.calculate_dominant_wind_direction(neighbors)
 
-        for neighbor in below_neighbors:
-            if neighbor.cell_type in {0, 1, 4, 8}:  # Ocean, Desert, Forest, or Vacuum
-                transfer_map[neighbor.position] = min(self.water_mass, self.config["rain_transfer_rate"])
-                self.cell_type = 8  # Convert to Vacuum after moving
-                break
+        # If at the lowest level, convert to ocean or land
+        if self.is_at_ground_level(neighbors) or self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):
+            self.convert_to_ocean()
+        elif self.is_surrounded_by_land_cells(neighbors_aligned):
+            self.exchange_water_mass(neighbors)
+            self.convert_to_air()
+        elif self.is_surrounded_by_air_cells(neighbors_aligned):
+            # self.exchange_water_mass(neighbors)
+            self.go_down()
 
-        # Stabilize if no valid downward movement
-        if not below_neighbors:
-            self.stabilize()
-
-        return transfer_map
-
+        if self.temperature > self.config["evaporation_point"]:
+            self.convert_to_air()
 
     ####################################################################################################################
     ###################################### CELL  CONVERSIONS ###########################################################
@@ -397,14 +369,14 @@ class Particle:
         )
 
         # Temperature decay towards baseline
-        baseline_temp = self.config["baseline_temperature"][self.cell_type]
-        if self.temperature > baseline_temp:
-            self.temperature -= (self.temperature -
-                                 baseline_temp) * temperature_decay_rate
+        # baseline_temp = self.config["baseline_temperature"][self.cell_type]
+        # if self.temperature > baseline_temp:
+        #     self.temperature -= (self.temperature -
+        #                          baseline_temp) * temperature_decay_rate
 
-        elif self.temperature < baseline_temp:
-            self.temperature += (baseline_temp -
-                                 self.temperature) * temperature_decay_rate
+        # elif self.temperature < baseline_temp:
+        #     self.temperature += (baseline_temp -
+        #                          self.temperature) * temperature_decay_rate
 
     ####################################################################################################################
     ############################################### CELL EQUILIBRATE ###################################################
@@ -468,11 +440,10 @@ class Particle:
     ####################################################################################################################
 
     def go_down(self):
-        self.direction = (0, 0, -1)
-
-        # if self.position[2] != 0:
-            # dx, dy, _ = self.direction
-            # self.direction = (dx, dy, -1)
+        if self.position[2] != 0:
+            dx, dy, _ = self.direction
+            self.direction = (dx, dy, -1)
+            self.direction = (0, 0, -1)
 
     def go_up(self):
         """
@@ -483,10 +454,10 @@ class Particle:
             self.direction = (dx, dy, 1)
 
     def stabilize(self):
-        self.temperature += (self.config["ambient_temperature"] - self.temperature) * 0.1
-        self.pollution_level *= 0.95  # Gradual decay
-        # Introduce slight randomization to prevent static state
-        self.water_mass += np.random.uniform(-0.01, 0.01)
+        """
+        Stabilize the particle, halting movement.
+        """
+        self.direction = (0, 0, 0)
 
     def stabilize_elevation(self):
         dx, dy, _ = self.direction

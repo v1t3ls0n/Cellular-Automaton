@@ -46,7 +46,6 @@ class Simulation:
             next_state = self.states[-1].clone()
             next_state.day_number += 1
             next_state.update_cells_on_grid()
-            # next_state.update_grid()
             self.states.append(next_state)
             self._update_aggregates(next_state)
             logging.debug(f"Next state (Day {day + 1}) added.")

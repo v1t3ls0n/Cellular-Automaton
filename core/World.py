@@ -19,12 +19,7 @@ class World:
         self.initial_deserts_ratio = initial_ratios["desert"]
         self.initial_deserts_ratio = initial_ratios["desert"]
         self.initial_vacuum_ratio = initial_ratios["vacuum"]
-        # Initialize global attributes
-        self.avg_temperature = 0
-        self.avg_pollution = 0
-        self.avg_water_mass = 0
-        self.total_cities = 0
-        self.total_forests = 0
+
         self.day_number = day_number
 
     def clone(self):
@@ -145,9 +140,10 @@ class World:
 
                     # Set direction for dynamic cells
                     if cell_type in {0, 3}:  # Sea/Ice
-                        # direction = (0, 0, 0)
                         np.random.choice(
                             [-1, 0, 1]), np.random.choice([-1, 0, 1])
+                        # direction = (0, 0, 0)
+                        
                     elif cell_type in {2, 6}:  # Cloud/Air
                         dx, dy = np.random.choice(
                             [-1, 0, 1]), np.random.choice([-1, 0, 1])
@@ -219,45 +215,24 @@ class World:
 
         return elevation_map
 
-    def apply_day_night_cycle(self, day):
-        """
-        Apply a day-night temperature cycle to the entire grid.
-
-        Args:
-            day (int): The current day or time step in the simulation.
-        """
-        cycle_amplitude = config.get("cycle_amplitude", 5)  # Temperature swing
-        base_temperature = config.get(
-            "ambient_temperature", 20)  # Base temperature
-
-        # Calculate a sinusoidal adjustment for the day-night cycle
-        temp_adjustment = cycle_amplitude * np.sin(2 * np.pi * (day % 24) / 24)
-
-        # Apply the adjustment to all cells
-        for x in range(self.grid_size[0]):
-            for y in range(self.grid_size[1]):
-                for z in range(self.grid_size[2]):
-                    cell = self.grid[x, y, z]
-                    if cell.cell_type != 8:  # Skip Vacuum cells
-                        cell.temperature += temp_adjustment
-
     def update_cells_on_grid(self):
         """
         Update the cells on the grid to compute their next states and resolve collisions.
         """
-        # self.apply_day_night_cycle(self.day_number)
         x, y, z = self.grid_size
+        # Properly initialize a new grid to hold the updated state
         new_grid = np.empty((x, y, z), dtype=object)
 
         # Clone the current grid to initialize new cells
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = self.grid[i, j, k]
+                    new_grid[i, j, k] = self.grid[i, j, k].clone()
+
         position_map = {}
         transfer_map = {}
 
-        # First pass: Update states and collect transfers
+        # First pass: Compute the next state for all cells and collect transfers
         for i in range(x):
             for j in range(y):
                 for k in range(z):
@@ -266,192 +241,52 @@ class World:
                     if cell.cell_type == 8:  # Skip Vacuum cells
                         continue
 
-                    # Retrieve neighbors and unpack only the `Particle` objects
-                    neighbors = [neighbor for neighbor,
-                                 _ in self.get_neighbors(i, j, k)]
+                    neighbors = self.get_neighbors(
+                        i, j, k)  # Retrieve neighbors
 
-                    # Update state and collect water transfers
-                    cell_transfer_map = cell.update_state(neighbors)
-                    for (to_pos, transfer_amount) in cell_transfer_map.items():
-                        transfer_key = ((i, j, k), to_pos)
-                        transfer_map[transfer_key] = transfer_map.get(
-                            transfer_key, 0) + transfer_amount
+                    # Unpack only the Particle objects
+                    unpacked_neighbors = [
+                        neighbor for neighbor, _ in neighbors]
+                    new_grid[i, j, k].update_state(
+                        unpacked_neighbors)  # Update state of the cell
 
-        # Apply transfers directly to the grid
-        for (from_pos, to_pos), transfer_amount in transfer_map.items():
+                    # Compute water transfers and store in transfer map
+                    for neighbor, neighbor_pos in neighbors:
+                        if neighbor.cell_type in {2, 6}:  # Only clouds or air
+                            transfer_amount = (
+                                neighbor.water_mass - cell.water_mass) * 0.05
+                            if transfer_amount != 0:
+                                transfer_key = ((i, j, k), neighbor_pos)
+                                transfer_map[transfer_key] = transfer_map.get(
+                                    transfer_key, 0) + transfer_amount
+
+        # Apply transfers to update water mass
+        for (from_pos, to_pos), transfer in transfer_map.items():
             fx, fy, fz = from_pos
             tx, ty, tz = to_pos
-
-            # Ensure valid positions
             if 0 <= fx < x and 0 <= fy < y and 0 <= fz < z:
-                new_grid[fx, fy, fz].water_mass = max(
-                    0, new_grid[fx, fy, fz].water_mass - transfer_amount
-                )
+                new_grid[fx, fy, fz].water_mass -= transfer
             if 0 <= tx < x and 0 <= ty < y and 0 <= tz < z:
-                new_grid[tx, ty, tz].water_mass += transfer_amount
+                new_grid[tx, ty, tz].water_mass += transfer
 
-            # Second pass: Determine new positions and resolve collisions
+        # Second pass: Determine new positions and resolve collisions
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     # Use updated grid for next position calculation
                     cell = new_grid[i, j, k]
                     next_position = cell.get_next_position()
-
-                    # Debugging output for position calculations
-                    logging.debug(
-                        f"Cell ({i}, {j}, {k}) -> Next Position: {next_position}")
-                    logging.debug(f"Before update: {position_map.keys()}")
-                    logging.debug(f"Cell ({i}, {j}, {k}) moving to {
-                                  next_position}")
-
                     if next_position not in position_map:
                         position_map[next_position] = cell
-                    else:
-                        # Handle collision by resolving interactions
-                        other_cell = position_map[next_position]
-                        logging.debug(f"Collision detected between {cell} and {
-                                      other_cell} at {next_position}")
 
-                        self.resolve_collision(cell, other_cell)
 
-                        # Save both resolved cells back to the position map
-                        # Assume `resolve_collision` modifies `cell` and `other_cell` in place
-                        resolved_positions = [
-                            cell.position, other_cell.position]
-                        resolved_cells = [cell, other_cell]
+        # Populate the new grid with updated cells
+        for (ni, nj, nk), updated_cell in position_map.items():
+            new_grid[ni, nj, nk] = updated_cell
 
-                        for pos, resolved_cell in zip(resolved_positions, resolved_cells):
-                            if pos:
-                                position_map[pos] = resolved_cell
-                        logging.debug(f"Day {self.day_number}: Cell ({
-                                      i}, {j}, {k}) state: {cell}")
-                        logging.debug(f"Collision resolved: {
-                                      cell} with {other_cell}")
-                        logging.debug(f"Transfer applied: {transfer_map}")
+        self.grid = new_grid  # Replace the current grid with the updated one
+        self._recalculate_global_attributes()
 
-            # Populate the final grid
-            for (ni, nj, nk), cell in position_map.items():
-                new_grid[ni, nj, nk] = cell
-
-            self.grid = new_grid
-            self._recalculate_global_attributes()
-
-    def apply_transfers(self, new_grid, transfer_map):
-        """
-        Applies all water mass transfers from the transfer map to the updated grid.
-        Args:
-            new_grid (np.ndarray): The updated grid to apply transfers to.
-            transfer_map (dict): A dictionary mapping (to_pos) -> transfer_amount.
-        """
-        for (from_pos, to_pos), transfer_amount in transfer_map.items():
-            fx, fy, fz = from_pos
-            tx, ty, tz = to_pos
-
-            # Ensure valid positions
-            if 0 <= fx < self.grid_size[0] and 0 <= fy < self.grid_size[1] and 0 <= fz < self.grid_size[2]:
-                new_grid[fx, fy, fz].water_mass -= transfer_amount
-            if 0 <= tx < self.grid_size[0] and 0 <= ty < self.grid_size[1] and 0 <= tz < self.grid_size[2]:
-                new_grid[tx, ty, tz].water_mass += transfer_amount
-
-    def resolve_collision(self, cell1, cell2):
-        """
-        Resolves a collision between two cells, updating their states based on predefined rules.
-
-        Args:
-            cell1: The first colliding cell.
-            cell2: The second colliding cell.
-        """
-        # If both cells are of the same type
-        if cell1.cell_type == cell2.cell_type:
-            if cell1.cell_type == 2:  # Both are Clouds
-                # Merge water mass and average temperature
-                cell1.water_mass += cell2.water_mass
-                cell1.temperature = (cell1.temperature + cell2.temperature) / 2
-                # Convert cell2 to Vacuum after merging
-                cell2.cell_type = 8
-            elif cell1.cell_type == 7:  # Both are Rain
-                # Combine water mass into cell1 and remove cell2
-                cell1.water_mass += cell2.water_mass
-                cell2.cell_type = 8
-            else:
-                # No interaction; keep both cells as they are
-                pass
-
-        # Handle specific interactions between different cell types
-        # Air and Rain
-        elif (cell1.cell_type, cell2.cell_type) in [(6, 7), (7, 6)]:
-            # Rain falls; Air moves up
-            if cell1.cell_type == 7:  # cell1 is Rain
-                cell1.go_down()
-                cell2.go_up()
-            else:  # cell2 is Rain
-                cell2.go_down()
-                cell1.go_up()
-
-        # Air and Cloud
-        elif (cell1.cell_type, cell2.cell_type) in [(6, 2), (2, 6)]:
-            # Air goes down; Cloud moves up
-            if cell1.cell_type == 2:  # cell1 is Cloud
-                cell1.go_up()
-                cell2.go_down()
-            else:  # cell2 is Cloud
-                cell2.go_up()
-                cell1.go_down()
-
-        # Cloud and Rain
-        elif (cell1.cell_type, cell2.cell_type) in [(2, 7), (7, 2)]:
-            # Rain falls; Cloud moves up
-            if cell1.cell_type == 7:  # cell1 is Rain
-                cell1.go_down()
-                cell2.go_up()
-            else:  # cell2 is Rain
-                cell2.go_down()
-                cell1.go_up()
-
-        # Air/Cloud/Rain and Vacuum
-        elif (cell1.cell_type, cell2.cell_type) in [(6, 8), (7, 8), (2, 8)]:
-            # Swap the cell with the vacuum
-            if cell1.cell_type == 8:  # cell1 is Vacuum
-                cell1.cell_type = cell2.cell_type
-                cell1.copy_state_from(cell2)
-                cell2.cell_type = 8
-            else:  # cell2 is Vacuum
-                cell2.cell_type = cell1.cell_type
-                cell2.copy_state_from(cell1)
-                cell1.cell_type = 8
-
-        else:
-            # Default behavior: No collision resolution for other cases
-            pass
-
-    def merge_cells(self, cell1, cell2):
-        """
-        Merge two cells by averaging their attributes.
-        """
-        # Example logic: Average water_mass and temperature
-        cell1.water_mass = (cell1.water_mass + cell2.water_mass) / 2
-        cell1.temperature = (cell1.temperature + cell2.temperature) / 2
-        cell2.water_mass = cell1.water_mass
-        cell2.temperature = cell1.temperature
-
-        # Keep the higher pollution level
-        cell1.pollution_level = max(
-            cell1.pollution_level, cell2.pollution_level)
-        cell2.pollution_level = cell1.pollution_level
-
-        # Optionally adjust other attributes
-    def find_nearest_empty_position(self, position, position_map):
-        """
-        Find the nearest empty position to the given position within the grid bounds.
-        """
-        x, y, z = position
-        for dx, dy, dz in [(-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1), (0, 0, 1)]:
-            nx, ny, nz = x + dx, y + dy, z + dz
-            if 0 <= nx < self.grid_size[0] and 0 <= ny < self.grid_size[1] and 0 <= nz < self.grid_size[2]:
-                if (nx, ny, nz) not in position_map:
-                    return (nx, ny, nz)
-        return None  # Return None if no valid empty position is found
 
     def get_neighbors(self, x, y, z):
         """
@@ -466,7 +301,6 @@ class World:
                 positions.append((nx, ny, nz))
         # Return both neighbors and positions
         return list(zip(neighbors, positions))
-        # return neighbors
 
     def _recalculate_global_attributes(self):
         """
