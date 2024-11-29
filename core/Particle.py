@@ -310,8 +310,8 @@ class Particle:
         self.stabilize()  # Stabilize motion
 
     def convert_to_cloud(self):
-        logging.info(f"Air at elevation {
-                     self.position[2]} converted into cloud.")
+        # logging.info(f"Air at elevation {
+        #              self.position[2]} converted into cloud.")
         self.cell_type = 2  # Set cell type to cloud
         # Condensation increases water mass
         self.water_mass = min(1.0, self.water_mass + 0.5)
