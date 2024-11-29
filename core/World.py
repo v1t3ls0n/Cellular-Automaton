@@ -245,6 +245,16 @@ class World:
         Update all cells in the grid based on their next states, resolving collisions.
         """
         x, y, z = self.grid_size
+
+
+        # Phase 1: Compute transfers
+        transfer_map = self.accumulate_water_transfers()
+
+        # Phase 2: Apply transfers
+        self.apply_water_transfers(transfer_map)
+
+
+
         updates = {}
 
         # First pass: Compute next states
@@ -253,6 +263,17 @@ class World:
                 for k in range(z):
                     cell = self.grid[i, j, k]
                     if cell is not None and cell.cell_type != 8:  # Skip vacuum
+                        if cell.cell_type == 7:  # Rain
+                            below = self.grid[i, j, k - 1] if k - 1 >= 0 else None
+                            if below and below.cell_type in {1, 4, 5}:  # Ground types
+                                below.water_mass += cell.water_mass  # Absorb rain into ground
+                                cell.cell_type = 6  # Turn into air
+                            elif below and below.cell_type == 6:  # Air
+                                below.water_mass += cell.water_mass
+                                cell.water_mass = 0
+                            else:
+                                # Otherwise, rain continues falling
+                                cell.position = (i, j, k - 1)
                         neighbors = [
                             self.grid[nx, ny, nz]
                             for nx, ny, nz in self.get_neighbor_positions(i, j, k)
@@ -372,3 +393,45 @@ class World:
         self.total_rain = total_rain
         logging.info(f"""Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={
             self.avg_pollution}, Avg Water Mass={self.avg_water_mass} Total Cities={self.total_cities} Total Forests={self.total_forests}  Total Rain={total_rain}""")
+
+
+    def accumulate_water_transfers(self):
+        """
+        Compute all water transfers for the grid.
+        Returns a transfer map with positions as keys and transfer amounts as values.
+        """
+        transfer_map = {}
+        for i in range(self.grid_size[0]):
+            for j in range(self.grid_size[1]):
+                for k in range(self.grid_size[2]):
+                    cell = self.grid[i, j, k]
+                    if cell and cell.cell_type in {2, 6}:  # Cloud or Air
+                        neighbors = [self.grid[nx, ny, nz] for nx, ny, nz in self.get_neighbor_positions(i, j, k)]
+                        cell_transfers = cell.calculate_water_transfer(neighbors)
+                        for neighbor_pos, transfer_amount in cell_transfers.items():
+                            if neighbor_pos not in transfer_map:
+                                transfer_map[neighbor_pos] = 0
+                            transfer_map[neighbor_pos] += transfer_amount
+
+        return transfer_map
+
+    def apply_water_transfers(self, transfer_map):
+        """
+        Apply the water transfers to the grid based on the computed transfer map.
+        """
+        for (i, j, k), transfer_amount in transfer_map.items():
+            cell = self.grid[i, j, k]
+            if cell and cell.cell_type in {2, 6}:  # Cloud or Air
+                cell.water_mass += transfer_amount
+
+
+    def total_water_mass(self):
+        """
+        Calculate the total water mass in the grid for debugging.
+        """
+        return sum(
+            self.grid[i][j][k].water_mass for i in range(self.grid_size[0])
+            for j in range(self.grid_size[1])
+            for k in range(self.grid_size[2])
+            if self.grid[i, j, k] and self.grid[i, j, k].cell_type in {2, 6, 7}
+        )

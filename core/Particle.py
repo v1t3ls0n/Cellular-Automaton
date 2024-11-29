@@ -458,16 +458,18 @@ class Particle:
 
     def calculate_water_transfer(self, neighbors):
         """
-        Calculate water transfer amounts for neighboring cells.
-        Returns a dictionary with positions as keys and transfer amounts as values.
+        Calculate water transfer with neighboring cells.
         """
-        transfer_data = {}
+        transfer_map = {}
         for neighbor in neighbors:
             if neighbor.cell_type in {2, 6}:  # Cloud or Air
-                water_transfer = (neighbor.water_mass - self.water_mass) * 0.05
-                if water_transfer != 0:
-                    transfer_data[neighbor] = water_transfer
-        return transfer_data
+                diff = neighbor.water_mass - self.water_mass
+                if abs(diff) > self.config["water_transfer_threshold"]:
+                    transfer_amount = diff * 0.05  # Compute transfer amount
+                    transfer_map[neighbor.position] = transfer_amount
+
+        return transfer_map
+
 
     def calculate_dominant_wind_direction(self, neighbors):
         """
