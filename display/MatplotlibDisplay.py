@@ -1,5 +1,6 @@
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
 import numpy as np
 import logging
@@ -11,7 +12,7 @@ class MatplotlibDisplay:
 
     def __init__(self, simulation):
         self.simulation = simulation
-        self.precomputed_results = simulation.states  # Use precomputed results
+        self.precomputed_results = simulation.states
         self.current_day = 0
         self.fig = None
         self.ax_3d = None
@@ -19,244 +20,142 @@ class MatplotlibDisplay:
         self.ax_temperature = None
         self.ax_population = None
         self.ax_forests = None
-        self.ax_ice_coverage = None
-        self.precomputed_data = []  # Cache for precomputed 3D scatter data
-        self.current_elev = 20  # Default elevation
-        self.current_azim = 45  # Default azimuth
+        self.ax_table = None
+        self.precomputed_data = []
+        self.current_elev = 20
+        self.current_azim = 45
 
     def plot_3d(self):
-        """Create the plot with all relevant graphs."""
-        plt.ion()  # Enable interactive mode
-        self.fig = plt.figure(figsize=(16, 10))  # Adjusted figure size for better layout
+        """Create a scrollable UI with all relevant graphs."""
+        # Create a Tkinter root window
+        root = tk.Tk()
+        root.title("Simulation Visualization")
 
-        # Adjust the positions of subplots
-        self.ax_3d = self.fig.add_subplot(231, projection='3d')  # 3D simulation
-        self.ax_pollution = self.fig.add_subplot(232)  # Pollution graph
-        self.ax_temperature = self.fig.add_subplot(233)  # Temperature graph
-        self.ax_population = self.fig.add_subplot(234)  # Population graph
-        self.ax_forests = self.fig.add_subplot(235)  # Forest graph
+        # Create a main frame for the canvas and scrollbar
+        main_frame = tk.Frame(root)
+        main_frame.pack(fill=tk.BOTH, expand=1)
 
-        # Precompute 3D visualizations
+        # Add a canvas widget for scrolling
+        canvas = tk.Canvas(main_frame)
+        scrollbar = tk.Scrollbar(main_frame, orient=tk.VERTICAL, command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+
+        # Configure scrolling behavior
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Create the Matplotlib figure
+        self.fig = plt.figure(figsize=(12, 20))
+        self.ax_3d = self.fig.add_subplot(231, projection='3d')
+        self.ax_pollution = self.fig.add_subplot(234)
+        self.ax_temperature = self.fig.add_subplot(235)
+        self.ax_population = self.fig.add_subplot(236)
+        self.ax_forests = self.fig.add_subplot(233)
+        self.ax_table = self.fig.add_subplot(232)
+
+        # Precompute data and render initial graphs
         self.precompute_visualizations()
-
-        # Render the graphs
         self.render_pollution_graph()
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
-
-        # Add keyboard navigation
-        self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
-
-        # Render the initial day
+        self.add_config_table()
         self.render_day(self.current_day)
 
-        plt.tight_layout()  # Automatically adjust subplot spacing
-        plt.ioff()  # Disable interactive mode to ensure `plt.show()` holds the program
-        plt.show()
+        # Embed the Matplotlib figure in the Tkinter UI
+        canvas_widget = FigureCanvasTkAgg(self.fig, scrollable_frame)
+        canvas_widget.draw()
+        canvas_widget.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        # Run the Tkinter event loop
+        root.mainloop()
 
     def precompute_visualizations(self):
         """Precompute 3D scatter data for all precomputed states."""
         logging.info("Precomputing 3D visualizations...")
         for state in self.simulation.states:
-            points = []
-            colors = []
-            sizes = []  # Add a list for point sizes
+            points, colors, sizes = [], [], []
             for x in range(state.grid.shape[0]):
                 for y in range(state.grid.shape[1]):
                     for z in range(state.grid.shape[2]):
                         cell = state.grid[x][y][z]
                         if cell.get_color() is not None:
-                            # Interpolate multiple points for "densification"
-                            for dx in np.linspace(-0.1, 0.1, 2):  # Fine-tune interpolation
-                                for dy in np.linspace(-0.1, 0.1, 2):
-                                    for dz in np.linspace(-0.1, 0.1, 2):
-                                        points.append((x + dx, y + dy, z + dz))
-                                        colors.append(to_rgba(cell.get_color()))
-                                        sizes.append(80)  # Larger size for denser appearance
-                            
-                            # points.append((x , y , z ))
-                            # colors.append(to_rgba(cell.get_color()))
-                            # sizes.append(80)  # Larger size for denser appearance
-
+                            points.append((x, y, z))
+                            colors.append(to_rgba(cell.get_color()))
+                            sizes.append(80)
             self.precomputed_data.append((points, colors, sizes))
         logging.info("3D Precomputation complete.")
 
-
     def render_day(self, day):
-        """Render the cached 3D visualization for a specific day."""
-        # Save the current viewing angles
-        self.current_elev = self.ax_3d.elev
-        self.current_azim = self.ax_3d.azim
-
-        # Clear the existing plot
+        """Render the 3D scatter plot for a specific day."""
         self.ax_3d.cla()
         self.ax_3d.set_title(f"Day {day}")
-        self.ax_3d.set_axis_on()  # Simplify visualization
-
-        # Set axis limits based on the grid size
-        # x_limit, y_limit, z_limit = self.simulation.grid_size
-        # self.ax_3d.set_xlim(0, x_limit )
-        # self.ax_3d.set_ylim(0, y_limit )
-        # self.ax_3d.set_zlim(0, z_limit )
-
-        # Add axis labels
-        # self.ax_3d.set_xlabel("X-axis (Width)")
-        # self.ax_3d.set_ylabel("Y-axis (Depth)")
-        # self.ax_3d.set_zlabel("Z-axis (Height)")
-
-        # Add grid for spatial reference
         self.ax_3d.grid(True)
-
         points, colors, sizes = self.precomputed_data[day]
         xs, ys, zs = zip(*points) if points else ([], [], [])
         self.ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
 
-        # Restore the saved viewing angles
+        # Restore view angles
         self.ax_3d.view_init(elev=self.current_elev, azim=self.current_azim)
-
-        # Add legend for the simulation
-        self.add_legend()
-
         self.fig.canvas.draw_idle()
 
+    def add_config_table(self):
+        """Add a table with configuration parameters."""
+        config_params = [
+            ("Temperature Extinction", self.config["temperature_extinction_point"]),
+            ("Freezing Point", self.config["freezing_point"]),
+            ("Melting Point", self.config["melting_point"]),
+            ("Evaporation Point", self.config["evaporation_point"]),
+            ("Water Transfer Threshold", self.config["water_transfer_threshold"]),
+            # Add other parameters as needed
+        ]
 
-    def render_population_graph(self):
-        """Render the city population graph over time."""
-        self.ax_population.cla()
-        self.ax_population.set_title("City Population Over Time")
-        self.ax_population.set_xlabel("Day")
-        self.ax_population.set_ylabel("Number of Cities")
-
-        # Retrieve data
-        days = range(len(self.simulation.city_population_over_time))
-        city_population = self.simulation.city_population_over_time
-
-        # Ensure data matches the length of days
-        if len(days) == len(city_population):
-            self.ax_population.plot(days, city_population, color="purple", label="Cities")
-            self.ax_population.legend()
-        else:
-            logging.error("Data length mismatch in population graph.")
-
-    def render_forests_graph(self):
-        """Render the forest count graph over time."""
-        self.ax_forests.cla()
-        self.ax_forests.set_title("Forest Count Over Time")
-        self.ax_forests.set_xlabel("Day")
-        self.ax_forests.set_ylabel("Number of Forests")
-
-        # Retrieve data
-        days = range(len(self.simulation.forest_count_over_time))
-        forest_count = self.simulation.forest_count_over_time
-
-        if len(days) == len(forest_count):
-            self.ax_forests.plot(days, forest_count, color="green", label="Forests")
-            self.ax_forests.legend()
-        else:
-            logging.error("Data length mismatch in forest graph.")
-
-    def render_temperature_graph(self):
-        """Render the temperature graph over time."""
-        self.ax_temperature.cla()
-        self.ax_temperature.set_title("Temperature Over Time")
-        self.ax_temperature.set_xlabel("Day")
-        self.ax_temperature.set_ylabel("Average Temperature")
-
-        days = range(len(self.simulation.temperature_over_time))
-        avg_temperatures = self.simulation.temperature_over_time
-
-        if len(days) == len(avg_temperatures):
-            self.ax_temperature.plot(days, avg_temperatures, color="blue", label="Temperature")
-            self.ax_temperature.legend()
-        else:
-            logging.error("Data length mismatch in temperature graph.")
+        table_data = [[param, value] for param, value in config_params]
+        self.ax_table.axis("tight")
+        self.ax_table.axis("off")
+        self.ax_table.table(
+            cellText=table_data,
+            colLabels=["Parameter", "Value"],
+            loc="center",
+            cellLoc="center"
+        )
 
     def render_pollution_graph(self):
-        """Render the pollution graph over time."""
+        """Render pollution data."""
         self.ax_pollution.cla()
         self.ax_pollution.set_title("Pollution Over Time")
-        self.ax_pollution.set_xlabel("Day")
-        self.ax_pollution.set_ylabel("Average Pollution")
-
         days = range(len(self.simulation.pollution_over_time))
-        avg_pollution = self.simulation.pollution_over_time
+        self.ax_pollution.plot(days, self.simulation.pollution_over_time, color="red", label="Pollution")
+        self.ax_pollution.legend()
 
-        if len(days) == len(avg_pollution):
-            self.ax_pollution.plot(days, avg_pollution, color="red", label="Pollution")
-            self.ax_pollution.legend()
-        else:
-            logging.error("Data length mismatch in pollution graph.")
+    def render_temperature_graph(self):
+        """Render temperature data."""
+        self.ax_temperature.cla()
+        self.ax_temperature.set_title("Temperature Over Time")
+        days = range(len(self.simulation.temperature_over_time))
+        self.ax_temperature.plot(days, self.simulation.temperature_over_time, color="blue", label="Temperature")
+        self.ax_temperature.legend()
 
+    def render_population_graph(self):
+        """Render city population data."""
+        self.ax_population.cla()
+        self.ax_population.set_title("City Population Over Time")
+        days = range(len(self.simulation.city_population_over_time))
+        self.ax_population.plot(days, self.simulation.city_population_over_time, color="purple", label="Cities")
+        self.ax_population.legend()
 
-
-
-
-
-
-
-
-
-    def add_legend(self):
-        """Add legends explaining the cell colors, cell type numbers, and configuration values."""
-
-        # Legend for cell types
-        cell_type_legend_elements = [
-            plt.Line2D(
-                [0], [0], marker='o', color='w',
-                label=f"{cell_type}: {label}", markersize=10,
-                markerfacecolor=self.config["base_colors"][cell_type]
-            )
-            for cell_type, label in enumerate([
-                "Ocean", "Desert", "Cloud", "Ice", "Forest", "City", "Air (Sky)", "Rain", "Vacuum"
-            ])
-        ]
-
-        # Legend for initial config values
-        config_text_lines = [
-            f"{cell_type}: {label} - Temp={self.config['baseline_temperature'][cell_type]}°C, "
-            f"Pollution={self.config['baseline_pollution_level'][cell_type]}, "
-            f"Weight={self.config['cell_type_weights'][cell_type]}"
-            for cell_type, label in enumerate([
-                "Ocean", "Desert", "Cloud", "Ice", "Forest", "City", "Air (Sky)", "Rain", "Vacuum"
-            ])
-        ]
-        config_text = "\n".join(config_text_lines)
-
-        # Add the cell type legend
-        self.ax_3d.legend(
-            handles=cell_type_legend_elements,
-            loc='upper left', bbox_to_anchor=(1.1, 1.05),
-            title="Cell Types"
-        )
-
-        # Add a text box for configuration values
-        self.ax_3d.text(
-            1.1, 0.5, config_text,
-            transform=self.ax_3d.transAxes,
-            fontsize=8,
-            bbox=dict(facecolor='white', alpha=0.7),
-            verticalalignment='center',
-            horizontalalignment='left'
-        )
-
-
-
-
-
-    def handle_key_press(self, event):
-        """Handle key presses for navigating and zooming/panning the graphs."""
-        if event.key == "right":
-            self.next_day()
-        elif event.key == "left":
-            self.previous_day()
-
-    def next_day(self):
-        if self.current_day < len(self.simulation.states) - 1:
-            self.current_day += 1
-            self.render_day(self.current_day)
-
-    def previous_day(self):
-        if self.current_day > 0:
-            self.current_day -= 1
-            self.render_day(self.current_day)
+    def render_forests_graph(self):
+        """Render forest data."""
+        self.ax_forests.cla()
+        self.ax_forests.set_title("Forest Count Over Time")
+        days = range(len(self.simulation.forest_count_over_time))
+        self.ax_forests.plot(days, self.simulation.forest_count_over_time, color="green", label="Forests")
+        self.ax_forests.legend()
