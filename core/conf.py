@@ -64,7 +64,7 @@ config = {
     "natural_pollution_decay_rate": 0.02, # Pollution decreases more slowly over time
 
     # Temperature decay
-    "natural_temperature_decay_rate": 0.05, # Retains realistic cooling/heating dynamics
+    "natural_temperature_decay_rate": 0.1, # Retains realistic cooling/heating dynamics
 
     # Cloud-specific settings
     "cloud_saturation_threshold": 10,
@@ -85,8 +85,8 @@ config = {
 
     # Ratios for land cell types
     "initial_ratios": {
-        "forest": 0.3,  # Increased forest proportion
-        "city": 0.3,    # Slightly fewer cities
+        "forest": 0.2,  # Increased forest proportion
+        "city": 0.4,    # Slightly fewer cities
         "desert": 0.2,  # Balance deserts and forests
         "vacuum": 0.2,  # Significant amount of vacuum for realism
     },
