@@ -4,87 +4,97 @@
 
 config = {
     # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
-    "baseline_temperature": [15, 25, 5, -10, 20, 30, 10, 12, 0],  # Vacuum temperature set to 0
+    "baseline_temperature": [
+        15,  # Sea: Warm
+        30,  # Desert: Hot
+        5,   # Cloud: Cool
+        -15, # Ice: Freezing
+        20,  # Forest: Moderate
+        35,  # City: Hot due to urban heat
+        10,  # Air: Cool
+        12,  # Rain: Mild
+        -270 # Vacuum: Near absolute zero
+    ],
 
     "cell_type_weights": {
         0: 1.0,  # Ocean
         1: 1.2,  # Desert
-        2: 0.8,  # Cloud
-        3: 0.9,  # Ice
+        2: 0.7,  # Cloud
+        3: 0.8,  # Ice
         4: 1.5,  # Forest
         5: 2.0,  # City
         6: 0.5,  # Air
-        7: 1.1,  # Rain
+        7: 1.0,  # Rain
         8: 0.0,  # Vacuum has no weight
     },
 
     "baseline_pollution_level": [
-        5,   # 0: Sea - Some pollution due to industrial waste and ocean pollution.
-        15,  # 1: Land (desert) - Minimal pollution but may contain dust particles or localized pollution.
-        2,   # 2: Cloud - Very low pollution, mainly water vapor.
-        1,   # 3: Ice - Negligible pollution in frozen areas.
-        3,   # 4: Forest - Forests absorb pollution, so they typically have low levels.
-        50,  # 5: City - High pollution due to industrial activities, vehicles, etc.
-        10,  # 6: Air - Moderate pollution depending on proximity to cities and other sources.
-        0,   # 7: Rain - Negligible pollution as rain often helps clean the air.
-        0,   # 8: Vacuum - No pollution in empty space.
+        3,   # 0: Sea - Some pollution from industrial waste and microplastics
+        10,  # 1: Desert - Dust and localized human activity
+        1,   # 2: Cloud - Almost no pollution
+        0,   # 3: Ice - Pristine areas with negligible pollution
+        2,   # 4: Forest - Absorbs pollution; very low
+        70,  # 5: City - High pollution due to vehicles, factories, etc.
+        5,   # 6: Air - Variable based on proximity to cities
+        0,   # 7: Rain - Cleanses the atmosphere
+        0,   # 8: Vacuum - No pollution in empty space
     ],
-    
+
     "base_colors": {
         6: (1.0, 1.0, 1.0, 0.5),  # Air (transparent white)
-        2: (0.5, 0.5, 0.5, 1.0),  # Cloud (gray)
-        0: (0.0, 0.0, 1.0, 1.0),  # Ocean (blue)
-        3: (0.4, 0.8, 1.0, 1.0),  # Ice (cyan)
-        7: (0.2, 0.3, 0.5, 1.0),  # Rain (light cyan)
-        1: (1.0, 1.0, 0.0, 1.0),  # Land (gold)
-        4: (0.0, 0.5, 0.0, 1.0),  # Forest (green)
-        5: (0.5, 0.0, 0.5, 1.0),  # City (purple)
-        8: (0.0, 0.0, 0.0, 1.0),  # Vacuum (transparent/black for empty space)
+        2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
+        0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
+        3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
+        7: (0.3, 0.4, 0.6, 1.0),  # Rain (grayish-blue)
+        1: (1.0, 0.8, 0.5, 1.0),  # Desert (sandy gold)
+        4: (0.0, 0.6, 0.0, 1.0),  # Forest (lush green)
+        5: (0.4, 0.0, 0.4, 1.0),  # City (dark purple)
+        8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (fully transparent/black)
     },
 
     "extinction_point": 80,
-    "freezing_point": -10,
-    "melting_point": 45,
-    "evaporation_point": 30,
-    "water_transfer_threshold": 0.1,
+    "freezing_point": -15,  # Lowered to account for extreme cold
+    "melting_point": 10,
+    "evaporation_point": 25,
+    "water_transfer_threshold": 0.05,  # Adjusted for smoother transfer dynamics
 
     # Pollution-related thresholds
-    "pollution_damage_threshold": 10.0,  # Default pollution threshold
-    "pollution_level_tipping_point": 60,
-    "natural_pollution_decay_rate": 0.01,
+    "pollution_damage_threshold": 5.0,  # Slightly higher threshold for visible damage
+    "pollution_level_tipping_point": 50, # Increased sensitivity for ecosystem changes
+    "natural_pollution_decay_rate": 0.02, # Pollution decreases more slowly over time
 
     # Temperature decay
-    "natural_temperature_decay_rate": 0.5,
+    "natural_temperature_decay_rate": 0.4, # Retains realistic cooling/heating dynamics
 
     # Cloud-specific settings
-    "cloud_saturation_threshold": 1.5,
+    "cloud_saturation_threshold": 1.2,
 
     # Rates for environmental changes
-    "melting_rate": 0.2,
-    "evaporation_rate": 0.1,
+    "melting_rate": 0.15,  # Ice melts slower
+    "evaporation_rate": 0.05,  # Reduced evaporation rate for balance
 
     # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.2,
-    "forest_cooling_effect": 0.2,
+    "forest_pollution_absorption_rate": 0.3, # Forests absorb more pollution
+    "forest_cooling_effect": 0.3, # Slightly more cooling effect from forests
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.8,
-    "city_warming_effect": 0.8,
-    "city_temperature_upper_limit": 60,
-    "city_pollution_upper_limit": 100,
+    "city_pollution_increase_rate": 0.6, # Cities emit pollution at a steady rate
+    "city_warming_effect": 0.4, # Slightly reduced warming effect for balance
+    "city_temperature_upper_limit": 50, # Cities remain hot but capped lower
+    "city_pollution_upper_limit": 100, # Cities can accumulate significant pollution
 
     # Ratios for land cell types
     "initial_ratios": {
-        "forest": 0.1,  
-        "city": 0.4,
-        "desert": 0.1,
-        "vacuum": 0.4,  
+        "forest": 0.2,  # Increased forest proportion
+        "city": 0.3,    # Slightly fewer cities
+        "desert": 0.2,  # Balance deserts and forests
+        "vacuum": 0.3,  # Significant amount of vacuum for realism
     },
 
     # Default simulation parameters
-    "default_grid_size": (10, 10, 10),
-    "default_days": 50,
+    "default_grid_size": (20, 20, 20), # Increased grid size for more detailed simulation
+    "default_days": 100, # Longer default simulation duration
 
     # Visualization settings
-    "tint": False,
+    "tint": True, # Use tint for better visual representation
 }
