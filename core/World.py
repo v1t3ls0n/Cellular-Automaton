@@ -258,7 +258,7 @@ class World:
             self.grid = new_grid  # Replace the current grid with the updated one
             self._recalculate_global_attributes()
 
-        def resolve_collision(self, cell1, cell2):
+    def resolve_collision(self, cell1, cell2):
             """
             Handle collisions between two cells. Adjust attributes accordingly.
             """
