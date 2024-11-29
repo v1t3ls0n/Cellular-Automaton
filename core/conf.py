@@ -4,11 +4,15 @@
 
 config = {
 
-    
+    # Visualization settings
+    "tint": False, # Use tint for better visual representation
+
+ 
     # Default simulation parameters
     "default_grid_size": (10, 10, 10), # Increased grid size for more detailed simulation
-    "default_days": 10, # Longer default simulation duration
-
+    "default_days": 50, # Longer default simulation duration
+   
+ 
     # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
     "baseline_temperature": [
         15,  # Sea: Warm
@@ -59,24 +63,24 @@ config = {
     "natural_pollution_decay_rate": 0.02, # Pollution decreases more slowly over time
 
     # Temperature decay
-    "natural_temperature_decay_rate": 0.4, # Retains realistic cooling/heating dynamics
+    "natural_temperature_decay_rate": 0.01, # Retains realistic cooling/heating dynamics
 
     # Cloud-specific settings
-    "cloud_saturation_threshold": 1.2,
+    "cloud_saturation_threshold": 10,
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Ice melts slower
     "evaporation_rate": 0.05,  # Reduced evaporation rate for balance
 
     # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.3, # Forests absorb more pollution
-    "forest_cooling_effect": 0.3, # Slightly more cooling effect from forests
+    "forest_pollution_absorption_rate": 0.03, # Forests absorb more pollution
+    "forest_cooling_effect": 0.03, # Slightly more cooling effect from forests
 
     # City-specific settings
     "city_pollution_increase_rate": 0.1, # Cities emit pollution at a steady rate
     "city_warming_effect": 0.1, # Slightly reduced warming effect for balance
     "city_temperature_upper_limit": 60, # Cities remain hot but capped lower
-    "city_pollution_upper_limit": 500, # Cities can accumulate significant pollution
+    "city_pollution_upper_limit": 100, # Cities can accumulate significant pollution
 
     # Ratios for land cell types
     "initial_ratios": {
@@ -85,13 +89,12 @@ config = {
         "desert": 0.2,  # Balance deserts and forests
         "vacuum": 0.2,  # Significant amount of vacuum for realism
     },
-
-    # Visualization settings
-    "tint": False, # Use tint for better visual representation
-
+    
+    "ambient_temperature": 20,  # Base temperature in degrees Celsius
+    "cycle_amplitude": 5,       # Day-night temperature swing
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.2),  # Air (transparent white)
+        6: (1.0, 1.0, 1.0, 0.05),  # Air (transparent white)
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
         3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)

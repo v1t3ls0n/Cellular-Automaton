@@ -7,11 +7,23 @@ import logging
 
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",  # Remove the default logging level prefix
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(message)s",  # Remove the default logging level prefix
+# )
 
+
+logging.basicConfig(
+    filename="simulation.log",
+    level=logging.DEBUG,
+    # format="%(asctime)s - %(levelname)s - %(message)s",
+    # datefmt="%Y-%m-%d %H:%M:%S",
 )
+
+
+
+
+
 logging.info("Simulation started.")
 
 # Compile Cython files if requested
