@@ -138,29 +138,55 @@ class MatplotlibDisplay:
         # Auto-adjust column widths
         tree.column("Parameter", width=200, anchor=tk.W)
         tree.column("Value", anchor=tk.W)
+        # Add data to the table
+        parameter_width = 0
+        value_width = 0
 
         # Add data to the table
         for key, value in self.config.items():
             if key == "base_colors":
                 continue
-            formatted_key = key_labels.get(key, key.replace("_", " ").capitalize())
+            # Use key_labels for meaningful names
+            parameter_name = key_labels.get(key, key)
+            
+            # Format the value using format_config_value
             formatted_value = format_config_value(key, value)
-            tree.insert("", tk.END, values=(formatted_key, formatted_value))
+            
+            # Insert the row into the treeview
+            tree.insert("", "end", values=(parameter_name, formatted_value))
+            
+            # Calculate maximum width for the Parameter column
+            parameter_width = max(parameter_width, len(parameter_name))
+            
+            # Calculate maximum width for the Value column
+            value_width = max(value_width, len(formatted_value))
 
-        # Add vertical and horizontal scrollbars
-        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
-        hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
-        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        # Set the column widths to fit the data
+        font_width = 10  # Adjust as needed to match your font size and style
 
-        # Place the Treeview and scrollbars
-        tree.grid(row=0, column=0, sticky="nsew")
-        vsb.grid(row=0, column=1, sticky="ns")
-        hsb.grid(row=1, column=0, sticky="ew")
+        # Dynamically adjust the window size based on table content
+        table_width = (parameter_width + value_width) * font_width + 50  # Extra padding
+        table_height = len(self.config) * 25 + 50  # Row height times the number of rows
 
-        # Make the frame resizable
+        # Set minimum and maximum dimensions for usability
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        window_width = min(table_width, screen_width * 0.9)
+        window_height = min(table_height, screen_height * 0.9)
+
+        # Apply the calculated dimensions to the window
+        root.geometry(f"{int(window_width)}x{int(window_height)}")
+
+        # Adjust layout of root
+        root.grid_rowconfigure(0, weight=1)
+        root.grid_columnconfigure(0, weight=1)
         frame.grid_rowconfigure(0, weight=1)
         frame.grid_columnconfigure(0, weight=1)
-        config_window.after(1000, lambda: config_window.attributes("-topmost", False))
+
+        # Run the Tkinter main loop if no parent root was provided
+        if root is None:
+            root.mainloop()
+            config_window.after(1000, lambda: config_window.attributes("-topmost", False))
 
 
 
