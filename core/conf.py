@@ -1,113 +1,110 @@
 # config.py
 
 # Configuration settings for the simulation
+# config.py
+
+# Configuration settings for the simulation
 
 config = {
 
     # Visualization settings
-    "tint": False, # Use tint for better visual representation
+    "tint": False,  # Use tint for better visual representation
 
- 
     # Default simulation parameters
-    "default_grid_size": (10, 10, 10), # Increased grid size for more detailed simulation
-    "default_days": 50, # Longer default simulation duration
-   
- 
+    "default_grid_size": (10, 10, 10),  # Increased grid size for more detailed simulation
+    "default_days": 50,  # Longer default simulation duration
+
     # 0: Sea | 1: Land (desert) | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
     "baseline_temperature": [
-        15,  # Sea: Warm
-        30,  # Desert: Hot
-        5,   # Cloud: Cool
-        -15, # Ice: Freezing
-        20,  # Forest: Moderate
-        35,  # City: Hot due to urban heat
-        10,  # Air: Cool
-        12,  # Rain: Mild
-        -20 # Vacuum: Near absolute zero
+        20,  # Sea: Warmer
+        35,  # Desert: Very hot
+        10,  # Cloud: Slightly warmer
+        -10,  # Ice: Slightly less cold
+        25,  # Forest: Warmer
+        40,  # City: Hot due to urban heat
+        15,  # Air: Warmer
+        18,  # Rain: Warmer
+        -30  # Vacuum: Extremely cold
     ],
 
     "cell_type_weights": {
         0: 1.0,  # Ocean
-        1: 1.2,  # Desert
-        2: 0.7,  # Cloud
-        3: 0.8,  # Ice
-        4: 1.5,  # Forest
-        5: 2.0,  # City
-        6: 0.5,  # Air
-        7: 1.0,  # Rain
+        1: 1.5,  # Desert
+        2: 0.8,  # Cloud
+        3: 0.9,  # Ice
+        4: 2.0,  # Forest
+        5: 3.0,  # City
+        6: 0.7,  # Air
+        7: 1.2,  # Rain
         8: 0.0,  # Vacuum has no weight
     },
 
     "baseline_pollution_level": [
-        3,   # 0: Sea - Some pollution from industrial waste and microplastics
-        10,  # 1: Desert - Dust and localized human activity
-        1,   # 2: Cloud - Almost no pollution
-        0,   # 3: Ice - Pristine areas with negligible pollution
-        2,   # 4: Forest - Absorbs pollution; very low
-        70,  # 5: City - High pollution due to vehicles, factories, etc.
-        5,   # 6: Air - Variable based on proximity to cities
-        0,   # 7: Rain - Cleanses the atmosphere
-        0,   # 8: Vacuum - No pollution in empty space
+        5,   # 0: Sea - Increased pollution
+        15,  # 1: Desert - Higher pollution
+        3,   # 2: Cloud - Some pollution
+        0,   # 3: Ice - Negligible pollution
+        5,   # 4: Forest - Low pollution
+        100,  # 5: City - Extreme pollution
+        10,   # 6: Air - Moderate pollution
+        2,   # 7: Rain - Cleansing effect
+        0,   # 8: Vacuum - No pollution
     ],
 
-
-    "temperature_extinction_point": 60,
-    "freezing_point": -15,  # Lowered to account for extreme cold
-    "melting_point": 10,
-    "evaporation_point": 25,
-    "water_transfer_threshold": 0.05,  # Adjusted for smoother transfer dynamics
+    "temperature_extinction_point": 70,
+    "freezing_point": 0,  # Raised for less ice
+    "melting_point": 15,
+    "evaporation_point": 20,
+    "water_transfer_threshold": 0.1,  # Increased for faster water dynamics
+    "rain_transfer_rate": 0.1,  # Transfer rate for rain to other cells (new key)
 
     # Pollution-related thresholds
-    "pollution_damage_threshold": 5.0,  # Slightly higher threshold for visible damage
-    "pollution_level_tipping_point": 50, # Increased sensitivity for ecosystem changes
-    "natural_pollution_decay_rate": 0.02, # Pollution decreases more slowly over time
+    "pollution_damage_threshold": 3.0,  # Lowered for faster damage
+    "pollution_level_tipping_point": 30,  # More sensitive ecosystem changes
+    "natural_pollution_decay_rate": 0.01,  # Slower pollution decay
 
     # Temperature decay
-    "natural_temperature_decay_rate": 0.01, # Retains realistic cooling/heating dynamics
+    "natural_temperature_decay_rate": 0.02,  # Faster cooling/heating dynamics
 
     # Cloud-specific settings
-    "cloud_saturation_threshold": 10,
+    "cloud_saturation_threshold": 1,  # Clouds form rain faster
 
     # Rates for environmental changes
-    "melting_rate": 0.15,  # Ice melts slower
-    "evaporation_rate": 0.05,  # Reduced evaporation rate for balance
+    "melting_rate": 0.3,  # Ice melts faster
+    "evaporation_rate": 0.1,  # Increased evaporation rate
 
     # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.03, # Forests absorb more pollution
-    "forest_cooling_effect": 0.03, # Slightly more cooling effect from forests
+    "forest_pollution_absorption_rate": 0.05,  # More aggressive pollution absorption
+    "forest_cooling_effect": 0.05,  # More pronounced cooling effect
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.1, # Cities emit pollution at a steady rate
-    "city_warming_effect": 0.1, # Slightly reduced warming effect for balance
-    "city_temperature_upper_limit": 60, # Cities remain hot but capped lower
-    "city_pollution_upper_limit": 100, # Cities can accumulate significant pollution
+    "city_pollution_increase_rate": 0.3,  # Cities emit pollution rapidly
+    "city_warming_effect": 0.2,  # Increased warming effect
+    "city_temperature_upper_limit": 70,  # Cities remain very hot
+    "city_pollution_upper_limit": 200,  # Cities can accumulate extreme pollution
 
     # Ratios for land cell types
     "initial_ratios": {
-        "forest": 0.3,  # Increased forest proportion
-        "city": 0.3,    # Slightly fewer cities
-        "desert": 0.2,  # Balance deserts and forests
-        "vacuum": 0.2,  # Significant amount of vacuum for realism
+        "forest": 0.4,  # Increased forest proportion
+        "city": 0.2,  # Fewer cities
+        "desert": 0.3,  # Increased deserts
+        "vacuum": 0.1,  # Reduced vacuum
     },
-    
-    "ambient_temperature": 20,  # Base temperature in degrees Celsius
-    "cycle_amplitude": 5,       # Day-night temperature swing
+
+    "ambient_temperature": 25,  # Warmer base temperature
+    "cycle_amplitude": 10,  # Larger day-night temperature swing
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.05),  # Air (transparent white)
-        2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
-        0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
-        3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
-        7: (0.3, 0.4, 0.6, 1.0),  # Rain (grayish-blue)
-        1: (1.0, 0.8, 0.5, 1.0),  # Desert (sandy gold)
-        4: (0.0, 0.6, 0.0, 1.0),  # Forest (lush green)
-        5: (0.4, 0.0, 0.4, 1.0),  # City (dark purple)
-        8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (fully transparent/black)
+        6: (1.0, 1.0, 1.0, 0.1),  # Air (slightly opaque white)
+        2: (0.8, 0.8, 0.8, 1.0),  # Cloud (light gray)
+        0: (0.0, 0.4, 1.0, 1.0),  # Ocean (deeper blue)
+        3: (0.7, 0.9, 1.0, 1.0),  # Ice (brighter cyan)
+        7: (0.3, 0.5, 0.8, 1.0),  # Rain (brighter grayish-blue)
+        1: (1.0, 0.7, 0.4, 1.0),  # Desert (warmer sandy gold)
+        4: (0.0, 0.8, 0.0, 1.0),  # Forest (vibrant green)
+        5: (0.5, 0.0, 0.5, 1.0),  # City (brighter purple)
+        8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (fully transparent)
     },
-
-
-
-
 }
 
 
