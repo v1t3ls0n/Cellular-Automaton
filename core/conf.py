@@ -26,6 +26,18 @@ config = {
         -20 # Vacuum: Near absolute zero
     ],
 
+    "baseline_pollution_level": [
+        3,   # 0: Sea - Some pollution from industrial waste and microplastics
+        10,  # 1: Desert - Dust and localized human activity
+        1,   # 2: Cloud - Almost no pollution
+        0,   # 3: Ice - Pristine areas with negligible pollution
+        2,   # 4: Forest - Absorbs pollution; very low
+        20,  # 5: City - High pollution due to vehicles, factories, etc.
+        5,   # 6: Air - Variable based on proximity to cities
+        0,   # 7: Rain - Cleanses the atmosphere
+        0,   # 8: Vacuum - No pollution in empty space
+    ],
+
     "cell_type_weights": {
         0: 1.0,  # Ocean
         1: 1.2,  # Desert
@@ -38,30 +50,19 @@ config = {
         8: 0.0,  # Vacuum has no weight
     },
 
-    "baseline_pollution_level": [
-        3,   # 0: Sea - Some pollution from industrial waste and microplastics
-        10,  # 1: Desert - Dust and localized human activity
-        1,   # 2: Cloud - Almost no pollution
-        0,   # 3: Ice - Pristine areas with negligible pollution
-        2,   # 4: Forest - Absorbs pollution; very low
-        70,  # 5: City - High pollution due to vehicles, factories, etc.
-        5,   # 6: Air - Variable based on proximity to cities
-        0,   # 7: Rain - Cleanses the atmosphere
-        0,   # 8: Vacuum - No pollution in empty space
-    ],
 
 
-    "temperature_extinction_point": 60,
+    "temperature_extinction_point": 80,
     "freezing_point": -15,  # Lowered to account for extreme cold
-    "melting_point": 10,
-    "evaporation_point": 25,
+    "melting_point": 20,
+    "evaporation_point": 35,
         
     "water_transfer_threshold": 0.05,  # Adjusted for smoother transfer dynamics
 
     # Pollution-related thresholds
-    "pollution_damage_threshold": 5.0,  # Slightly higher threshold for visible damage
+    "pollution_damage_threshold": 10.0,  # Slightly higher threshold for visible damage
     "pollution_level_tipping_point": 50, # Increased sensitivity for ecosystem changes
-    "natural_pollution_decay_rate": 0.02, # Pollution decreases more slowly over time
+    "natural_pollution_decay_rate": 0.1, # Pollution decreases more slowly over time
 
     # Temperature decay
     "natural_temperature_decay_rate": 0.1, # Retains realistic cooling/heating dynamics
@@ -74,28 +75,28 @@ config = {
     "evaporation_rate": 0.05,  # Reduced evaporation rate for balance
 
     # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.1, # Forests absorb more pollution
-    "forest_cooling_effect": 0.1, # Slightly more cooling effect from forests
+    "forest_pollution_absorption_rate": 0.2, # Forests absorb more pollution
+    "forest_cooling_effect": 0.2, # Slightly more cooling effect from forests
 
     # City-specific settings
     "city_pollution_increase_rate": 0.1, # Cities emit pollution at a steady rate
     "city_warming_effect": 0.1, # Slightly reduced warming effect for balance
-    "city_temperature_upper_limit": 60, # Cities remain hot but capped lower
+    "city_temperature_upper_limit": 100, # Cities remain hot but capped lower
     "city_pollution_upper_limit": 100, # Cities can accumulate significant pollution
 
     # Ratios for land cell types
     "initial_ratios": {
-        "forest": 0.2,  # Increased forest proportion
+        "forest": 0.4,  # Increased forest proportion
         "city": 0.4,    # Slightly fewer cities
-        "desert": 0.2,  # Balance deserts and forests
-        "vacuum": 0.2,  # Significant amount of vacuum for realism
+        "desert": 0.1,  # Balance deserts and forests
+        "vacuum": 0.1,  # Significant amount of vacuum for realism
     },
     
     "ambient_temperature": 20,  # Base temperature in degrees Celsius
     "cycle_amplitude": 5,       # Day-night temperature swing
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.05),  # Air (transparent white)
+        6: (1.0, 1.0, 1.0, 0.1),  # Air (transparent white)
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
         3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)

@@ -142,7 +142,7 @@ class World:
                     if cell_type in {0, 3}:  # Sea/Ice
                         np.random.choice(
                             [-1, 0, 1]), np.random.choice([-1, 0, 1])
-                        # direction = (0, 0, 0)
+                        direction = (0, 0, 0)
                         
                     elif cell_type in {2, 6}:  # Cloud/Air
                         dx, dy = np.random.choice(
@@ -227,7 +227,7 @@ class World:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = self.grid[i, j, k].clone()
+                    new_grid[i, j, k] = self.grid[i, j, k]
 
         position_map = {}
         transfer_map = {}
@@ -238,12 +238,10 @@ class World:
                 for k in range(z):
                     # Use original grid for neighbor lookup
                     cell = self.grid[i, j, k]
-                    if cell.cell_type == 8:  # Skip Vacuum cells
+                    if cell.cell_type == 8:
                         continue
-
                     neighbors = self.get_neighbors(
                         i, j, k)  # Retrieve neighbors
-
                     # Unpack only the Particle objects
                     unpacked_neighbors = [
                         neighbor for neighbor, _ in neighbors]
@@ -272,12 +270,17 @@ class World:
         # Second pass: Determine new positions and resolve collisions
         for i in range(x):
             for j in range(y):
-                for k in range(z):
+                for k in range(z-1,-1,-1):
                     # Use updated grid for next position calculation
                     cell = new_grid[i, j, k]
                     next_position = cell.get_next_position()
-                    if next_position not in position_map:
-                        position_map[next_position] = cell
+                    position_map[next_position] = cell
+                    # if cell.cell_type in {0,1,3,4,5,8}:
+                    #     position_map[i,j,k] = cell
+                    # else:
+                    #     next_position = cell.get_next_position()
+                    #     position_map[next_position] = cell
+
 
 
         # Populate the new grid with updated cells
@@ -317,7 +320,7 @@ class World:
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
                     cell = self.grid[i, j, k]
-                    if cell and cell.cell_type != 6:  # Exclude air cells
+                    if cell.cell_type not in {6,8}:  # Exclude air and vacuum cells
                         total_temperature += cell.temperature
                         total_pollution += cell.pollution_level
                         total_water_mass += cell.water_mass

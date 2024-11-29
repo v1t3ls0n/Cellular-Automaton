@@ -129,8 +129,6 @@ class Particle:
         self.equilibrate_temperature(neighbors)
         self.equilibrate_pollution_level(neighbors)
 
-        # if self.cell_type in {4,6}:
-            # self.equilibrate_pollution_level(neighbors)
 
         if self.cell_type == 0:  # Ocean
             self._update_ocean(neighbors)
@@ -188,14 +186,17 @@ class Particle:
         """
         saturation_threshold = self.config["cloud_saturation_threshold"]
 
-        self.exchange_water_mass(neighbors)
-        self.direction = self.calculate_dominant_wind_direction(neighbors)
-        if self.water_mass >= saturation_threshold:
+        # self.exchange_water_mass(neighbors)
+        rain = [n for n in neighbors if n.cell_type == 7]
+        rain_aligned = self.get_aligned_neighbors(rain)
+        rain_above = self.get_above_neighbors(rain)
+        rain_below = self.get_below_neighbors(rain)
+
+        if not rain_above and not rain_aligned and self.water_mass >= saturation_threshold:
             self.convert_to_rain()
-        elif not self.is_surrounded_by_cloud_cells(neighbors):
-            self.go_up()
-        else:
-            self.stabilize_elevation()
+        # elif not self.is_surrounded_by_cloud_cells(neighbors):
+        #     self.direction = self.calculate_dominant_wind_direction(neighbors)
+
 
     def _update_ice(self, neighbors):
         """
@@ -263,36 +264,53 @@ class Particle:
         """
         Air updates behavior to rise, stabilize, or convert into clouds.
         """
-
-        self.direction = self.calculate_dominant_wind_direction(neighbors)
+        rain_above = self.get_above_neighbors([n for n in neighbors if n.cell_type == 7])
+        rain_below = self.get_below_neighbors([n for n in neighbors if n.cell_type == 7])
+        rain_aligned = self.get_aligned_neighbors([n for n in neighbors if n.cell_type == 7])
+        self.exchange_water_mass(neighbors)
 
         # Convert to cloud if saturated and in realistic height
-        if self.water_mass > self.config["cloud_saturation_threshold"] and self.position[2] >= (self.grid_size[2] - 3):
+        if self.water_mass > self.config["cloud_saturation_threshold"] and self.position[2] >= (self.grid_size[2] - 1):
             self.convert_to_cloud()
 
-        elif self.position[2] <= 2 or self.is_below_ground_level(neighbors) or self.is_below_sea_level(neighbors):
+        elif rain_above and self.is_surrounded_by_land_cells(neighbors):
+            # self.direction = self.calculate_dominant_wind_direction(neighbors)
+            # self.stabilize_elevation()
+            self.convert_to_vacuum()
+        elif rain_above:
+            self.go_down()
+            # self.convert_to_vacuum()
+        elif self.position[2] <= 2 or rain_below or self.is_below_ground_level(neighbors) or self.is_below_sea_level(neighbors):
             self.go_up()
+        # else:
+        #     self.direction = self.calculate_dominant_wind_direction(neighbors)
+
+ 
 
     def _update_rain(self, neighbors):
         """
         Rain moves downward and converts to ocean or land.
         """
+        
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
+        neighbors_above = self.get_above_neighbors(neighbors)
         # self.direction = self.calculate_dominant_wind_direction(neighbors)
+        self.go_down()
+        self.exchange_water_mass(neighbors)
 
         # If at the lowest level, convert to ocean or land
-        if self.is_at_ground_level(neighbors) or self.is_surrounded_by_sea_cells(neighbors_aligned+neighbors_below):
+        if self.is_at_ground_level(neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_aligned):
             self.convert_to_ocean()
         elif self.is_surrounded_by_land_cells(neighbors_aligned):
-            self.exchange_water_mass(neighbors)
-            self.convert_to_air()
-        elif self.is_surrounded_by_air_cells(neighbors_aligned):
             # self.exchange_water_mass(neighbors)
-            self.go_down()
-
-        if self.temperature > self.config["evaporation_point"]:
             self.convert_to_air()
+            self.stabilize_elevation()
+            # self.convert_to_vacuum()
+        elif self.is_surrounded_by_rain_cells(neighbors_above):
+            self.convert_to_vacuum()
+
+
 
     ####################################################################################################################
     ###################################### CELL  CONVERSIONS ###########################################################
@@ -346,6 +364,13 @@ class Particle:
         self.water_mass = max(0.0, self.water_mass - 0.5)
         self.temperature += 2  # Air warms during evaporation
         self.go_up()  # Air moves upward
+   
+    def convert_to_vacuum(self):
+        self.cell_type = 8
+        self.water_mass = 0
+        self.pollution_level = 0
+        self.direction = (0,0,0)
+
 
     def convert_to_rain(self):
         self.cell_type = 7  # Set cell type to rain
@@ -553,7 +578,7 @@ class Particle:
         """
         # return all(neighbor.cell_type in {0, 3} for neighbor in neighbors)
         # Majority are sea cells
-        return sum(n.cell_type == 0 for n in neighbors) > len(neighbors) / 2
+        return sum(n.cell_type in {0,3} for n in neighbors) > len(neighbors) / 2
 
     def is_surrounded_by_cloud_cells(self, neighbors):
         """
@@ -565,13 +590,13 @@ class Particle:
         """
         Check if the air particle is at cloud level.
         """
-        return sum(n.cell_type in {1, 4, 5, 6} for n in neighbors) == len(neighbors)   # Majority are sea cells
+        return sum(n.cell_type in {1, 4, 5, 6, 8} for n in neighbors) == len(neighbors)   # Majority are sea cells
 
     def is_surrounded_by_air_cells(self, neighbors):
         """
         Check if the air particle is at cloud level.
         """
-        return sum(n.cell_type in {6} for n in neighbors) == len(neighbors)   # Majority are sea cells
+        return sum(n.cell_type in {6,8} for n in neighbors) == len(neighbors)   # Majority are sea cells
 
     def is_surrounded_by_rain_cells(self, neighbors):
         """
