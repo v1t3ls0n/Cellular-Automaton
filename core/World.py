@@ -5,6 +5,7 @@ from .Particle import Particle
 
 
 class World:
+    config = config
     def __init__(self, grid_size=None, initial_ratios=None, day_number=0):
         """
         Initialize the World class.
@@ -40,6 +41,16 @@ class World:
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
+                    if self.grid[i,j,k] is None:
+                            self.grid[i, j, k] = Particle(
+                                cell_type=8,  # וואקום כברירת מחדל
+                                temperature=0,
+                                water_mass=0,
+                                pollution_level=0,
+                                direction=(0, 0, 0),
+                                position=(i, j, k),
+                                grid_size=self.grid_size
+                            )
                     cloned_state.grid[i, j, k] = self.grid[i, j, k].clone()
 
         return cloned_state
@@ -74,6 +85,20 @@ class World:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
+
+
+                    if self.grid[i, j, k] is None:
+                        # Default to vacuum
+                        self.grid[i, j, k] = Particle(
+                            cell_type=8,  # Vacuum
+                            temperature=0,
+                            water_mass=0,
+                            pollution_level=0,
+                            direction=(0, 0, 0),
+                            position=(i, j, k),
+                            grid_size=self.grid_size
+                        )
+
                     cell_type = 8  # Default to Vacuum
                     direction = (0, 0, 0)
 
@@ -149,20 +174,20 @@ class World:
                             [-1, 0, 1]), np.random.choice([-1, 0, 1])
                         dz = -1 if cell_type == 6 else 1  # Air falls, clouds rise
                         direction = (dx, dy, dz)
-
-                    # Create the cell
-                    temperature = baseline_temperature[cell_type] + \
-                        np.random.uniform(-2, 2)
-                    pollution = baseline_pollution_level[cell_type]
-                    self.grid[i, j, k] = Particle(
-                        cell_type=cell_type,
-                        temperature=temperature,
-                        water_mass=1 if cell_type in {0, 2, 3} else 0,
-                        pollution_level=pollution,
-                        direction=direction,
-                        position=(i, j, k),
-                        grid_size=self.grid_size
-                    )
+                    if cell_type != 8:
+                        # Create the cell
+                        temperature = baseline_temperature[cell_type] + \
+                            np.random.uniform(-2, 2)
+                        pollution = baseline_pollution_level[cell_type]
+                        self.grid[i, j, k] = Particle(
+                            cell_type=cell_type,
+                            temperature=temperature,
+                            water_mass=1 if cell_type in {0, 2, 3} else 0,
+                            pollution_level=pollution,
+                            direction=direction,
+                            position=(i, j, k),
+                            grid_size=self.grid_size
+                        )
 
         self._recalculate_global_attributes()
         logging.debug(f"Grid initialized successfully with dimensions: {
@@ -215,95 +240,132 @@ class World:
 
         return elevation_map
 
+
+
+
+
     def update_cells_on_grid(self):
         """
-        Update the cells on the grid to compute their next states and resolve collisions.
+        Update all cells in the grid based on their next states, resolving collisions.
         """
         x, y, z = self.grid_size
-        # Properly initialize a new grid to hold the updated state
-        new_grid = np.empty((x, y, z), dtype=object)
+        updates = {}
 
-        # Clone the current grid to initialize new cells
+        # First pass: Compute next states
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-                    new_grid[i, j, k] = self.grid[i, j, k]
-
-        position_map = {}
-        transfer_map = {}
-
-        # First pass: Compute the next state for all cells and collect transfers
-        for i in range(x):
-            for j in range(y):
-                for k in range(z):
-                    # Use original grid for neighbor lookup
                     cell = self.grid[i, j, k]
-                    if cell.cell_type == 8:
-                        continue
-                    neighbors = self.get_neighbors(
-                        i, j, k)  # Retrieve neighbors
-                    # Unpack only the Particle objects
-                    unpacked_neighbors = [
-                        neighbor for neighbor, _ in neighbors]
-                    new_grid[i, j, k].update_state(
-                        unpacked_neighbors)  # Update state of the cell
+                    if cell is not None and cell.cell_type != 8:  # Skip vacuum
+                        neighbors = [
+                            self.grid[nx, ny, nz]
+                            for nx, ny, nz in self.get_neighbor_positions(i, j, k)
+                            if self.grid[nx, ny, nz] is not None
+                        ]
+                        updates[(i, j, k)] = cell.compute_next_state(neighbors)
 
-                    # Compute water transfers and store in transfer map
-                    for neighbor, neighbor_pos in neighbors:
-                        if neighbor.cell_type in {2, 6}:  # Only clouds or air
-                            transfer_amount = (
-                                neighbor.water_mass - cell.water_mass) * 0.05
-                            if transfer_amount != 0:
-                                transfer_key = ((i, j, k), neighbor_pos)
-                                transfer_map[transfer_key] = transfer_map.get(
-                                    transfer_key, 0) + transfer_amount
+        # Second pass: Resolve collisions
+        position_map = {}
+        for (i, j, k), updated_cell in updates.items():
+            next_position = updated_cell.get_next_position()
+            if next_position not in position_map:
+                position_map[next_position] = updated_cell
+            else:
+                position_map[next_position] = self.resolve_collision(
+                    position_map[next_position], updated_cell
+                )
 
-        # Apply transfers to update water mass
-        for (from_pos, to_pos), transfer in transfer_map.items():
-            fx, fy, fz = from_pos
-            tx, ty, tz = to_pos
-            if 0 <= fx < x and 0 <= fy < y and 0 <= fz < z:
-                new_grid[fx, fy, fz].water_mass -= transfer
-            if 0 <= tx < x and 0 <= ty < y and 0 <= tz < z:
-                new_grid[tx, ty, tz].water_mass += transfer
+        # Populate the new grid
+        new_grid = np.empty_like(self.grid)
+        for (i, j, k), cell in position_map.items():
+            new_grid[i, j, k] = cell
 
-        # Second pass: Determine new positions and resolve collisions
+        # Fill remaining cells with vacuum
         for i in range(x):
             for j in range(y):
-                for k in range(z-1,-1,-1):
-                    # Use updated grid for next position calculation
-                    cell = new_grid[i, j, k]
-                    next_position = cell.get_next_position()
-                    position_map[next_position] = cell
-                    # if cell.cell_type in {0,1,3,4,5,8}:
-                    #     position_map[i,j,k] = cell
-                    # else:
-                    #     next_position = cell.get_next_position()
-                    #     position_map[next_position] = cell
+                for k in range(z):
+                    if new_grid[i, j, k] is None:
+                        new_grid[i, j, k] = Particle(
+                            cell_type=8,  # Vacuum
+                            temperature=0,
+                            water_mass=0,
+                            pollution_level=0,
+                            direction=(0, 0, 0),
+                            position=(i, j, k),
+                            grid_size=self.grid_size
+                        )
 
-
-
-        # Populate the new grid with updated cells
-        for (ni, nj, nk), updated_cell in position_map.items():
-            new_grid[ni, nj, nk] = updated_cell
-
-        self.grid = new_grid  # Replace the current grid with the updated one
+        self.grid = new_grid
         self._recalculate_global_attributes()
 
 
-    def get_neighbors(self, x, y, z):
+
+
+    def resolve_collision(self, cell1, cell2):
         """
-        Get the neighbors of the cell at position (x, y, z) and their positions.
+        פותר התנגשויות בין שני תאים, מעדכן את המצב בהתאם לחוקים.
+        """
+        if cell1.cell_type == cell2.cell_type:
+            # מיזוג תכונות כאשר סוג התא זהה
+            cell1.water_mass += cell2.water_mass
+            cell1.temperature = (cell1.temperature + cell2.temperature) / 2
+            return cell1
+        else:
+            # קביעת קדימות לפי משקל הסוג
+            if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type]:
+                return cell1
+            else:
+                return cell2
+
+
+
+    def get_neighbor_positions(self, i, j, k):
+        """
+        Get the positions of neighboring cells for the given cell position (i, j, k).
+        
+        Args:
+            i (int): The x-coordinate of the cell.
+            j (int): The y-coordinate of the cell.
+            k (int): The z-coordinate of the cell.
+
+        Returns:
+            list: A list of tuples representing the positions of neighboring cells.
         """
         neighbors = []
-        positions = []
-        for dx, dy, dz in [(-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1), (0, 0, 1)]:
-            nx, ny, nz = x + dx, y + dy, z + dz
+        directions = [
+            (-1, 0, 0), (1, 0, 0),  # Left and right
+            (0, -1, 0), (0, 1, 0),  # Up and down
+            (0, 0, -1), (0, 0, 1)   # Below and above
+        ]
+
+        for dx, dy, dz in directions:
+            nx, ny, nz = i + dx, j + dy, k + dz
             if 0 <= nx < self.grid_size[0] and 0 <= ny < self.grid_size[1] and 0 <= nz < self.grid_size[2]:
-                neighbors.append(self.grid[nx, ny, nz])
-                positions.append((nx, ny, nz))
-        # Return both neighbors and positions
-        return list(zip(neighbors, positions))
+                neighbors.append((nx, ny, nz))
+
+        return neighbors
+
+
+
+
+
+
+
+    # def get_neighbors(self, x, y, z):
+    #     """
+    #     Get the neighbors of the cell at position (x, y, z) and their positions.
+    #     """
+    #     neighbors = []
+    #     positions = []
+    #     for dx, dy, dz in [(-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1), (0, 0, 1)]:
+    #         nx, ny, nz = x + dx, y + dy, z + dz
+    #         if 0 <= nx < self.grid_size[0] and 0 <= ny < self.grid_size[1] and 0 <= nz < self.grid_size[2]:
+    #             neighbors.append(self.grid[nx, ny, nz])
+    #             positions.append((nx, ny, nz))
+    #     # Return both neighbors and positions
+    #     return list(zip(neighbors, positions))
+    
+
 
     def _recalculate_global_attributes(self):
         """
@@ -319,16 +381,19 @@ class World:
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
+
                     cell = self.grid[i, j, k]
-                    if cell.cell_type not in {6,8}:  # Exclude air and vacuum cells
-                        total_temperature += cell.temperature
-                        total_pollution += cell.pollution_level
-                        total_water_mass += cell.water_mass
-                        if cell.cell_type == 5:  # City
+                    if cell is None:
+                        continue
+
+                    total_temperature += cell.temperature
+                    total_pollution += cell.pollution_level
+                    total_water_mass += cell.water_mass
+                    if cell.cell_type == 5:  # City
                             total_cities += 1
-                        elif cell.cell_type == 4:  # Forest
+                    elif cell.cell_type == 4:  # Forest
                             total_forests += 1
-                        total_cells += 1
+                    total_cells += 1
 
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
         self.avg_pollution = total_pollution / total_cells if total_cells > 0 else 0

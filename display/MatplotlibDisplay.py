@@ -247,6 +247,7 @@ class MatplotlibDisplay:
             for x in range(state.grid.shape[0]):
                 for y in range(state.grid.shape[1]):
                     for z in range(state.grid.shape[2]):
+        
                         cell = state.grid[x][y][z]
                         if cell.get_color() is not None:
                             # Interpolate multiple points for "densification"

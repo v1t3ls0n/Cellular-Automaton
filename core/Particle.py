@@ -154,6 +154,11 @@ class Particle:
         elif self.cell_type == 7:  # Rain
             self._update_rain(neighbors)
 
+
+
+
+
+
     def _update_ocean(self, neighbors):
         """
         Ocean behavior: evaporates, freezes, or stabilizes.
@@ -636,3 +641,35 @@ class Particle:
 
     def get_aligned_neighbors(self, neighbors):
         return [n for n in neighbors if n.position[2] == self.position[2]]
+
+
+
+    def compute_next_state(self, neighbors):
+        """
+        Compute the next state of the particle based on its type and neighbors.
+        """
+        new_cell = self.clone()
+        new_cell._apply_natural_decay()
+        new_cell.equilibrate_temperature(neighbors)
+        new_cell.equilibrate_pollution_level(neighbors)
+
+
+        # Apply specific update logic based on the cell type
+        if self.cell_type == 0:  # Ocean
+            new_cell._update_ocean(neighbors)
+        elif self.cell_type == 1:  # Desert
+            new_cell._update_desert(neighbors)
+        elif self.cell_type == 2:  # Cloud
+            new_cell._update_cloud(neighbors)
+        elif self.cell_type == 3:  # Ice
+            new_cell._update_ice(neighbors)
+        elif self.cell_type == 4:  # Forest
+            new_cell._update_forest(neighbors)
+        elif self.cell_type == 5:  # City
+            new_cell._update_city(neighbors)
+        elif self.cell_type == 6:  # Air
+            new_cell._update_air(neighbors)
+        elif self.cell_type == 7:  # Rain
+            new_cell._update_rain(neighbors)
+
+        return new_cell
