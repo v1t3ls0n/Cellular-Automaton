@@ -2,24 +2,39 @@ from core.World import World  # Import the World class
 import logging
 
 class Simulation:
+    """
+    The Simulation class is responsible for managing the lifecycle of a simulation,
+    including initialization, precomputing states over a specified number of days,
+    and analyzing results.
+    """
+
     def __init__(self, grid_size, initial_ratios, days):
         """
         Initialize the Simulation class with initial conditions.
+
+        Args:
+            grid_size (tuple): Dimensions of the grid (x, y, z).
+            initial_ratios (dict): Initial ratios for different cell types (e.g., forest, city, desert).
+            days (int): Number of days to run the simulation.
         """
         self.grid_size = grid_size
         self.initial_ratios = initial_ratios
         self.days = days
 
-        self.states = []  # Store the history of World objects
-        # Initialize aggregates
-        self.pollution_over_time = []
-        self.temperature_over_time = []
-        self.city_population_over_time = []
-        self.forest_count_over_time = []
+        self.states = []  # Store the history of World objects (one per day)
+
+        # Aggregates to track various metrics over time
+        self.pollution_over_time = []  # Average pollution over time
+        self.temperature_over_time = []  # Average temperature over time
+        self.city_population_over_time = []  # Total number of city cells over time
+        self.forest_count_over_time = []  # Total number of forest cells over time
 
     def _update_aggregates(self, state):
         """
-        Update aggregates based on the current state's attributes.
+        Update aggregate metrics based on the current state.
+
+        Args:
+            state (World): The current state of the world.
         """
         self.pollution_over_time.append(state.avg_pollution)
         self.temperature_over_time.append(state.avg_temperature)
@@ -28,9 +43,15 @@ class Simulation:
 
     def precompute(self):
         """
-        Run the simulation for the specified number of days.
+        Run the simulation for the specified number of days and precompute all states.
+        This function initializes the grid and iteratively updates it for each day.
+
+        Steps:
+        1. Initialize the first state (Day 0).
+        2. For each day, clone the last state, update it, and store it.
+        3. Update aggregates for analysis.
         """
-        # Initialize the first state
+        # Initialize the first state (Day 0)
         initial_state = World(
             grid_size=self.grid_size,
             initial_ratios=self.initial_ratios,
@@ -38,21 +59,26 @@ class Simulation:
         )
         initial_state.initialize_grid()
         self.states.append(initial_state)
-        self._update_aggregates(initial_state)
+        self._update_aggregates(initial_state)  # Update aggregates for Day 0
 
+        # Simulate for the specified number of days
         for day in range(self.days):
             logging.info(f"Day {day + 1}...")
-            # Compute the next state by cloning and updating
+
+            # Compute the next state by cloning the current state
             next_state = self.states[-1].clone()
-            next_state.day_number += 1
-            next_state.update_cells_on_grid()
-            self.states.append(next_state)
-            self._update_aggregates(next_state)
+            next_state.day_number += 1  # Increment the day number
+            next_state.update_cells_on_grid()  # Update the grid cells
+            self.states.append(next_state)  # Store the new state
+            self._update_aggregates(next_state)  # Update aggregates
             logging.info(f"Next state (Day {day + 1}) added.")
 
     def analyze(self):
         """
-        Analyze the simulation history and return aggregates.
+        Analyze the simulation history and return aggregates for analysis.
+
+        Returns:
+            dict: Aggregates including pollution, temperature, city counts, and forest counts over time.
         """
         return {
             "pollution": self.pollution_over_time,
@@ -63,7 +89,10 @@ class Simulation:
 
     def get_averages_over_time(self):
         """
-        Retrieve averages and counts over time.
+        Retrieve averages and counts of metrics over the simulation period.
+
+        Returns:
+            dict: Averages of temperature, pollution, city counts, and forest counts over time.
         """
         return {
             "temperature": self.temperature_over_time,
