@@ -1,25 +1,24 @@
 import sys
 import subprocess
 from core.conf import config, particle_mapping, key_labels
-# from core.Simulation import Simulation
 from core.Simulation import Simulation
 from display.MatplotlibDisplay import MatplotlibDisplay
 import logging
 
 
 # Set up logging
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format="%(message)s",  # Remove the default logging level prefix
-# )
-
-
 logging.basicConfig(
-    filename="simulation.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+    format="%(message)s",  # Remove the default logging level prefix
 )
+
+
+# logging.basicConfig(
+#     filename="simulation.log",
+#     level=logging.INFO,
+#     format="%(asctime)s - %(levelname)s - %(message)s",
+#     datefmt="%Y-%m-%d %H:%M:%S",
+# )
 
 
 

@@ -5,13 +5,21 @@ from .Particle import Particle
 
 
 class World:
+    """
+    Represents the simulation world, including the grid of particles and associated behaviors.
+    """
+
     config = config
 
     def __init__(self, grid_size=None, initial_ratios=None, day_number=0):
         """
         Initialize the World class.
+
+        Args:
+            grid_size (tuple): Dimensions of the grid (x, y, z). Defaults to config's default grid size.
+            initial_ratios (dict): Initial ratios for cell types. Defaults to config's initial ratios.
+            day_number (int): The current day in the simulation.
         """
-        # Set grid size and default ratios from config if not provided
         self.grid_size = grid_size or config["default_grid_size"]
         self.grid = np.empty(self.grid_size, dtype=object)
 
@@ -19,14 +27,16 @@ class World:
         self.initial_cities_ratio = initial_ratios["city"]
         self.initial_forests_ratio = initial_ratios["forest"]
         self.initial_deserts_ratio = initial_ratios["desert"]
-        self.initial_deserts_ratio = initial_ratios["desert"]
         self.initial_vacuum_ratio = initial_ratios["vacuum"]
 
         self.day_number = day_number
 
     def clone(self):
         """
-        Create a deep clone of the current state.
+        Create a deep copy of the current World state.
+
+        Returns:
+            World: A cloned instance of the current World.
         """
         cloned_state = World(
             grid_size=self.grid_size,
@@ -44,7 +54,7 @@ class World:
                 for k in range(self.grid_size[2]):
                     if self.grid[i, j, k] is None:
                         self.grid[i, j, k] = Particle(
-                            cell_type=8,  # וואקום כברירת מחדל
+                            cell_type=8,  # Default to Vacuum
                             temperature=0,
                             water_mass=0,
                             pollution_level=0,
@@ -58,8 +68,23 @@ class World:
 
     def initialize_grid(self):
         """
-        Initialize the grid with a realistic distribution of oceans, forests, cities, deserts, and other elements.
-        Includes logic to prevent overlapping forests/cities and adjusts cloud/air probabilities dynamically by height.
+        Initialize the grid with a realistic distribution of various cell types, such as oceans, forests, cities,
+        deserts, and other elements. Includes logic to:
+        - Prevent overlapping forests and cities.
+        - Adjust cloud/air probabilities dynamically based on elevation.
+        - Ensure diversity in cell types while maintaining realistic environmental conditions.
+
+        The initialization process uses a combination of ratios (e.g., for deserts, forests, cities, vacuum) and 
+        elevation mapping (generated using Perlin noise) to assign cell types and properties.
+
+        Steps:
+        1. Generate an elevation map for terrain features.
+        2. Normalize initial ratios to calculate probabilities for cell assignment.
+        3. Loop through all cells in the grid, assigning types based on height and neighboring conditions.
+        4. Configure additional properties like temperature, pollution, and direction for dynamic cells.
+
+        Returns:
+            None
         """
         x, y, z = self.grid_size
         elevation_map = self._generate_elevation_map()
@@ -77,9 +102,9 @@ class World:
         deserts_ratio = self.initial_deserts_ratio / total_ratio
         vacuum_ratio = self.initial_vacuum_ratio / total_ratio
 
-        plane_surfaces_map = {}  # Use a dictionary to track the surface type
+        plane_surfaces_map = {}  # Tracks the type of surface for each plane
 
-        # Use cell properties from config
+        # Use baseline values for temperature and pollution from config
         baseline_temperature = config["baseline_temperature"]
         baseline_pollution_level = config["baseline_pollution_level"]
 
@@ -105,31 +130,38 @@ class World:
                     if k == 0:
                         # Surface layer: Assign initial sea or land
                         cell_type = np.random.choice(
-                            [0, 1], p=[0.5, 0.5])  # 50% Sea, 50% Land
-                        plane_surfaces_map[(
-                            i, j, k)] = 'unused_land' if cell_type == 1 else 'sea'
+                            [0, 1], p=[0.5, 0.5]  # 50% Sea, 50% Land
+                        )
+                        plane_surfaces_map[(i, j, k)] = (
+                            'unused_land' if cell_type == 1 else 'sea'
+                        )
                     else:
                         # Check the surface type below this cell
                         surface_type = plane_surfaces_map.get(
-                            (i, j, k - 1), 'sky')
+                            (i, j, k - 1), 'sky'
+                        )
 
                         if surface_type == 'sea':
+                            # Sea layer behavior
                             if k < elevation_map[i, j]:
                                 cell_type = np.random.choice(
                                     # Mostly sea, some ice
-                                    [0, 3], p=[0.99, 0.01])
+                                    [0, 3], p=[0.99, 0.01]
+                                )
                             elif k == elevation_map[i, j]:
                                 cell_type = np.random.choice(
-                                    [0, 3, 6], p=[0.65, 0.05, 0.3])  # Sea/Ice/Air
+                                    [0, 3, 6], p=[0.65, 0.05, 0.3]  # Sea/Ice/Air
+                                )
                             elif k > elevation_map[i, j]:  # Above sea
                                 cell_type = self._get_dynamic_air_or_cloud_type(
                                     k, z)
 
                         elif surface_type == 'unused_land':
+                            # Land layer behavior
                             if k <= elevation_map[i, j]:
                                 cell_type = 1  # Unused Land (Desert)
                             elif k == elevation_map[i, j] + 1:
-                                # Prevent placing forests/cities above existing forests/cities
+                                # Prevent forests/cities above existing forests/cities
                                 if plane_surfaces_map.get((i, j, k - 1)) != 'used_land':
                                     cell_type = np.random.choice(
                                         [1, 4, 5, 8],
@@ -151,7 +183,7 @@ class World:
                             cell_type = self._get_dynamic_air_or_cloud_type(
                                 k, z)
 
-                    # Update plane_surfaces_map
+                    # Update the plane_surfaces_map based on the assigned cell type
                     if cell_type in {0, 3}:  # Sea or Ice
                         plane_surfaces_map[(i, j, k)] = 'sea'
                     elif cell_type == 1:  # Unused Land (Desert)
@@ -163,19 +195,17 @@ class World:
                     elif cell_type == 8:  # Vacuum
                         plane_surfaces_map[(i, j, k)] = 'vacuum'
 
-                    # Set direction for dynamic cells
+                    # Assign direction for dynamic cells
                     if cell_type in {0, 3}:  # Sea/Ice
-                        np.random.choice(
-                            [-1, 0, 1]), np.random.choice([-1, 0, 1])
-                        direction = (0, 0, 0)
-
+                        direction = (0, 0, 0)  # Static cells
                     elif cell_type in {2, 6}:  # Cloud/Air
                         dx, dy = np.random.choice(
                             [-1, 0, 1]), np.random.choice([-1, 0, 1])
                         dz = -1 if cell_type == 6 else 1  # Air falls, clouds rise
                         direction = (dx, dy, dz)
+
                     if cell_type != 8:
-                        # Create the cell
+                        # Create the particle for the cell
                         temperature = baseline_temperature[cell_type] + \
                             np.random.uniform(-2, 2)
                         pollution = baseline_pollution_level[cell_type]
@@ -189,13 +219,20 @@ class World:
                             grid_size=self.grid_size
                         )
 
-        self._recalculate_global_attributes()
+        self._recalculate_global_attributes()  # Update global stats
         logging.info(f"Grid initialized successfully with dimensions: {
-            self.grid_size}")
+                     self.grid_size}")
 
     def _get_dynamic_air_or_cloud_type(self, k, z):
         """
-        Determine the type of air, cloud, or vacuum based on elevation.
+        Determine the type of Air, Cloud, or Vacuum based on elevation.
+
+        Args:
+            k (int): Current elevation.
+            z (int): Maximum elevation.
+
+        Returns:
+            int: Cell type (6: Air, 2: Cloud, 8: Vacuum).
         """
         vacuum_ratio = self.initial_vacuum_ratio
 
@@ -211,7 +248,7 @@ class World:
         else:
             return 6  # Default to Air
 
-        # Normalize probabilities to ensure they sum to 1
+        # Normalize probabilities
         total_ratio = air_ratio + cloud_ratio + vacuum_ratio
         air_ratio /= total_ratio
         cloud_ratio /= total_ratio
@@ -222,14 +259,17 @@ class World:
     def _generate_elevation_map(self):
         """
         Generate an elevation map using Perlin noise for smooth terrain.
+
+        Returns:
+            np.ndarray: A 2D elevation map.
         """
         from noise import pnoise2
 
         x, y, _ = self.grid_size
         elevation_map = np.zeros((x, y))
 
-        scale = 10.0  # Adjust for larger/smaller features
-        octaves = 10  # Higher value for more detail
+        scale = 10.0  # Scale for terrain features
+        octaves = 10  # Detail level
         persistence = 0.5
         lacunarity = 2.0
 
@@ -242,11 +282,11 @@ class World:
 
     def update_cells_on_grid(self):
         """
-        Update all cells in the grid based on their next states, resolving collisions.
+        Update all cells in the grid based on their next states and resolve collisions.
         """
         x, y, z = self.grid_size
 
-        # Phase 1: Compute transfers
+        # Phase 1: Compute water transfers
         transfer_map = self.accumulate_water_transfers()
 
         # Phase 2: Apply transfers
@@ -254,7 +294,7 @@ class World:
 
         updates = {}
 
-        # First pass: Compute next states
+        # Phase 3: Compute next states for all cells
         for i in range(x):
             for j in range(y):
                 for k in range(z):
@@ -265,13 +305,12 @@ class World:
                                               1] if k - 1 >= 0 else None
                             # Ground types
                             if below and below.cell_type in {1, 4, 5}:
-                                below.water_mass += cell.water_mass  # Absorb rain into ground
+                                below.water_mass += cell.water_mass  # Absorb rain
                                 cell.cell_type = 6  # Turn into air
                             elif below and below.cell_type == 6:  # Air
                                 below.water_mass += cell.water_mass
                                 cell.water_mass = 0
-                            else:
-                                # Otherwise, rain continues falling
+                            else:  # Rain continues falling
                                 cell.position = (i, j, k - 1)
                         neighbors = [
                             self.grid[nx, ny, nz]
@@ -280,7 +319,7 @@ class World:
                         ]
                         updates[(i, j, k)] = cell.compute_next_state(neighbors)
 
-        # Second pass: Resolve collisions
+        # Phase 4: Resolve collisions
         position_map = {}
         for (i, j, k), updated_cell in updates.items():
             next_position = updated_cell.get_next_position()
@@ -291,7 +330,7 @@ class World:
                     position_map[next_position], updated_cell
                 )
 
-        # Populate the new grid
+        # Phase 5: Populate the new grid
         new_grid = np.empty_like(self.grid)
         for (i, j, k), cell in position_map.items():
             new_grid[i, j, k] = cell
@@ -315,6 +354,16 @@ class World:
         self._recalculate_global_attributes()
 
     def resolve_collision(self, cell1, cell2):
+        """
+        Resolve collisions between two cells.
+
+        Args:
+            cell1 (Particle): The first cell involved in the collision.
+            cell2 (Particle): The second cell involved in the collision.
+
+        Returns:
+            Particle: The resolved cell after the collision.
+        """
         # Rain falls through air or vacuum
         if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:
             return cell1
@@ -354,7 +403,8 @@ class World:
 
     def _recalculate_global_attributes(self):
         """
-        Recalculate global attributes based on the current grid.
+        Recalculate global attributes like average temperature, pollution, water mass,
+        and counts of cities, forests, and rain cells.
         """
         total_temperature = 0
         total_pollution = 0
@@ -367,7 +417,6 @@ class World:
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
-
                     cell = self.grid[i, j, k]
                     if cell is None:
                         continue
@@ -390,13 +439,21 @@ class World:
         self.total_cities = total_cities
         self.total_forests = total_forests
         self.total_rain = total_rain
-        logging.info(f"""Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={
-            self.avg_pollution}, Avg Water Mass={self.avg_water_mass} Total Cities={self.total_cities} Total Forests={self.total_forests}  Total Rain={total_rain}""")
+        logging.info(
+            f"Recalculated global attributes: Avg Temp={
+                self.avg_temperature}, "
+            f"Avg Pollution={self.avg_pollution}, Avg Water Mass={
+                self.avg_water_mass}, "
+            f"Total Cities={self.total_cities}, Total Forests={
+                self.total_forests}, Total Rain={total_rain}"
+        )
 
     def accumulate_water_transfers(self):
         """
         Compute all water transfers for the grid.
-        Returns a transfer map with positions as keys and transfer amounts as values.
+
+        Returns:
+            dict: A transfer map with positions as keys and transfer amounts as values.
         """
         transfer_map = {}
         for i in range(self.grid_size[0]):
@@ -404,14 +461,14 @@ class World:
                 for k in range(self.grid_size[2]):
                     cell = self.grid[i, j, k]
                     if cell and cell.cell_type in {2, 6}:  # Cloud or Air
-                        neighbors = [self.grid[nx, ny, nz] for nx, ny,
-                                     nz in self.get_neighbor_positions(i, j, k)]
+                        neighbors = [
+                            self.grid[nx, ny, nz] for nx, ny, nz in self.get_neighbor_positions(i, j, k)
+                        ]
                         cell_transfers = cell.calculate_water_transfer(
                             neighbors)
                         for neighbor_pos, transfer_amount in cell_transfers.items():
-                            if neighbor_pos not in transfer_map:
-                                transfer_map[neighbor_pos] = 0
-                            transfer_map[neighbor_pos] += transfer_amount
+                            transfer_map[neighbor_pos] = transfer_map.get(
+                                neighbor_pos, 0) + transfer_amount
 
         return transfer_map
 
@@ -426,10 +483,14 @@ class World:
 
     def total_water_mass(self):
         """
-        Calculate the total water mass in the grid for debugging.
+        Calculate the total water mass in the grid for debugging purposes.
+
+        Returns:
+            float: Total water mass in the grid.
         """
         return sum(
-            self.grid[i][j][k].water_mass for i in range(self.grid_size[0])
+            self.grid[i][j][k].water_mass
+            for i in range(self.grid_size[0])
             for j in range(self.grid_size[1])
             for k in range(self.grid_size[2])
             if self.grid[i, j, k] and self.grid[i, j, k].cell_type in {2, 6, 7}
