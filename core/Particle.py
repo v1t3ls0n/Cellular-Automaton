@@ -149,6 +149,7 @@ class Particle:
 
 
     def _update_cloud(self, neighbors):
+        self.exchange_water_mass(neighbors)
         saturation_threshold = self.config["cloud_saturation_threshold"]
         if self.water_mass >= saturation_threshold:
             logging.info(f"Cloud at {self.position} converting to rain.")

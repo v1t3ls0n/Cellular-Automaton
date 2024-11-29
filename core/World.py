@@ -6,6 +6,7 @@ from .Particle import Particle
 
 class World:
     config = config
+
     def __init__(self, grid_size=None, initial_ratios=None, day_number=0):
         """
         Initialize the World class.
@@ -41,16 +42,16 @@ class World:
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
-                    if self.grid[i,j,k] is None:
-                            self.grid[i, j, k] = Particle(
-                                cell_type=8,  # וואקום כברירת מחדל
-                                temperature=0,
-                                water_mass=0,
-                                pollution_level=0,
-                                direction=(0, 0, 0),
-                                position=(i, j, k),
-                                grid_size=self.grid_size
-                            )
+                    if self.grid[i, j, k] is None:
+                        self.grid[i, j, k] = Particle(
+                            cell_type=8,  # וואקום כברירת מחדל
+                            temperature=0,
+                            water_mass=0,
+                            pollution_level=0,
+                            direction=(0, 0, 0),
+                            position=(i, j, k),
+                            grid_size=self.grid_size
+                        )
                     cloned_state.grid[i, j, k] = self.grid[i, j, k].clone()
 
         return cloned_state
@@ -85,7 +86,6 @@ class World:
         for i in range(x):
             for j in range(y):
                 for k in range(z):
-
 
                     if self.grid[i, j, k] is None:
                         # Default to vacuum
@@ -168,7 +168,7 @@ class World:
                         np.random.choice(
                             [-1, 0, 1]), np.random.choice([-1, 0, 1])
                         direction = (0, 0, 0)
-                        
+
                     elif cell_type in {2, 6}:  # Cloud/Air
                         dx, dy = np.random.choice(
                             [-1, 0, 1]), np.random.choice([-1, 0, 1])
@@ -191,7 +191,7 @@ class World:
 
         self._recalculate_global_attributes()
         logging.info(f"Grid initialized successfully with dimensions: {
-                      self.grid_size}")
+            self.grid_size}")
 
     def _get_dynamic_air_or_cloud_type(self, k, z):
         """
@@ -239,10 +239,6 @@ class World:
                                                    persistence=persistence, lacunarity=lacunarity) + 1) * (self.grid_size[2] // 5))
 
         return elevation_map
-
-
-
-
 
     def update_cells_on_grid(self):
         """
@@ -298,11 +294,9 @@ class World:
         self.grid = new_grid
         self._recalculate_global_attributes()
 
-
-
-
     def resolve_collision(self, cell1, cell2):
-        if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Rain falls through air or vacuum
+        # Rain falls through air or vacuum
+        if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:
             return cell1
         elif cell2.cell_type == 7 and cell1.cell_type in {6, 8}:
             return cell2
@@ -312,12 +306,10 @@ class World:
         # Default collision resolution
         return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
 
-
-
     def get_neighbor_positions(self, i, j, k):
         """
         Get the positions of neighboring cells for the given cell position (i, j, k).
-        
+
         Args:
             i (int): The x-coordinate of the cell.
             j (int): The y-coordinate of the cell.
@@ -339,11 +331,6 @@ class World:
                 neighbors.append((nx, ny, nz))
 
         return neighbors
-
-
-
-
-
 
     def _recalculate_global_attributes(self):
         """
@@ -369,13 +356,12 @@ class World:
                     total_pollution += cell.pollution_level
                     total_water_mass += cell.water_mass
                     if cell.cell_type == 5:  # City
-                            total_cities += 1
+                        total_cities += 1
                     elif cell.cell_type == 4:  # Forest
-                            total_forests += 1
+                        total_forests += 1
                     elif cell.cell_type == 7:  # Rain
-                            total_rain += 1
-                    
-                    
+                        total_rain += 1
+
                     total_cells += 1
 
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
@@ -385,4 +371,4 @@ class World:
         self.total_forests = total_forests
         self.total_rain = total_rain
         logging.info(f"""Recalculated global attributes: Avg Temp={self.avg_temperature}, Avg Pollution={
-                      self.avg_pollution}, Avg Water Mass={self.avg_water_mass} Total Cities={self.total_cities} Total Forests={self.total_forests}  Total Rain={total_rain}""")
+            self.avg_pollution}, Avg Water Mass={self.avg_water_mass} Total Cities={self.total_cities} Total Forests={self.total_forests}  Total Rain={total_rain}""")

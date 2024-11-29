@@ -68,7 +68,7 @@ config = {
     "natural_temperature_decay_rate": 0.1, # Retains realistic cooling/heating dynamics
 
     # Cloud-specific settings
-    "cloud_saturation_threshold": 0.3,
+    "cloud_saturation_threshold": 3.0,
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Ice melts slower
