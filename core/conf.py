@@ -6,7 +6,7 @@
 
 config = {
     # Visualization settings
-    "tint": False,  # Use tint for better visual representation of pollution levels
+    "tint": True,  # Use tint for better visual representation of pollution levels
 
     # Default simulation parameters
     "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)

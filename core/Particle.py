@@ -121,7 +121,7 @@ class Particle:
             return (1.0, 1.0, 1.0, 1.0)  # Default to white color
 
         # Scale pollution intensity to a range of [0.0, 1.0]
-        pollution_intensity = max(0.0, min(self.pollution_level / 100.0, 1.0))
+        pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 1.0))
 
         # Apply red tint by modifying the RGB channels
         red_tinted_color = [

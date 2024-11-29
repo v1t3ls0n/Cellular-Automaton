@@ -223,13 +223,18 @@ class MatplotlibDisplay:
                        markersize=10, markerfacecolor=self.config["base_colors"][4]),
             plt.Line2D([0], [0], marker='o', color='w', label='5: City',
                        markersize=10, markerfacecolor=self.config["base_colors"][5]),
-            plt.Line2D([0], [0], marker='o', color='w', label='6: Air (Sky)',
+            plt.Line2D([0], [0], marker='o', color='w', label='6: Air (White With Low Opacity)',
                        markersize=10, markerfacecolor=self.config["base_colors"][6]),
             plt.Line2D([0], [0], marker='o', color='w', label='7: Rain',
                        markersize=10, markerfacecolor=self.config["base_colors"][7]),
-            plt.Line2D([0], [0], marker='o', color='w', label='8: Vacuum',
-                       markersize=10, markerfacecolor=self.config["base_colors"][8]),
-        ]
+            plt.Line2D([0], [0], marker='o', color='w', label='8: Vacuum (Transparent)',
+                       markersize=10, markerfacecolor=self.config["base_colors"][8])]
+        
+        if self.config['tint']:
+            tinted_red = plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution Levels (Tinted Color)',
+                        markersize=10, markerfacecolor='red')
+            legend_elements.append(tinted_red)
+        
         self.ax_color_map.legend(
             handles=legend_elements,
             loc="center",

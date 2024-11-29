@@ -1,5 +1,3 @@
-import sys
-import subprocess
 from core.conf import config, particle_mapping, key_labels
 from core.Simulation import Simulation
 from display.MatplotlibDisplay import MatplotlibDisplay
@@ -26,11 +24,6 @@ logging.basicConfig(
 
 logging.info("Simulation started.")
 
-# Compile Cython files if requested
-if "--compile" in sys.argv:
-    print("Compiling Cython files...")
-    subprocess.run(["python", "setup.py", "build_ext", "--inplace"], cwd="core", check=True)
-    print("Compilation complete.")
 
 
 # Function to get user input for all configuration parameters
