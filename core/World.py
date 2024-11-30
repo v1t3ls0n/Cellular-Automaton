@@ -426,6 +426,57 @@ class World:
 
         return neighbors
 
+
+    def accumulate_water_transfers(self):
+        """
+        Compute all water transfers for the grid.
+
+        Returns:
+            dict: A transfer map with positions as keys and transfer amounts as values.
+        """
+        transfer_map = {}
+        for i in range(self.grid_size[0]):
+            for j in range(self.grid_size[1]):
+                for k in range(self.grid_size[2]):
+                    cell = self.grid[i, j, k]
+                    if cell and cell.cell_type in {2, 6}:  # Cloud or Air
+                        neighbors = [
+                            self.grid[nx, ny, nz] for nx, ny, nz in self.get_neighbor_positions(i, j, k)
+                        ]
+                        cell_transfers = cell.calculate_water_transfer(
+                            neighbors)
+                        for neighbor_pos, transfer_amount in cell_transfers.items():
+                            transfer_map[neighbor_pos] = transfer_map.get(
+                                neighbor_pos, 0) + transfer_amount
+
+        return transfer_map
+
+    def apply_water_transfers(self, transfer_map):
+        """
+        Apply the water transfers to the grid based on the computed transfer map.
+        """
+        for (i, j, k), transfer_amount in transfer_map.items():
+            cell = self.grid[i, j, k]
+            if cell and cell.cell_type in {2, 6}:  # Cloud or Air
+                cell.water_mass += transfer_amount
+
+    def total_water_mass(self):
+        """
+        Calculate the total water mass in the grid for debugging purposes.
+
+        Returns:
+            float: Total water mass in the grid.
+        """
+        return sum(
+            self.grid[i][j][k].water_mass
+            for i in range(self.grid_size[0])
+            for j in range(self.grid_size[1])
+            for k in range(self.grid_size[2])
+            if self.grid[i, j, k] and self.grid[i, j, k].cell_type in {2, 6, 7}
+        )
+
+
+
     def _recalculate_global_attributes(self):
         """
         Recalculate global attributes like average temperature, pollution, water mass,
@@ -473,51 +524,3 @@ class World:
         #     f"Total Cities={self.total_cities}, Total Forests={
         #         self.total_forests}, Total Rain={total_rain}"
         # )
-
-    def accumulate_water_transfers(self):
-        """
-        Compute all water transfers for the grid.
-
-        Returns:
-            dict: A transfer map with positions as keys and transfer amounts as values.
-        """
-        transfer_map = {}
-        for i in range(self.grid_size[0]):
-            for j in range(self.grid_size[1]):
-                for k in range(self.grid_size[2]):
-                    cell = self.grid[i, j, k]
-                    if cell and cell.cell_type in {2, 6}:  # Cloud or Air
-                        neighbors = [
-                            self.grid[nx, ny, nz] for nx, ny, nz in self.get_neighbor_positions(i, j, k)
-                        ]
-                        cell_transfers = cell.calculate_water_transfer(
-                            neighbors)
-                        for neighbor_pos, transfer_amount in cell_transfers.items():
-                            transfer_map[neighbor_pos] = transfer_map.get(
-                                neighbor_pos, 0) + transfer_amount
-
-        return transfer_map
-
-    def apply_water_transfers(self, transfer_map):
-        """
-        Apply the water transfers to the grid based on the computed transfer map.
-        """
-        for (i, j, k), transfer_amount in transfer_map.items():
-            cell = self.grid[i, j, k]
-            if cell and cell.cell_type in {0, 1, 2, 6}:  # Cloud or Air
-                cell.water_mass += transfer_amount
-
-    def total_water_mass(self):
-        """
-        Calculate the total water mass in the grid for debugging purposes.
-
-        Returns:
-            float: Total water mass in the grid.
-        """
-        return sum(
-            self.grid[i][j][k].water_mass
-            for i in range(self.grid_size[0])
-            for j in range(self.grid_size[1])
-            for k in range(self.grid_size[2])
-            if self.grid[i, j, k] and self.grid[i, j, k].cell_type in {2, 6, 7}
-        )

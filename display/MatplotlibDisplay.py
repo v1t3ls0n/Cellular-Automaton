@@ -38,92 +38,74 @@ class MatplotlibDisplay:
         root = tk.Tk()
         root.title("Simulation")
 
-        # Maximize the window without entering full-screen mode
-        # 'zoomed' state maximizes the window on most platforms
+        # Maximize the window
         root.state("zoomed")
 
-        # Define a clean exit function
         def on_close():
-            root.destroy()  # Close the main simulation window
-            exit(0)  # Ensure the Python script exits
+            root.destroy()
+            exit(0)
 
-        # Set the window close protocol
         root.protocol("WM_DELETE_WINDOW", on_close)
 
-        # Create a frame for the simulation plot and buttons
+        # Main layout
         main_frame = tk.Frame(root)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Create the control frame for buttons
+        # Control frame
         control_frame = tk.Frame(main_frame)
         control_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
-        # Add control buttons to the main simulation window
-        bring_to_front_button = tk.Button(
-            control_frame,
-            text="Bring Config to Front",
-            command=lambda: self.bring_config_to_front(),
-        )
-        bring_to_front_button.pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Bring Config to Front", command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Minimize Config Window", command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
 
-        minimize_button = tk.Button(
-            control_frame,
-            text="Minimize Config Window",
-            command=lambda: self.minimize_config_window(),
-        )
-        minimize_button.pack(side=tk.LEFT, padx=5)
-
-        # Create a frame for the simulation plot
+        # Plot frame
         plot_frame = tk.Frame(main_frame)
         plot_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Create the main figure
-        # Larger size for better spacing
-        self.fig = plt.Figure(figsize=(12, 10))
+        # Main figure and canvas
+        self.fig = plt.Figure(figsize=(16, 12), constrained_layout=True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Use GridSpec for flexible layout
-        spec = gridspec.GridSpec(nrows=3, ncols=3, figure=self.fig)
+        # Use GridSpec for flexible subplot layout
+        spec = gridspec.GridSpec(nrows=3, ncols=3, figure=self.fig, hspace=0.3, wspace=0.3)
 
-        # Adjust the positions of subplots
-        self.ax_3d = self.fig.add_subplot(
-            231, projection="3d")  # 3D simulation
-        self.ax_pollution = self.fig.add_subplot(234)  # Pollution graph
-        self.ax_temperature = self.fig.add_subplot(235)  # Temperature graph
-        self.ax_population = self.fig.add_subplot(236)  # City Population graph
-        self.ax_forests = self.fig.add_subplot(233)  # Forest graph
-        self.ax_std_dev_pollution_graph =  self.fig.add_subplot(236)  # Pollution Standard deviation Graph
-        self.ax_std_dev_temperature_graph =  self.fig.add_subplot(231)  # Temperature Standard deviation Graph
+        self.ax_3d = self.fig.add_subplot(spec[0, 0], projection="3d")
+        self.ax_pollution = self.fig.add_subplot(spec[1, 0])
+        self.ax_temperature = self.fig.add_subplot(spec[1, 1])
+        self.ax_population = self.fig.add_subplot(spec[1, 2])
+        self.ax_forests = self.fig.add_subplot(spec[2, 0])
+        self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[2, 1])
+        self.ax_std_dev_temperature_graph = self.fig.add_subplot(spec[2, 2])
 
-        self.ax_color_map = self.fig.add_subplot(
-            spec[0, 1])  # Color map legend
-        self.ax_color_map.axis("off")  # Hide axes for the legend
+        # Add legend or color map
         self.add_cell_type_legend()
 
-        # Precompute 3D visualizations
+        # Render initial graphs
         self.precompute_visualizations()
-
-        # Render the graphs
         self.render_pollution_graph()
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
         self.render_std_dev_pollution_graph()
         self.render_std_dev_temperature_graph()
-        self.add_cell_type_legend()
-
-        # Add keyboard navigation
-        self.fig.canvas.mpl_connect("key_press_event", self.handle_key_press)
-
-        # Render the initial day
         self.render_day(self.current_day)
 
-        # Display the configuration table
+        # Configuration table
         self.add_config_table_with_scrollbar(root)
 
         # Start the Tkinter event loop
         root.mainloop()
+
+
+
+
+
+
+
+
+
+
 
     def bring_config_to_front(self):
         """Bring the configuration window to the front."""
@@ -216,39 +198,50 @@ class MatplotlibDisplay:
         self.config_window.after(
             1000, lambda: self.config_window.attributes("-topmost", False))
 
+
+
+
+
     def add_cell_type_legend(self):
         """Add a legend explaining the cell colors and cell type numbers."""
         legend_elements = [
             plt.Line2D([0], [0], marker='o', color='w', label='0: Ocean',
-                       markersize=10, markerfacecolor=self.config["base_colors"][0]),
+                    markersize=10, markerfacecolor=self.config["base_colors"][0]),
             plt.Line2D([0], [0], marker='o', color='w', label='1: Desert',
-                       markersize=10, markerfacecolor=self.config["base_colors"][1]),
+                    markersize=10, markerfacecolor=self.config["base_colors"][1]),
             plt.Line2D([0], [0], marker='o', color='w', label='2: Cloud',
-                       markersize=10, markerfacecolor=self.config["base_colors"][2]),
+                    markersize=10, markerfacecolor=self.config["base_colors"][2]),
             plt.Line2D([0], [0], marker='o', color='w', label='3: Ice',
-                       markersize=10, markerfacecolor=self.config["base_colors"][3]),
+                    markersize=10, markerfacecolor=self.config["base_colors"][3]),
             plt.Line2D([0], [0], marker='o', color='w', label='4: Forest',
-                       markersize=10, markerfacecolor=self.config["base_colors"][4]),
+                    markersize=10, markerfacecolor=self.config["base_colors"][4]),
             plt.Line2D([0], [0], marker='o', color='w', label='5: City',
-                       markersize=10, markerfacecolor=self.config["base_colors"][5]),
+                    markersize=10, markerfacecolor=self.config["base_colors"][5]),
             plt.Line2D([0], [0], marker='o', color='w', label='6: Air (White With Low Opacity)',
-                       markersize=10, markerfacecolor=self.config["base_colors"][6]),
+                    markersize=10, markerfacecolor=self.config["base_colors"][6]),
             plt.Line2D([0], [0], marker='o', color='w', label='7: Rain',
-                       markersize=10, markerfacecolor=self.config["base_colors"][7]),
+                    markersize=10, markerfacecolor=self.config["base_colors"][7]),
             plt.Line2D([0], [0], marker='o', color='w', label='8: Vacuum (Transparent)',
-                       markersize=10, markerfacecolor=self.config["base_colors"][8])]
+                    markersize=10, markerfacecolor=self.config["base_colors"][8])
+        ]
         
-        if self.config['tint']:
-            tinted_red = plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution Levels (Tinted Color)',
+        if self.config.get('tint'):
+            legend_elements.append(
+                plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution Levels (Tinted Color)',
                         markersize=10, markerfacecolor='red')
-            legend_elements.append(tinted_red)
-        
-        self.ax_color_map.legend(
+            )
+
+        self.ax_temperature.legend(
             handles=legend_elements,
-            loc="center",
-            title="Cell Types",
-            frameon=False
+            loc="upper center",  # Center the legend above the plot
+            bbox_to_anchor=(0.5, -0.2),  # Position the legend below the plot
+            ncol=3,  # Arrange items in multiple columns
+            frameon=False  # Remove the legend box (optional)
         )
+
+
+
+
 
     def precompute_visualizations(self):
         """Precompute 3D scatter data for all precomputed states."""
@@ -374,8 +367,6 @@ class MatplotlibDisplay:
             self.ax_pollution.legend()
         else:
             logging.error("Data length mismatch in pollution graph.")
-
-
 
     def render_std_dev_pollution_graph(self):
         """Render the standard deviation of pollution graph over time."""
