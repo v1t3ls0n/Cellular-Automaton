@@ -221,33 +221,20 @@ class MatplotlibDisplay:
 
 
     def open_3d_in_new_window(self):
-        """Open the 3D plot in a resizable Tkinter window with padding around the legend."""
-        # Create a new Toplevel window
+        """Open a resizable 3D graph window with a Matplotlib legend and keyboard navigation."""
         self.three_d_window = tk.Toplevel()
         self.three_d_window.title("3D Visualization")
-        self.three_d_window.geometry("1000x600")  # Default size
-        self.three_d_window.minsize(600, 400)  # Set a minimum size
-        self.three_d_window.columnconfigure(0, weight=3)  # Column for the 3D plot
-        self.three_d_window.columnconfigure(1, weight=1)  # Column for the legend
-        self.three_d_window.rowconfigure(1, weight=1)  # Allow resizing for the frames
+        self.three_d_window.geometry("1200x600")  # Default size
+        self.three_d_window.minsize(800, 500)  # Minimum size
+        self.three_d_window.columnconfigure(0, weight=3)  # Column for 3D plot
+        self.three_d_window.columnconfigure(1, weight=1)  # Column for legend
+        self.three_d_window.rowconfigure(0, weight=1)  # Flexible row for content
 
         # Frame for the 3D plot
-        plot_frame = tk.Frame(self.three_d_window, bg="white")  # Add background color to blend
-        plot_frame.grid(row=1, column=0, sticky="nsew", padx=(20, 10), pady=(20, 20))  # Adjust padding
-
-        # Outer frame for the legend to add padding
-        legend_outer_frame = tk.Frame(self.three_d_window, bg="white")
-        legend_outer_frame.grid(row=1, column=1, sticky="nsew", padx=(20, 20), pady=(20, 20))  # Add padding around the legend
-
-        # Inner frame for the actual legend content
-        legend_frame = tk.Frame(legend_outer_frame, bg="white", relief=tk.GROOVE, bd=2)  # Add border for better separation
-        legend_frame.pack(fill=tk.BOTH, expand=True, padx=(15, 15), pady=(15, 15))  # Increased internal padding
-
-        # Create a Matplotlib figure and axes for the 3D plot
-        fig = plt.Figure(figsize=(6, 6), constrained_layout=True)
+        fig = plt.Figure(figsize=(8, 6), constrained_layout=True)
         ax_3d = fig.add_subplot(111, projection="3d")
 
-        # Fetch the precomputed data for the current day
+        # Fetch data for the current day
         points, colors, sizes = self.precomputed_data[self.current_day]
         xs, ys, zs = zip(*points) if points else ([], [], [])
         ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
@@ -257,23 +244,58 @@ class MatplotlibDisplay:
         ax_3d.set_ylabel("Y Axis")
         ax_3d.set_zlabel("Z Axis")
 
-        # Embed the Matplotlib figure in the plot frame
-        canvas = FigureCanvasTkAgg(fig, master=plot_frame)
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        # Add the 3D plot to the window
+        canvas = FigureCanvasTkAgg(fig, master=self.three_d_window)
+        canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew", padx=(10, 5), pady=10)
         canvas.draw()
 
-        # Add the legend to the legend frame
-        self.add_cell_type_legend_to_frame(legend_frame)
+        # Create a separate Matplotlib figure for the legend
+        legend_fig = plt.Figure(figsize=(2, 6), constrained_layout=True)
+        legend_ax = legend_fig.add_subplot(111)
+        legend_ax.axis("off")  # Hide axes
 
-        # Handle resizing of the window and adjust the figure size dynamically
-        def on_resize(event):
-            """Adjust the figure layout dynamically when the window is resized."""
-            new_width = plot_frame.winfo_width() / 100  # Scale figure size
-            new_height = plot_frame.winfo_height() / 100
-            fig.set_size_inches(new_width, new_height)
-            canvas.draw_idle()
+        # Create legend elements
+        legend_elements = [
+            plt.Line2D([0], [0], marker="o", color="w", label="0: Ocean", markersize=10,
+                    markerfacecolor=self.config["base_colors"][0]),
+            plt.Line2D([0], [0], marker="o", color="w", label="1: Desert", markersize=10,
+                    markerfacecolor=self.config["base_colors"][1]),
+            plt.Line2D([0], [0], marker="o", color="w", label="2: Cloud", markersize=10,
+                    markerfacecolor=self.config["base_colors"][2]),
+            plt.Line2D([0], [0], marker="o", color="w", label="3: Ice", markersize=10,
+                    markerfacecolor=self.config["base_colors"][3]),
+            plt.Line2D([0], [0], marker="o", color="w", label="4: Forest", markersize=10,
+                    markerfacecolor=self.config["base_colors"][4]),
+            plt.Line2D([0], [0], marker="o", color="w", label="5: City", markersize=10,
+                    markerfacecolor=self.config["base_colors"][5]),
+            plt.Line2D([0], [0], marker="o", color="w", label="6: Air", markersize=10,
+                    markerfacecolor=self.config["base_colors"][6]),
+            plt.Line2D([0], [0], marker="o", color="w", label="7: Rain", markersize=10,
+                    markerfacecolor=self.config["base_colors"][7]),
+            plt.Line2D([0], [0], marker="o", color="w", label="8: Vacuum", markersize=10,
+                    markerfacecolor=self.config["base_colors"][8]),
+        ]
 
-        self.three_d_window.bind("<Configure>", on_resize)  # Trigger on window resize
+        if self.config.get("tint"):
+            legend_elements.append(
+                plt.Line2D([0], [0], marker="o", color="w", label="9: Pollution", markersize=10,
+                        markerfacecolor="red")
+            )
+
+        # Add the legend to the legend_ax
+        legend_ax.legend(
+            handles=legend_elements,
+            loc="center",
+            title="Cell Types",
+            frameon=True,
+            fontsize=10,
+            title_fontsize=12,
+        )
+
+        # Add the legend figure to the Tkinter window
+        legend_canvas = FigureCanvasTkAgg(legend_fig, master=self.three_d_window)
+        legend_canvas.get_tk_widget().grid(row=0, column=1, sticky="nsew", padx=(5, 10), pady=10)
+        legend_canvas.draw()
 
         # Handle keyboard events for navigation
         def handle_key_press(event):
@@ -303,12 +325,21 @@ class MatplotlibDisplay:
             # Redraw the canvas
             canvas.draw_idle()
 
-        # Connect the keyboard event handler to the canvas in the new window
+        # Bind the keyboard event handler to the canvas
         fig.canvas.mpl_connect("key_press_event", handle_key_press)
 
+        # Add dynamic resizing
+        def on_resize(event):
+            """Adjust the 3D plot and legend dynamically."""
+            plot_width = self.three_d_window.winfo_width() * 0.7 / 100
+            plot_height = self.three_d_window.winfo_height() / 100
+            legend_width = self.three_d_window.winfo_width() * 0.2 / 100
+            fig.set_size_inches(plot_width, plot_height)
+            legend_fig.set_size_inches(legend_width, plot_height)
+            canvas.draw_idle()
+            legend_canvas.draw_idle()
 
-
-
+        self.three_d_window.bind("<Configure>", on_resize)
 
 
 
@@ -348,22 +379,23 @@ class MatplotlibDisplay:
         if self.config.get("tint"):
             legend_items.append(("9: Pollution Levels (Tinted Color)", "red"))
 
+        # Function to convert RGBA to Hex
+        def rgba_to_hex(rgba):
+            r, g, b, a = rgba  # Extract RGBA components
+            return f"#{int(r * 255):02X}{int(g * 255):02X}{int(b * 255):02X}"
+
         # Add each legend item with padding
         for text, color in legend_items:
+            # Convert RGBA color to Hex if necessary
+            hex_color = rgba_to_hex(color) if isinstance(color, tuple) else color
+
             item_frame = tk.Frame(legend_frame, bg="white")
             item_frame.pack(fill=tk.X, padx=(20, 20), pady=(10, 10))  # Add padding around each item
 
-            # Create a color indicator
-            color_label = tk.Label(
-                item_frame,
-                text=" ",
-                bg=color,
-                width=2,
-                height=1,
-                relief=tk.SOLID,
-                borderwidth=1
-            )
-            color_label.pack(side=tk.LEFT, padx=(10, 10))  # Add space between color box and text
+            # Create a circular color indicator using Canvas
+            canvas = tk.Canvas(item_frame, width=24, height=24, bg="white", highlightthickness=0)
+            canvas.pack(side=tk.LEFT, padx=(10, 10))
+            canvas.create_oval(2, 2, 22, 22, fill=hex_color, outline="black")  # Draw a circle
 
             # Add the text description
             text_label = tk.Label(
@@ -373,7 +405,7 @@ class MatplotlibDisplay:
                 bg="white",
                 anchor="w"
             )
-            text_label.pack(side=tk.LEFT, padx=(10, 10))  # Add space between text and color box
+            text_label.pack(side=tk.LEFT, padx=(10, 10))  # Add space between text and circle
 
 
     def precompute_visualizations(self):
