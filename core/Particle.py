@@ -270,6 +270,8 @@ class Particle:
         absorption_rate = self.config["forest_pollution_absorption_rate"]
         cooling_effect = self.config["forest_cooling_effect"]
         pollution_level_tipping_point = self.config["pollution_level_tipping_point"]
+        pollution_damage_threshold = self.config["pollution_damage_threshold"]
+        forest_baseline_temperature = self.config["baseline_temperature"][self.cell_type]
 
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
@@ -288,8 +290,8 @@ class Particle:
         ):  # Forest destruction
             self.convert_to_desert()
         elif (
-            self.pollution_level == 0
-            and int(self.temperature) == self.config["baseline_temperature"][self.cell_type]
+            self.pollution_level <= pollution_damage_threshold
+            and forest_baseline_temperature -5 <= self.temperature <= forest_baseline_temperature + 5
         ):  # Convert to a city
             self.convert_to_city()
         else:
