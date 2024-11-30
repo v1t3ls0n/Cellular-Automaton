@@ -121,7 +121,7 @@ class Particle:
             return (1.0, 1.0, 1.0, 1.0)  # Default to white color
 
         # Scale pollution intensity to a range of [0.0, 1.0]
-        pollution_intensity = max(0.0, min(self.pollution_level / 10.0, 1.0))
+        pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 1.0))
 
         # Apply red tint by modifying the RGB channels
         red_tinted_color = [
@@ -214,6 +214,7 @@ class Particle:
             neighbors (list): List of neighboring particles.
         """
         neighbors_above = self.get_above_neighbors(neighbors)
+        neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         pollution_damage_threshold = self.config["pollution_damage_threshold"]
         forest_baseline_temperature = self.config["baseline_temperature"][4]
@@ -222,9 +223,9 @@ class Particle:
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
         elif (
-            self.is_surrounded_by_land_cells(neighbors_aligned)
+            self.is_surrounded_by_land_cells(neighbors_aligned) and not self.is_below_ground_level(neighbors_above) and not self.is_surrounded_by_land_cells(neighbors_below)
             and self.pollution_level <= pollution_damage_threshold
-            and forest_baseline_temperature - 5 <= self.temperature <= forest_baseline_temperature + 5
+            and forest_baseline_temperature - 1 <= self.temperature <= forest_baseline_temperature + 1
         ):  # Suitable for forest conversion
             self.convert_to_forest()
 

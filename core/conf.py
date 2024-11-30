@@ -8,15 +8,15 @@ config = {
 
     "default_days": 365,  # Duration of the simulation in days
     # Visualization settings
-    "tint": False,  # Use tint for better visual representation of pollution levels
+    "tint": True,  # Use tint for better visual representation of pollution levels
     # Default simulation parameters
     "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)
     # Ratios for land cell types in the initial grid
     "initial_ratios": {
-        "forest": 0.4,  # Proportion of forest cells
-        "city": 0.4,    # Proportion of city cells
+        "forest": 0.2,  # Proportion of forest cells
+        "city": 0.2,    # Proportion of city cells
         "desert": 0.1,  # Proportion of desert cells
-        "vacuum": 0.1,  # Proportion of vacuum cells
+        "vacuum": 0.5,  # Proportion of vacuum cells
     },
     # Cell type configurations:
     # 0: Ocean | 1: Desert | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
@@ -63,10 +63,10 @@ config = {
     "forest_cooling_effect": 0.2,  # Cooling effect of forests on their environment
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
-    "city_warming_effect": 0.1,  # Warming effect of cities on their environment
-    "city_temperature_upper_limit": 100,  # Maximum temperature cities can reach
-    "city_pollution_upper_limit": 100,  # Maximum pollution level cities can reach
+    "city_pollution_increase_rate": 0.3,  # Rate of pollution increase in cities
+    "city_warming_effect": 0.3,  # Warming effect of cities on their environment
+    "city_temperature_upper_limit": 200,  # Maximum temperature cities can reach
+    "city_pollution_upper_limit": 200,  # Maximum pollution level cities can reach
 
 
 
@@ -78,7 +78,7 @@ config = {
 
     # Thresholds and rates for water transfer and pollution effects
     "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
-    "pollution_damage_threshold": 10.0,  # Pollution level causing damage to ecosystems
+    "pollution_damage_threshold": 5.0,  # Pollution level causing damage to ecosystems
     "pollution_level_tipping_point": 50,  # Point at which pollution accelerates damage
     "natural_pollution_decay_rate": 0.1,  # Rate of pollution decay over time
 
@@ -94,7 +94,7 @@ config = {
 
     # Base colors for visual representation of cell types
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.05),  # Air (transparent white)
+        6: (1.0, 1.0, 1.0, 0.1),  # Air (transparent white)
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
         3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)

@@ -101,7 +101,7 @@ class World:
         forests_ratio = self.initial_forests_ratio / total_ratio
         deserts_ratio = self.initial_deserts_ratio / total_ratio
         vacuum_ratio = self.initial_vacuum_ratio / total_ratio
-
+        # logging.info(f"cities:{cities_ratio} forests:{forests_ratio}")
         plane_surfaces_map = {}  # Tracks the type of surface for each plane
 
         # Use baseline values for temperature and pollution from config
@@ -159,7 +159,12 @@ class World:
                         elif surface_type == 'unused_land':
                             # Land layer behavior
                             if k <= elevation_map[i, j]:
-                                cell_type = 1  # Unused Land (Desert)
+                                # cell_type = 1  # Unused Land (Desert)
+                                cell_type = np.random.choice(
+                                        [1, 4, 5, 8],
+                                        p=[deserts_ratio, forests_ratio,
+                                            cities_ratio, vacuum_ratio]
+                                    )
                             elif k == elevation_map[i, j] + 1:
                                 # Prevent forests/cities above existing forests/cities
                                 if plane_surfaces_map.get((i, j, k - 1)) != 'used_land':
@@ -372,6 +377,8 @@ class World:
         elif cell1.cell_type == 7 and cell2.cell_type == 7:  # Merge rain cells
             cell1.water_mass += cell2.water_mass
             return cell1
+        elif cell1.cell_type == 7 and cell2.cell_type == 0:
+            return cell2
         # Default collision resolution
         return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
 
