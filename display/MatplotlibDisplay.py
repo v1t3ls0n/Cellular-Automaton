@@ -561,24 +561,33 @@ class MatplotlibDisplay:
         """Render the standard deviation of temperature graph over time."""
         self.ax_std_dev_temperature_graph.cla()
         self.ax_std_dev_temperature_graph.set_title(
-            "Temperature Standard deviation Over Time")
+            "Temperature Standard Deviation Over Time")
         self.ax_std_dev_temperature_graph.set_xlabel("Day")
         self.ax_std_dev_temperature_graph.set_ylabel(
-            "Standard deviation Temperature")
+            "Standard Deviation Temperature")
 
-        # Corrected attribute name
+        # Ensure correct data availability
         days = range(len(self.simulation.std_dev_temperature_over_time))
-        # Corrected attribute name
         std_dev_temperature = self.simulation.std_dev_temperature_over_time
 
         if len(days) == len(std_dev_temperature):
+            avg_temperature = self.simulation.temperature_over_time
+
+            # Add standard deviation as shaded region
+            self.ax_std_dev_temperature_graph.fill_between(
+                days,
+                np.array(avg_temperature) - np.array(std_dev_temperature),
+                np.array(avg_temperature) + np.array(std_dev_temperature),
+                color="cyan", alpha=0.2, label="Temperature Std Dev Range")
+
             self.ax_std_dev_temperature_graph.plot(
-                days, std_dev_temperature, color="cyan", label="Temperature Standard deviation"
-            )
+                days, avg_temperature, color="cyan", label="Average Temperature")
             self.ax_std_dev_temperature_graph.legend()
         else:
             logging.error(
-                "Data length mismatch in temperature Standard deviation graph.")
+                "Data length mismatch in temperature standard deviation graph.")
+
+
 
     def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:
