@@ -53,8 +53,30 @@ def parse_boolean(input_value):
             return False
     return input_value
 
+def parse_input_value(input_value, default_value):
+    """
+    Parse the input value based on the type of the default value.
+    """
+    if not input_value:  # If input is empty, return the default value
+        return default_value
 
-# Function to get user input for all configuration parameters
+    # Try to parse as boolean
+    boolean_value = parse_boolean(input_value)
+    if isinstance(boolean_value, bool):
+        return boolean_value
+
+    # Parse as float, then integer if necessary
+    try:
+        if isinstance(default_value, float):
+            return float(input_value)
+        if isinstance(default_value, int):
+            return int(input_value)
+    except ValueError:
+        pass  # Fall back to returning the input as a string
+
+    return input_value  # Default to string if no conversion is possible
+
+
 def get_user_configuration():
     """Prompt user for all configuration parameters or use defaults."""
     user_config = {}
@@ -81,40 +103,23 @@ def get_user_configuration():
                 for sub_key, sub_value in value.items():
                     particle_label = particle_mapping.get(sub_key, sub_key)
                     input_value = input(f"Enter value for {particle_label} (default: {sub_value}): ").strip()
-                    user_config[key][sub_key] = (
-                        parse_boolean(input_value)
-                        if input_value
-                        else sub_value
-                    )
+                    user_config[key][sub_key] = parse_input_value(input_value, sub_value)
             elif isinstance(value, list):
                 print(f"\n{label} (list values):")
                 user_config[key] = []
                 for i, v in enumerate(value):
                     particle_label = particle_mapping.get(i, i)
                     input_value = input(f"Enter value for {particle_label} (default: {v}): ").strip()
-                    user_config[key].append(
-                        parse_boolean(input_value) if input_value else v
-                    )
+                    user_config[key].append(parse_input_value(input_value, v))
             else:
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
-                if input_value:
-                    # Try to parse boolean first, then other types
-                    parsed_value = parse_boolean(input_value)
-                    if isinstance(parsed_value, bool):  # Handle booleans
-                        user_config[key] = parsed_value
-                    elif isinstance(value, int):  # Handle integers
-                        user_config[key] = int(input_value)
-                    elif isinstance(value, float):  # Handle floats
-                        user_config[key] = float(input_value)
-                    else:  # Default to string or original input
-                        user_config[key] = input_value
-                else:
-                    user_config[key] = value
+                user_config[key] = parse_input_value(input_value, value)
     else:
         print("Invalid choice. Using default configuration.")
         user_config = config.copy()
 
     return user_config
+
 
 
 
