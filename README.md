@@ -175,8 +175,4 @@ The simulation is inspired by cellular automata, a mathematical model used for s
 
 ## Example Output
 
-- Average temperature over time: `[20.1, 21.5, 22.0, ...]`
-- Pollution levels over time: `[5.3, 5.8, 6.0, ...]`
-- Number of cities and forests: `[Cities: 10, Forests: 15]`
-
----
+---![UI Results, without tint color](./docs/ui_print_screen_01.png)
