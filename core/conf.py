@@ -52,6 +52,24 @@ config = {
         8: 0.0,  # Vacuum (no interaction)
     },
 
+   # Forest-specific settings
+    "forest_pollution_absorption_rate": 0.2,  # Rate at which forests absorb pollution
+    "forest_cooling_effect": 0.2,  # Cooling effect of forests on their environment
+
+    # City-specific settings
+    "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
+    "city_warming_effect": 0.1,  # Warming effect of cities on their environment
+    "city_temperature_upper_limit": 100,  # Maximum temperature cities can reach
+    "city_pollution_upper_limit": 100,  # Maximum pollution level cities can reach
+
+    # Ratios for land cell types in the initial grid
+    "initial_ratios": {
+        "forest": 0.4,  # Proportion of forest cells
+        "city": 0.4,    # Proportion of city cells
+        "desert": 0.1,  # Proportion of desert cells
+        "vacuum": 0.1,  # Proportion of vacuum cells
+    },
+
     # Temperature thresholds for specific behaviors
     "temperature_extinction_point": 60,  # Maximum temperature before extinction effects
     "freezing_point": -15,              # Temperature at which water freezes
@@ -73,24 +91,6 @@ config = {
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
     "evaporation_rate": 0.05,  # Rate at which water evaporates
-
-    # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.2,  # Rate at which forests absorb pollution
-    "forest_cooling_effect": 0.2,  # Cooling effect of forests on their environment
-
-    # City-specific settings
-    "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
-    "city_warming_effect": 0.1,  # Warming effect of cities on their environment
-    "city_temperature_upper_limit": 100,  # Maximum temperature cities can reach
-    "city_pollution_upper_limit": 100,  # Maximum pollution level cities can reach
-
-    # Ratios for land cell types in the initial grid
-    "initial_ratios": {
-        "forest": 0.4,  # Proportion of forest cells
-        "city": 0.4,    # Proportion of city cells
-        "desert": 0.1,  # Proportion of desert cells
-        "vacuum": 0.1,  # Proportion of vacuum cells
-    },
 
     # Base colors for visual representation of cell types
     "base_colors": {
