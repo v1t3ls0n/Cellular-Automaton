@@ -241,7 +241,7 @@ class Particle:
             neighbors)  # Share water with neighboring cells
         saturation_threshold = self.config["cloud_saturation_threshold"]
         if self.water_mass >= saturation_threshold:  # Convert to rain if saturated
-            logging.info(f"Cloud at {self.position} converting to rain.")
+            # logging.info(f"Cloud at {self.position} converting to rain.")
             self.convert_to_rain()
 
     def _update_ice(self, neighbors):
