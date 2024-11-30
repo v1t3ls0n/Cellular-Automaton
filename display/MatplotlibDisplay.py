@@ -23,10 +23,13 @@ class MatplotlibDisplay:
         self.ax_temperature = None
         self.ax_population = None
         self.ax_forests = None
+        self.ax_std_dev_pollution_graph = None
+        self.ax_std_dev_temperature_graph = None
         self.ax_ice_coverage = None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
         self.current_elev = 20  # Default elevation
         self.current_azim = 45  # Default azimuth
+
 
     def plot_3d(self):
         """Create the plot with all relevant graphs, including the configuration window."""
@@ -76,7 +79,7 @@ class MatplotlibDisplay:
 
         # Create the main figure
         # Larger size for better spacing
-        self.fig = plt.Figure(figsize=(18, 12))
+        self.fig = plt.Figure(figsize=(12, 10))
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -90,6 +93,9 @@ class MatplotlibDisplay:
         self.ax_temperature = self.fig.add_subplot(235)  # Temperature graph
         self.ax_population = self.fig.add_subplot(236)  # City Population graph
         self.ax_forests = self.fig.add_subplot(233)  # Forest graph
+        self.ax_std_dev_pollution_graph =  self.fig.add_subplot(236)  # Pollution Standard deviation Graph
+        self.ax_std_dev_temperature_graph =  self.fig.add_subplot(231)  # Temperature Standard deviation Graph
+
         self.ax_color_map = self.fig.add_subplot(
             spec[0, 1])  # Color map legend
         self.ax_color_map.axis("off")  # Hide axes for the legend
@@ -103,6 +109,8 @@ class MatplotlibDisplay:
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
+        self.render_std_dev_pollution_graph()
+        self.render_std_dev_temperature_graph()
         self.add_cell_type_legend()
 
         # Add keyboard navigation
@@ -366,6 +374,47 @@ class MatplotlibDisplay:
             self.ax_pollution.legend()
         else:
             logging.error("Data length mismatch in pollution graph.")
+
+
+
+    def render_std_dev_pollution_graph(self):
+        """Render the standard deviation of pollution graph over time."""
+        self.ax_std_dev_pollution_graph.cla()
+        self.ax_std_dev_pollution_graph.set_title("Pollution Std Dev Over Time")
+        self.ax_std_dev_pollution_graph.set_xlabel("Day")
+        self.ax_std_dev_pollution_graph.set_ylabel("Std Dev Pollution")
+
+        days = range(len(self.simulation.std_dev_pollution))
+        std_dev_pollution = self.simulation.std_dev_pollution
+
+        if len(days) == len(std_dev_pollution):
+            self.ax_std_dev_pollution_graph.plot(
+                days, std_dev_pollution, color="orange", label="Pollution Std Dev"
+            )
+            self.ax_std_dev_pollution_graph.legend()
+        else:
+            logging.error("Data length mismatch in pollution std dev graph.")
+
+    def render_std_dev_temperature_graph(self):
+        """Render the standard deviation of temperature graph over time."""
+        self.ax_std_dev_temperature_graph.cla()
+        self.ax_std_dev_temperature_graph.set_title("Temperature Std Dev Over Time")
+        self.ax_std_dev_temperature_graph.set_xlabel("Day")
+        self.ax_std_dev_temperature_graph.set_ylabel("Std Dev Temperature")
+
+        days = range(len(self.simulation.std_dev_temperature))
+        std_dev_temperature = self.simulation.std_dev_temperature
+
+        if len(days) == len(std_dev_temperature):
+            self.ax_std_dev_temperature_graph.plot(
+                days, std_dev_temperature, color="cyan", label="Temperature Std Dev"
+            )
+            self.ax_std_dev_temperature_graph.legend()
+        else:
+            logging.error("Data length mismatch in temperature std dev graph.")
+
+
+
 
     def handle_key_press(self, event):
         """Handle key presses for navigating and zooming/panning the graphs."""

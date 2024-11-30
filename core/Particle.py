@@ -205,7 +205,7 @@ class Particle:
                 self.exchange_water_mass(
                     neighbors)  # Share water with neighboring cells
                 self.convert_to_air()
-                self.direction = self.calculate_dynamic_wind_direction()
+                self.direction = self.calculate_dynamic_wind_direction(neighbors)
 
         # Freeze into ice
         elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and not self.is_surrounded_by_land_cells(neighbors_aligned) and (self.is_surrounded_by_sea_cells(neighbors_below+neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_above)):
@@ -431,7 +431,7 @@ class Particle:
             # Convert to air (dry up) if surrounded by land cells
             elif self.is_surrounded_by_land_cells(neighbors):
                 self.convert_to_air()
-                self.direction = self.calculate_dynamic_wind_direction()
+                self.direction = self.calculate_dynamic_wind_direction(neighbors)
 
 
     ####################################################################################################################
@@ -440,14 +440,18 @@ class Particle:
 
     def convert_to_ocean(self):
         """
-        Convert the current cell into an ocean cell.
+        Converts the current cell to an ocean cell.
+        Updates water mass, temperature, and stabilizes elevation.
+
+        Ocean cells:
+        - Always have full water mass (1.0).
+        - Have a baseline temperature defined in the configuration.
         """
-        self.cell_type = 0  # Ocean
+        self.cell_type = 0  # Set cell type to ocean
         self.water_mass = 1.0  # Oceans are full of water by default
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-        self.pollution_level = self.config["baseline_pollution_level"][self.cell_type]
         self.stabilize_elevation()  # Stabilize motion
-
+    
     def convert_to_desert(self):
         """
         Converts the current cell to a desert cell.
@@ -492,6 +496,7 @@ class Particle:
         self.temperature = self.config["freezing_point"]
         self.stabilize()  # Stabilize motion
 
+
     def convert_to_forest(self):
         """
         Converts the current cell to a forest cell.
@@ -534,7 +539,7 @@ class Particle:
         """
         self.cell_type = 6  # Set cell type to air
         # Evaporation reduces water mass
-        self.water_mass = max(0.0, self.water_mass - 0.2)
+        self.water_mass = max(0.0, self.water_mass - 0.5)
         self.temperature += 2  # Air warms during evaporation
         self.go_up()  # Air moves upward
 
@@ -551,7 +556,7 @@ class Particle:
         self.water_mass = 0  # No water in vacuum
         self.pollution_level = 0  # No pollution in vacuum
         self.direction = (0, 0, 0)  # No movement
-
+  
     def convert_to_rain(self):
         """
         Converts the current cell to a rain cell.
@@ -566,7 +571,6 @@ class Particle:
         self.water_mass = 1.0  # Rain has full water mass
         self.temperature -= 1  # Rain cools during formation
         self.direction = (0, 0, -1)  # Move downward
-
     ####################################################################################################################
     ##################################### CELL NATURAL DECAY : #########################################################
     ####################################################################################################################
@@ -641,27 +645,28 @@ class Particle:
         if total_weight > 0:
             self.pollution_level = (
                 weighted_pollution_sum / total_weight + self.pollution_level) / 2
-
+   
     def exchange_water_mass(self, neighbors):
         """
-        Exchange water mass with neighboring cells, including rain and ocean cells.
-        Updates both the current cell and the neighbors.
+        Exchange water mass with neighboring cells of type Cloud or Air.
+
+        Water mass is exchanged based on the difference between the current cell's water mass
+        and the neighbor's water mass, adjusted by a weight factor and a threshold.
         """
+        total_transfer = 0
         for neighbor in neighbors:
-            if neighbor.cell_type in {0, 6, 7}:  # Ocean, Air, Rain
-                diff = neighbor.water_mass - self.water_mass
-                if abs(diff) > self.config["water_transfer_threshold"]:
-                    # Calculate transfer amount based on the water mass difference
-                    transfer_amount = diff * 0.05
-                    if transfer_amount > 0:
-                        # Transfer water from the neighbor to self
-                        self.water_mass += transfer_amount
-                    else:
-                        # Transfer water from self to the neighbor
-                        self.water_mass -= -transfer_amount
-
-                    # Check if rain should convert to ocean
-
+            if neighbor.cell_type in {2, 6}:  # Cloud or Air
+                diff = abs(neighbor.water_mass - self.water_mass)
+                weight = self.config["cell_type_weights"].get(neighbor.cell_type, 1.0)
+                water_transfer = (
+                    diff * 0.05 * weight
+                    if diff < self.config["water_transfer_threshold"]
+                    else 0
+                )
+                if water_transfer > 0:
+                    self.water_mass += water_transfer
+                    total_transfer += water_transfer
+        return total_transfer
 
     ####################################################################################################################
     ###################################### CELL ELEVATION ##############################################################

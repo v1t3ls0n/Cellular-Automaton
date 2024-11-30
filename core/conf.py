@@ -6,7 +6,7 @@
 
 config = {
 
-    "default_days": 365,  # Duration of the simulation in days
+    "default_days": 50,  # Duration of the simulation in days
     # Visualization settings
     "tint": True,  # Use tint for better visual representation of pollution levels
     # Default simulation parameters
@@ -88,7 +88,7 @@ config = {
     "natural_temperature_decay_rate": 0.1,  # Rate of temperature equalization to baseline
 
     # Cloud-specific settings
-    "cloud_saturation_threshold": 1.0,  # Minimum water mass for clouds to precipitate as rain
+    "cloud_saturation_threshold": 3.0,  # Minimum water mass for clouds to precipitate as rain
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
