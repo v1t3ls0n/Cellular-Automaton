@@ -5,12 +5,12 @@
 # of the cellular automata simulation.
 
 config = {
+
+    "default_days": 50,  # Duration of the simulation in days
     # Visualization settings
     "tint": False,  # Use tint for better visual representation of pollution levels
-
     # Default simulation parameters
     "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)
-    "default_days": 50,  # Duration of the simulation in days
     # Ratios for land cell types in the initial grid
     "initial_ratios": {
         "forest": 0.4,  # Proportion of forest cells

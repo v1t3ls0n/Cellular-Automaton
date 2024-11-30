@@ -3,27 +3,55 @@ from core.Simulation import Simulation
 from display.MatplotlibDisplay import MatplotlibDisplay
 import logging
 
-
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(message)s",  # Remove the default logging level prefix
 )
 
-
-# logging.basicConfig(
-#     filename="simulation.log",
-#     level=logging.INFO,
-#     format="%(asctime)s - %(levelname)s - %(message)s",
-#     datefmt="%Y-%m-%d %H:%M:%S",
-# )
-
-
-
-
-
 logging.info("Simulation started.")
 
+
+# Utility function to parse grid size input
+def parse_grid_size(input_value):
+    """
+    Parse the grid size from a string or list.
+    Accepts formats like:
+    - "10,10,10"
+    - "10 10 10"
+    - [10, 10, 10]
+
+    Returns:
+        tuple: Parsed grid size as integers (x, y, z)
+    """
+    if isinstance(input_value, str):
+        # Replace commas with spaces, split by spaces, and convert to integers
+        return tuple(int(value) for value in input_value.replace(",", " ").split())
+    elif isinstance(input_value, (list, tuple)):
+        # Convert list or tuple to a tuple of integers
+        return tuple(int(value) for value in input_value)
+    else:
+        raise ValueError("Invalid grid size format. Provide a list, tuple, or string.")
+
+
+# Utility function to parse boolean strings
+def parse_boolean(input_value):
+    """
+    Parse boolean input from strings like "true" or "false".
+    Returns True for "true", False for "false", and passes through other values.
+
+    Args:
+        input_value (str): Input string to parse
+
+    Returns:
+        bool or original value: Parsed boolean or original input
+    """
+    if isinstance(input_value, str):
+        if input_value.lower() in {"true", "yes", "1", 1, "True"}:
+            return True
+        elif input_value.lower() in {"false", "no", "0", "False", 0}:
+            return False
+    return input_value
 
 
 # Function to get user input for all configuration parameters
@@ -34,7 +62,7 @@ def get_user_configuration():
     print("\n--- Simulation Configuration ---")
     print("1. Use Default Parameters")
     print("2. Set Custom Parameters")
-    
+
     choice = input("Choose an option (1 or 2): ").strip()
     if choice == "1":
         # Use default configuration
@@ -53,27 +81,41 @@ def get_user_configuration():
                 for sub_key, sub_value in value.items():
                     particle_label = particle_mapping.get(sub_key, sub_key)
                     input_value = input(f"Enter value for {particle_label} (default: {sub_value}): ").strip()
-                    user_config[key][sub_key] = float(input_value) if input_value else sub_value
+                    user_config[key][sub_key] = (
+                        parse_boolean(input_value)
+                        if input_value
+                        else sub_value
+                    )
             elif isinstance(value, list):
                 print(f"\n{label} (list values):")
                 user_config[key] = []
                 for i, v in enumerate(value):
                     particle_label = particle_mapping.get(i, i)
                     input_value = input(f"Enter value for {particle_label} (default: {v}): ").strip()
-                    user_config[key].append(float(input_value) if input_value else v)
+                    user_config[key].append(
+                        parse_boolean(input_value) if input_value else v
+                    )
             else:
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
-                if isinstance(value, int):
-                    user_config[key] = int(input_value) if input_value else value
-                elif isinstance(value, float):
-                    user_config[key] = float(input_value) if input_value else value
+                if input_value:
+                    # Try to parse boolean first, then other types
+                    parsed_value = parse_boolean(input_value)
+                    if isinstance(parsed_value, bool):  # Handle booleans
+                        user_config[key] = parsed_value
+                    elif isinstance(value, int):  # Handle integers
+                        user_config[key] = int(input_value)
+                    elif isinstance(value, float):  # Handle floats
+                        user_config[key] = float(input_value)
+                    else:  # Default to string or original input
+                        user_config[key] = input_value
                 else:
-                    user_config[key] = input_value if input_value else value
+                    user_config[key] = value
     else:
         print("Invalid choice. Using default configuration.")
         user_config = config.copy()
 
     return user_config
+
 
 
 # Main execution
@@ -82,7 +124,8 @@ if __name__ == "__main__":
     user_config = get_user_configuration()
 
     # Extract essential parameters for simulation
-    grid_size = tuple(user_config.get("default_grid_size", (10, 10, 10)))
+    grid_size_input = user_config.get("default_grid_size", (10, 10, 10))
+    grid_size = parse_grid_size(grid_size_input)  # Parse grid size input
     days = user_config.get("default_days", 10)
     initial_ratios = user_config.get("initial_ratios", {"forest": 0.3, "city": 0.3, "desert": 0.3, "vacuum": 0.1})
 
