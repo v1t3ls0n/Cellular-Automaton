@@ -11,7 +11,13 @@ config = {
     # Default simulation parameters
     "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)
     "default_days": 50,  # Duration of the simulation in days
-
+    # Ratios for land cell types in the initial grid
+    "initial_ratios": {
+        "forest": 0.4,  # Proportion of forest cells
+        "city": 0.4,    # Proportion of city cells
+        "desert": 0.1,  # Proportion of desert cells
+        "vacuum": 0.1,  # Proportion of vacuum cells
+    },
     # Cell type configurations:
     # 0: Ocean | 1: Desert | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
     "baseline_temperature": [
@@ -62,13 +68,7 @@ config = {
     "city_temperature_upper_limit": 100,  # Maximum temperature cities can reach
     "city_pollution_upper_limit": 100,  # Maximum pollution level cities can reach
 
-    # Ratios for land cell types in the initial grid
-    "initial_ratios": {
-        "forest": 0.4,  # Proportion of forest cells
-        "city": 0.4,    # Proportion of city cells
-        "desert": 0.1,  # Proportion of desert cells
-        "vacuum": 0.1,  # Proportion of vacuum cells
-    },
+
 
     # Temperature thresholds for specific behaviors
     "temperature_extinction_point": 60,  # Maximum temperature before extinction effects
