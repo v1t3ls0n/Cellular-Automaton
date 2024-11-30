@@ -173,4 +173,4 @@ The simulation is inspired by cellular automata, a mathematical model used for s
 
 ## Example Output
 
-[UI Results, without tint color](./docs/ui_print_screen_01.png)
+![UI Results, without tint color](./docs/ui_print_screen_01.png)
