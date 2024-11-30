@@ -439,14 +439,14 @@ class World:
         self.total_cities = total_cities
         self.total_forests = total_forests
         self.total_rain = total_rain
-        logging.info(
-            f"Recalculated global attributes: Avg Temp={
-                self.avg_temperature}, "
-            f"Avg Pollution={self.avg_pollution}, Avg Water Mass={
-                self.avg_water_mass}, "
-            f"Total Cities={self.total_cities}, Total Forests={
-                self.total_forests}, Total Rain={total_rain}"
-        )
+        # logging.info(
+        #     f"Recalculated global attributes: Avg Temp={
+        #         self.avg_temperature}, "
+        #     f"Avg Pollution={self.avg_pollution}, Avg Water Mass={
+        #         self.avg_water_mass}, "
+        #     f"Total Cities={self.total_cities}, Total Forests={
+        #         self.total_forests}, Total Rain={total_rain}"
+        # )
 
     def accumulate_water_transfers(self):
         """
