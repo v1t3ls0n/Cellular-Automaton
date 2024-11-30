@@ -290,7 +290,7 @@ class Particle:
         ):  # Forest destruction
             self.convert_to_desert()
         elif (
-            self.pollution_level <= pollution_damage_threshold / 2
+            self.pollution_level == 0
             and forest_baseline_temperature -5 <= self.temperature <= forest_baseline_temperature + 5
         ):  # Convert to a city
             self.convert_to_city()
