@@ -77,6 +77,10 @@ class MatplotlibDisplay:
         self.ax_forests = self.fig.add_subplot(spec[2, 0])
         self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[2, 1])
         self.ax_std_dev_temperature_graph = self.fig.add_subplot(spec[2, 2])
+        self.ax_color_map = self.fig.add_subplot(
+            spec[0, 1])  # Color map legend
+        self.ax_color_map.axis("off")  # Hide axes for the legend
+        self.add_cell_type_legend()
 
         # Render initial graphs
         self.precompute_visualizations()
@@ -87,9 +91,6 @@ class MatplotlibDisplay:
         self.render_std_dev_pollution_graph()
         self.render_std_dev_temperature_graph()
         
-        # Add legend or color map
-        self.add_cell_type_legend()
-
         self.fig.canvas.draw_idle()  # Force the canvas to update
 
         self.render_day(self.current_day)
@@ -373,42 +374,46 @@ class MatplotlibDisplay:
         else:
             logging.error("Data length mismatch in pollution graph.")
 
+
+
+
     def render_std_dev_pollution_graph(self):
         """Render the standard deviation of pollution graph over time."""
         self.ax_std_dev_pollution_graph.cla()
-        self.ax_std_dev_pollution_graph.set_title("Pollution Std Dev Over Time")
+        self.ax_std_dev_pollution_graph.set_title("Pollution Standard deviation Over Time")
         self.ax_std_dev_pollution_graph.set_xlabel("Day")
-        self.ax_std_dev_pollution_graph.set_ylabel("Std Dev Pollution")
+        self.ax_std_dev_pollution_graph.set_ylabel("Standard deviation Pollution")
 
-        days = range(len(self.simulation.std_dev_pollution))
-        std_dev_pollution = self.simulation.std_dev_pollution
+        days = range(len(self.simulation.std_dev_pollution_over_time))  # Corrected attribute name
+        std_dev_pollution = self.simulation.std_dev_pollution_over_time  # Corrected attribute name
 
         if len(days) == len(std_dev_pollution):
             self.ax_std_dev_pollution_graph.plot(
-                days, std_dev_pollution, color="orange", label="Pollution Std Dev"
+                days, std_dev_pollution, color="orange", label="Pollution Standard deviation"
             )
             self.ax_std_dev_pollution_graph.legend()
         else:
-            logging.error("Data length mismatch in pollution std dev graph.")
+            logging.error("Data length mismatch in pollution Standard deviation graph.")
+
+
 
     def render_std_dev_temperature_graph(self):
         """Render the standard deviation of temperature graph over time."""
         self.ax_std_dev_temperature_graph.cla()
-        self.ax_std_dev_temperature_graph.set_title("Temperature Std Dev Over Time")
+        self.ax_std_dev_temperature_graph.set_title("Temperature Standard deviation Over Time")
         self.ax_std_dev_temperature_graph.set_xlabel("Day")
-        self.ax_std_dev_temperature_graph.set_ylabel("Std Dev Temperature")
+        self.ax_std_dev_temperature_graph.set_ylabel("Standard deviation Temperature")
 
-        days = range(len(self.simulation.std_dev_temperature))
-        std_dev_temperature = self.simulation.std_dev_temperature
+        days = range(len(self.simulation.std_dev_temperature_over_time))  # Corrected attribute name
+        std_dev_temperature = self.simulation.std_dev_temperature_over_time  # Corrected attribute name
 
         if len(days) == len(std_dev_temperature):
             self.ax_std_dev_temperature_graph.plot(
-                days, std_dev_temperature, color="cyan", label="Temperature Std Dev"
+                days, std_dev_temperature, color="cyan", label="Temperature Standard deviation"
             )
             self.ax_std_dev_temperature_graph.legend()
         else:
-            logging.error("Data length mismatch in temperature std dev graph.")
-
+            logging.error("Data length mismatch in temperature Standard deviation graph.")
 
 
 

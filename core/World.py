@@ -2,6 +2,7 @@ import numpy as np
 import logging
 from core.conf import config
 from .Particle import Particle
+import math
 
 
 class World:
@@ -366,9 +367,6 @@ class World:
         if (cell1.cell_type == 6 and cell2.cell_type == 6):
             return cell1 if cell1.water_mass > cell2.water_mass else cell2
         # Prevent land (desert) from overriding ocean
-        if (cell1.cell_type == 1 and cell2.cell_type == 0) or (cell1.cell_type == 0 and cell2.cell_type == 1):
-            logging.info("desert sea collision")
-            return cell1 if cell1.cell_type == 0 else cell2
 
         # Prevent vacuum or air from overriding ocean or land
         if cell1.cell_type in {6, 8} and cell2.cell_type in {0, 1, 3, 4, 5}:
@@ -393,8 +391,10 @@ class World:
 
         # Ensure desert cannot override ocean even in other cases
         if cell1.cell_type == 1 and cell2.cell_type == 0:
+            logging.info("desert sea collision")
             return cell2
         if cell2.cell_type == 1 and cell1.cell_type == 0:
+            logging.info("desert sea collision")
             return cell1
 
         # Default behavior based on cell type weights
@@ -425,7 +425,6 @@ class World:
                 neighbors.append((nx, ny, nz))
 
         return neighbors
-
 
     def accumulate_water_transfers(self):
         """
@@ -475,12 +474,11 @@ class World:
             if self.grid[i, j, k] and self.grid[i, j, k].cell_type in {2, 6, 7}
         )
 
-
-
     def _recalculate_global_attributes(self):
         """
         Recalculate global attributes like average temperature, pollution, water mass,
-        and counts of cities, forests, and rain cells.
+        and counts of cities, forests, and rain cells. Also calculates and saves the 
+        standard deviation of pollution and temperature.
         """
         total_temperature = 0
         total_pollution = 0
@@ -489,6 +487,9 @@ class World:
         total_forests = 0
         total_cells = 0
         total_rain = 0
+
+        temperature_values = []  # Store temperature values for standard deviation
+        pollution_values = []  # Store pollution values for standard deviation
 
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
@@ -500,6 +501,9 @@ class World:
                     total_temperature += cell.temperature
                     total_pollution += cell.pollution_level
                     total_water_mass += cell.water_mass
+                    temperature_values.append(cell.temperature)
+                    pollution_values.append(cell.pollution_level)
+
                     if cell.cell_type == 5:  # City
                         total_cities += 1
                     elif cell.cell_type == 4:  # Forest
@@ -509,6 +513,7 @@ class World:
 
                     total_cells += 1
 
+        # Calculate averages and save in self
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
         self.avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
         self.avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
@@ -516,11 +521,24 @@ class World:
         self.total_forests = total_forests
         self.total_rain = total_rain
 
-        # logging.info(
-        #     f"Recalculated global attributes: Avg Temp={
-        #         self.avg_temperature}, "
-        #     f"Avg Pollution={self.avg_pollution}, Avg Water Mass={
-        #         self.avg_water_mass}, "
-        #     f"Total Cities={self.total_cities}, Total Forests={
-        #         self.total_forests}, Total Rain={total_rain}"
-        # )
+        # Calculate standard deviation for temperature and save in self
+        if total_cells > 0:
+            temperature_variance = sum(
+                (temp - self.avg_temperature) ** 2 for temp in temperature_values) / total_cells
+            self.std_dev_temperature = math.sqrt(temperature_variance)
+        else:
+            self.std_dev_temperature = 0
+
+        # Calculate standard deviation for pollution and save in self
+        if total_cells > 0:
+            pollution_variance = sum(
+                (poll - self.avg_pollution) ** 2 for poll in pollution_values) / total_cells
+            self.std_dev_pollution = math.sqrt(pollution_variance)
+        else:
+            self.std_dev_pollution = 0
+
+        # Log or print for debugging (optional)
+        print(f"Avg Temperature: {self.avg_temperature}, Std Dev: {
+              self.std_dev_temperature}")
+        print(f"Avg Pollution: {self.avg_pollution}, Std Dev: {
+              self.std_dev_pollution}")

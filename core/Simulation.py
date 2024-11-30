@@ -29,12 +29,8 @@ class Simulation:
         self.temperature_over_time = []  # Average temperature over time
         self.city_population_over_time = []  # Total number of city cells over time
         self.forest_count_over_time = []  # Total number of forest cells over time
-
-        # Standard deviation tracking
-        self.std_dev_pollution = []
-        self.std_dev_temperature = []
-        self.std_dev_cities = []
-        self.std_dev_forests = []
+        self.std_dev_pollution_over_time = []  # Standard deviation of pollution
+        self.std_dev_temperature_over_time = []  # Standard deviation of temperature
 
     def _update_aggregates(self, state):
         """
@@ -47,12 +43,8 @@ class Simulation:
         self.temperature_over_time.append(state.avg_temperature)
         self.city_population_over_time.append(state.total_cities)
         self.forest_count_over_time.append(state.total_forests)
-
-        # Calculate standard deviation for each metric
-        self.std_dev_pollution.append(np.std(self.pollution_over_time))
-        self.std_dev_temperature.append(np.std(self.temperature_over_time))
-        self.std_dev_cities.append(np.std(self.city_population_over_time))
-        self.std_dev_forests.append(np.std(self.forest_count_over_time))
+        self.std_dev_pollution_over_time.append(state.std_dev_pollution)
+        self.std_dev_temperature_over_time.append(state.std_dev_temperature)
 
     def precompute(self):
         """
@@ -82,44 +74,42 @@ class Simulation:
             next_state = self.states[-1].clone()
             next_state.day_number += 1  # Increment the day number
             next_state.update_cells_on_grid()  # Update the grid cells
+            next_state._recalculate_global_attributes()  # Recalculate global attributes
             self.states.append(next_state)  # Store the new state
             self._update_aggregates(next_state)  # Update aggregates
-            # logging.info(f"Next state (Day {day + 1}) added.")
 
     def get_averages_and_std_dev_over_time(self):
-            """
-            Retrieve averages and standard deviations of metrics over the simulation period.
+        """
+        Retrieve averages and standard deviations of metrics over the simulation period.
 
-            Returns:
-                dict: Averages and standard deviations of temperature, pollution, city counts, and forest counts.
-            """
-            return {
-                "averages": {
-                    "temperature": self.temperature_over_time,
-                    "pollution": self.pollution_over_time,
-                    "cities": self.city_population_over_time,
-                    "forests": self.forest_count_over_time,
-                },
-                "std_devs": {
-                    "temperature": self.std_dev_temperature,
-                    "pollution": self.std_dev_pollution,
-                    "cities": self.std_dev_cities,
-                    "forests": self.std_dev_forests,
-                }
+        Returns:
+            dict: Averages and standard deviations of temperature, pollution, city counts, and forest counts.
+        """
+        return {
+            "averages": {
+                "temperature": self.temperature_over_time,
+                "pollution": self.pollution_over_time,
+                "cities": self.city_population_over_time,
+                "forests": self.forest_count_over_time,
+            },
+            "std_devs": {
+                "temperature": self.std_dev_temperature_over_time,
+                "pollution": self.std_dev_pollution_over_time,
             }
+        }
 
     def calculate_statistics(self):
-            """
-            Calculate mean and standard deviation for each parameter over the entire simulation.
+        """
+        Calculate mean and standard deviation for each parameter over the entire simulation.
 
-            Returns:
-                dict: Mean and standard deviation for each parameter.
-            """
-            data = self.get_averages_and_std_dev_over_time()["averages"]
-            stats = {}
-            for param, values in data.items():
-                stats[param] = {
-                    "mean": np.mean(values),
-                    "std_dev": np.std(values)
-                }
-            return stats
+        Returns:
+            dict: Mean and standard deviation for each parameter.
+        """
+        data = self.get_averages_and_std_dev_over_time()["averages"]
+        stats = {}
+        for param, values in data.items():
+            stats[param] = {
+                "mean": np.mean(values),
+                "std_dev": np.std(values)
+            }
+        return stats
