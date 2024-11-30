@@ -6,8 +6,8 @@ import logging
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(message)s",  # Remove the default logging level prefix
     filename="simulation.log",
+    filemode="w",  # Overwrite the file each time
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
