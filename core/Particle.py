@@ -187,12 +187,16 @@ class Particle:
 
     def _update_ocean(self, neighbors):
         """
+
         Updates the behavior of ocean cells.
         Ocean cells can evaporate into air, freeze into ice, or remain stable.
 
         Args:
             neighbors (list): List of neighboring particles.
         """
+        neighbors_above = self.get_above_neighbors(neighbors)
+        neighbors_below = self.get_below_neighbors(neighbors)
+        neighbors_aligned = self.get_aligned_neighbors(neighbors)
         self.go_down()  # Ocean cells tend to move downward (e.g., gravity)
         if self.temperature > self.config["evaporation_point"] - 5:
             evaporation_rate = self.config["evaporation_rate"]
@@ -200,7 +204,8 @@ class Particle:
             if self.water_mass <= 0:  # Convert to air if water is fully evaporated
                 self.convert_to_air()
         # Freeze into ice
-        elif self.temperature < self.config["freezing_point"] - 1:
+        elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and self.is_surrounded_by_sea_cells(neighbors_below):
+
             self.convert_to_ice()
         else:  # Stabilize if no changes occur
             self.stabilize()
@@ -337,7 +342,7 @@ class Particle:
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         # Surrounded by water
-        if self.is_surrounded_by_sea_cells(neighbors_above + neighbors_aligned):
+        if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
         elif (
             self.pollution_level > 100

@@ -86,11 +86,11 @@ config = {
     "natural_temperature_decay_rate": 0.1,  # Rate of temperature equalization to baseline
 
     # Cloud-specific settings
-    "cloud_saturation_threshold": 3.0,  # Minimum water mass for clouds to precipitate as rain
+    "cloud_saturation_threshold": 2.0,  # Minimum water mass for clouds to precipitate as rain
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
-    "evaporation_rate": 0.05,  # Rate at which water evaporates
+    "evaporation_rate": 0.1,  # Rate at which water evaporates
 
     # Base colors for visual representation of cell types
     "base_colors": {
