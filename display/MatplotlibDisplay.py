@@ -19,6 +19,7 @@ class MatplotlibDisplay:
         self.current_day = 0
         self.fig = None
         self.ax_3d = None
+        self.three_d_window = None
         self.ax_pollution = None
         self.ax_temperature = None
         self.ax_population = None
@@ -30,9 +31,10 @@ class MatplotlibDisplay:
         self.current_elev = 20  # Default elevation
         self.current_azim = 45  # Default azimuth
 
-
     def plot_3d(self):
-        """Create the plot with all relevant graphs, including the configuration window."""
+        """Create the plot with all relevant graphs, excluding the 3D visualization."""
+        # Precompute 3D visualizations before any rendering
+        self.precompute_visualizations()
 
         # Create the main Tkinter root window for the simulation
         root = tk.Tk()
@@ -55,61 +57,50 @@ class MatplotlibDisplay:
         control_frame = tk.Frame(main_frame)
         control_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
-        tk.Button(control_frame, text="Bring Config to Front", command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
-        tk.Button(control_frame, text="Minimize Config Window", command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
-
-        # Plot frame
+        # Add buttons to the control frame
+        tk.Button(control_frame, text="Bring Config to Front",
+                  command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Minimize Config Window",
+                  command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Minimize 3D Window",
+                  command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Bring 3D Visualization to Front",
+                  command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
+        # Plot frame for graphs
         plot_frame = tk.Frame(main_frame)
         plot_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Main figure and canvas
-        self.fig = plt.Figure(figsize=(16, 12), constrained_layout=True)
+        # Main figure and canvas (for graphs only)
+        self.fig = plt.Figure(figsize=(18, 12), constrained_layout=True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Use GridSpec for flexible subplot layout
-        spec = gridspec.GridSpec(nrows=3, ncols=3, figure=self.fig, hspace=0.3, wspace=0.3)
+        spec = gridspec.GridSpec(
+            nrows=3, ncols=3, figure=self.fig, hspace=0.3, wspace=0.3)
 
-        self.ax_3d = self.fig.add_subplot(spec[0, 0], projection="3d")
-        self.ax_pollution = self.fig.add_subplot(spec[1, 0])
-        self.ax_temperature = self.fig.add_subplot(spec[1, 1])
-        self.ax_population = self.fig.add_subplot(spec[1, 2])
-        self.ax_forests = self.fig.add_subplot(spec[2, 0])
-        self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[2, 1])
-        self.ax_std_dev_temperature_graph = self.fig.add_subplot(spec[2, 2])
-        self.ax_color_map = self.fig.add_subplot(
-            spec[0, 1])  # Color map legend
-        self.ax_color_map.axis("off")  # Hide axes for the legend
-        self.add_cell_type_legend()
+        # Remove 3D and legend from the main window
+        self.ax_pollution = self.fig.add_subplot(spec[0, 0])
+        self.ax_temperature = self.fig.add_subplot(spec[0, 1])
+        self.ax_population = self.fig.add_subplot(spec[0, 2])
+        self.ax_forests = self.fig.add_subplot(spec[1, 0])
+        self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[1, 1])
+        self.ax_std_dev_temperature_graph = self.fig.add_subplot(spec[1, 2])
 
         # Render initial graphs
-        self.precompute_visualizations()
         self.render_pollution_graph()
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
         self.render_std_dev_pollution_graph()
         self.render_std_dev_temperature_graph()
-        
-        self.fig.canvas.draw_idle()  # Force the canvas to update
-
-        self.render_day(self.current_day)
 
         # Configuration table
         self.add_config_table_with_scrollbar(root)
+        self.open_3d_in_new_window()
 
         # Start the Tkinter event loop
         root.mainloop()
-
-
-
-
-
-
-
-
-
-
 
     def bring_config_to_front(self):
         """Bring the configuration window to the front."""
@@ -118,10 +109,24 @@ class MatplotlibDisplay:
             self.config_window.lift()
             self.config_window.focus_force()
 
+    def bring_3d_to_front(self):
+        """Bring the 3D visualization window to the front."""
+        if self.three_d_window and self.three_d_window.winfo_exists():
+            self.three_d_window.deiconify()
+            self.three_d_window.lift()
+            self.three_d_window.focus_force()
+        else:
+            self.open_3d_in_new_window()
+
     def minimize_config_window(self):
         """Minimize the configuration window."""
         if self.config_window and self.config_window.winfo_exists():
             self.config_window.iconify()
+
+    def minimize_3d_window(self):
+        """Minimize the 3D visualization window."""
+        if self.three_d_window and self.three_d_window.winfo_exists():
+            self.three_d_window.iconify()
 
     def add_config_table_with_scrollbar(self, root=None):
         """Create a configuration table window with scrollbars and add control buttons."""
@@ -201,55 +206,178 @@ class MatplotlibDisplay:
         # Remove the topmost attribute after focusing on the window
         self.config_window.after(
             1000, lambda: self.config_window.attributes("-topmost", False))
+   
 
 
 
 
 
-    def add_cell_type_legend(self):
-        """Add a legend explaining the cell colors and cell type numbers."""
-        legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', label='0: Ocean',
-                    markersize=10, markerfacecolor=self.config["base_colors"][0]),
-            plt.Line2D([0], [0], marker='o', color='w', label='1: Desert',
-                    markersize=10, markerfacecolor=self.config["base_colors"][1]),
-            plt.Line2D([0], [0], marker='o', color='w', label='2: Cloud',
-                    markersize=10, markerfacecolor=self.config["base_colors"][2]),
-            plt.Line2D([0], [0], marker='o', color='w', label='3: Ice',
-                    markersize=10, markerfacecolor=self.config["base_colors"][3]),
-            plt.Line2D([0], [0], marker='o', color='w', label='4: Forest',
-                    markersize=10, markerfacecolor=self.config["base_colors"][4]),
-            plt.Line2D([0], [0], marker='o', color='w', label='5: City',
-                    markersize=10, markerfacecolor=self.config["base_colors"][5]),
-            plt.Line2D([0], [0], marker='o', color='w', label='6: Air (White With Low Opacity)',
-                    markersize=10, markerfacecolor=self.config["base_colors"][6]),
-            plt.Line2D([0], [0], marker='o', color='w', label='7: Rain',
-                    markersize=10, markerfacecolor=self.config["base_colors"][7]),
-            plt.Line2D([0], [0], marker='o', color='w', label='8: Vacuum (Transparent)',
-                    markersize=10, markerfacecolor=self.config["base_colors"][8])
-        ]
-        
-        if self.config.get('tint'):
-            legend_elements.append(
-                plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution Levels (Tinted Color)',
-                        markersize=10, markerfacecolor='red')
-            )
 
-        
-        self.ax_color_map.legend(
-            handles=legend_elements,
-            loc="center",
-            title="Cell Types",
-            frameon=False
+
+
+
+
+
+
+
+    def open_3d_in_new_window(self):
+        """Open the 3D plot in a resizable Tkinter window with padding around the legend."""
+        # Create a new Toplevel window
+        self.three_d_window = tk.Toplevel()
+        self.three_d_window.title("3D Visualization")
+        self.three_d_window.geometry("1000x600")  # Default size
+        self.three_d_window.minsize(600, 400)  # Set a minimum size
+        self.three_d_window.columnconfigure(0, weight=3)  # Column for the 3D plot
+        self.three_d_window.columnconfigure(1, weight=1)  # Column for the legend
+        self.three_d_window.rowconfigure(1, weight=1)  # Allow resizing for the frames
+
+        # Frame for the 3D plot
+        plot_frame = tk.Frame(self.three_d_window, bg="white")  # Add background color to blend
+        plot_frame.grid(row=1, column=0, sticky="nsew", padx=(20, 10), pady=(20, 20))  # Adjust padding
+
+        # Outer frame for the legend to add padding
+        legend_outer_frame = tk.Frame(self.three_d_window, bg="white")
+        legend_outer_frame.grid(row=1, column=1, sticky="nsew", padx=(20, 20), pady=(20, 20))  # Add padding around the legend
+
+        # Inner frame for the actual legend content
+        legend_frame = tk.Frame(legend_outer_frame, bg="white", relief=tk.GROOVE, bd=2)  # Add border for better separation
+        legend_frame.pack(fill=tk.BOTH, expand=True, padx=(15, 15), pady=(15, 15))  # Increased internal padding
+
+        # Create a Matplotlib figure and axes for the 3D plot
+        fig = plt.Figure(figsize=(6, 6), constrained_layout=True)
+        ax_3d = fig.add_subplot(111, projection="3d")
+
+        # Fetch the precomputed data for the current day
+        points, colors, sizes = self.precomputed_data[self.current_day]
+        xs, ys, zs = zip(*points) if points else ([], [], [])
+        ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
+
+        ax_3d.set_title(f"Day {self.current_day}")
+        ax_3d.set_xlabel("X Axis")
+        ax_3d.set_ylabel("Y Axis")
+        ax_3d.set_zlabel("Z Axis")
+
+        # Embed the Matplotlib figure in the plot frame
+        canvas = FigureCanvasTkAgg(fig, master=plot_frame)
+        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        canvas.draw()
+
+        # Add the legend to the legend frame
+        self.add_cell_type_legend_to_frame(legend_frame)
+
+        # Handle resizing of the window and adjust the figure size dynamically
+        def on_resize(event):
+            """Adjust the figure layout dynamically when the window is resized."""
+            new_width = plot_frame.winfo_width() / 100  # Scale figure size
+            new_height = plot_frame.winfo_height() / 100
+            fig.set_size_inches(new_width, new_height)
+            canvas.draw_idle()
+
+        self.three_d_window.bind("<Configure>", on_resize)  # Trigger on window resize
+
+        # Handle keyboard events for navigation
+        def handle_key_press(event):
+            """Handle key presses for navigating between days in the separate window."""
+            if event.key == "right":  # Move to the next day
+                if self.current_day < len(self.simulation.states) - 1:
+                    self.current_day += 1
+                    update_plot()
+            elif event.key == "left":  # Move to the previous day
+                if self.current_day > 0:
+                    self.current_day -= 1
+                    update_plot()
+
+        def update_plot():
+            """Update the 3D plot in the separate window."""
+            ax_3d.cla()
+            ax_3d.set_title(f"Day {self.current_day}")
+            ax_3d.set_xlabel("X Axis")
+            ax_3d.set_ylabel("Y Axis")
+            ax_3d.set_zlabel("Z Axis")
+
+            # Fetch data for the updated day
+            points, colors, sizes = self.precomputed_data[self.current_day]
+            xs, ys, zs = zip(*points) if points else ([], [], [])
+            ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
+
+            # Redraw the canvas
+            canvas.draw_idle()
+
+        # Connect the keyboard event handler to the canvas in the new window
+        fig.canvas.mpl_connect("key_press_event", handle_key_press)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def add_cell_type_legend_to_frame(self, legend_frame):
+        """Add a well-padded legend explaining the cell colors and cell type numbers."""
+        # Add a title at the top of the legend
+        title_label = tk.Label(
+            legend_frame,
+            text="Cell Types",
+            font=("Arial", 12, "bold"),
+            bg="white"
         )
+        title_label.pack(pady=(10, 10))  # Add space above and below the title
 
+        # Define legend items
+        legend_items = [
+            ("0: Ocean", self.config["base_colors"][0]),
+            ("1: Desert", self.config["base_colors"][1]),
+            ("2: Cloud", self.config["base_colors"][2]),
+            ("3: Ice", self.config["base_colors"][3]),
+            ("4: Forest", self.config["base_colors"][4]),
+            ("5: City", self.config["base_colors"][5]),
+            ("6: Air (White With Low Opacity)", self.config["base_colors"][6]),
+            ("7: Rain", self.config["base_colors"][7]),
+            ("8: Vacuum (Transparent)", self.config["base_colors"][8]),
+        ]
 
+        # Add tinted pollution if enabled
+        if self.config.get("tint"):
+            legend_items.append(("9: Pollution Levels (Tinted Color)", "red"))
 
+        # Add each legend item with padding
+        for text, color in legend_items:
+            item_frame = tk.Frame(legend_frame, bg="white")
+            item_frame.pack(fill=tk.X, padx=(20, 20), pady=(10, 10))  # Add padding around each item
 
+            # Create a color indicator
+            color_label = tk.Label(
+                item_frame,
+                text=" ",
+                bg=color,
+                width=2,
+                height=1,
+                relief=tk.SOLID,
+                borderwidth=1
+            )
+            color_label.pack(side=tk.LEFT, padx=(10, 10))  # Add space between color box and text
 
+            # Add the text description
+            text_label = tk.Label(
+                item_frame,
+                text=text,
+                font=("Arial", 10),
+                bg="white",
+                anchor="w"
+            )
+            text_label.pack(side=tk.LEFT, padx=(10, 10))  # Add space between text and color box
 
 
     def precompute_visualizations(self):
+        # # Render initial graphs
         """Precompute 3D scatter data for all precomputed states."""
         logging.info("Precomputing 3D visualizations...")
         for state in self.simulation.states:
@@ -259,7 +387,7 @@ class MatplotlibDisplay:
             for x in range(state.grid.shape[0]):
                 for y in range(state.grid.shape[1]):
                     for z in range(state.grid.shape[2]):
-        
+
                         cell = state.grid[x][y][z]
                         if cell.get_color() is not None:
                             # Interpolate multiple points for "densification"
@@ -374,18 +502,19 @@ class MatplotlibDisplay:
         else:
             logging.error("Data length mismatch in pollution graph.")
 
-
-
-
     def render_std_dev_pollution_graph(self):
         """Render the standard deviation of pollution graph over time."""
         self.ax_std_dev_pollution_graph.cla()
-        self.ax_std_dev_pollution_graph.set_title("Pollution Standard deviation Over Time")
+        self.ax_std_dev_pollution_graph.set_title(
+            "Pollution Standard deviation Over Time")
         self.ax_std_dev_pollution_graph.set_xlabel("Day")
-        self.ax_std_dev_pollution_graph.set_ylabel("Standard deviation Pollution")
+        self.ax_std_dev_pollution_graph.set_ylabel(
+            "Standard deviation Pollution")
 
-        days = range(len(self.simulation.std_dev_pollution_over_time))  # Corrected attribute name
-        std_dev_pollution = self.simulation.std_dev_pollution_over_time  # Corrected attribute name
+        # Corrected attribute name
+        days = range(len(self.simulation.std_dev_pollution_over_time))
+        # Corrected attribute name
+        std_dev_pollution = self.simulation.std_dev_pollution_over_time
 
         if len(days) == len(std_dev_pollution):
             self.ax_std_dev_pollution_graph.plot(
@@ -393,19 +522,22 @@ class MatplotlibDisplay:
             )
             self.ax_std_dev_pollution_graph.legend()
         else:
-            logging.error("Data length mismatch in pollution Standard deviation graph.")
-
-
+            logging.error(
+                "Data length mismatch in pollution Standard deviation graph.")
 
     def render_std_dev_temperature_graph(self):
         """Render the standard deviation of temperature graph over time."""
         self.ax_std_dev_temperature_graph.cla()
-        self.ax_std_dev_temperature_graph.set_title("Temperature Standard deviation Over Time")
+        self.ax_std_dev_temperature_graph.set_title(
+            "Temperature Standard deviation Over Time")
         self.ax_std_dev_temperature_graph.set_xlabel("Day")
-        self.ax_std_dev_temperature_graph.set_ylabel("Standard deviation Temperature")
+        self.ax_std_dev_temperature_graph.set_ylabel(
+            "Standard deviation Temperature")
 
-        days = range(len(self.simulation.std_dev_temperature_over_time))  # Corrected attribute name
-        std_dev_temperature = self.simulation.std_dev_temperature_over_time  # Corrected attribute name
+        # Corrected attribute name
+        days = range(len(self.simulation.std_dev_temperature_over_time))
+        # Corrected attribute name
+        std_dev_temperature = self.simulation.std_dev_temperature_over_time
 
         if len(days) == len(std_dev_temperature):
             self.ax_std_dev_temperature_graph.plot(
@@ -413,16 +545,8 @@ class MatplotlibDisplay:
             )
             self.ax_std_dev_temperature_graph.legend()
         else:
-            logging.error("Data length mismatch in temperature Standard deviation graph.")
-
-
-
-    def handle_key_press(self, event):
-        """Handle key presses for navigating and zooming/panning the graphs."""
-        if event.key == "right":
-            self.next_day()
-        elif event.key == "left":
-            self.previous_day()
+            logging.error(
+                "Data length mismatch in temperature Standard deviation graph.")
 
     def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:
