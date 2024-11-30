@@ -322,6 +322,10 @@ class World:
         # Phase 4: Resolve collisions
         position_map = {}
         for (i, j, k), updated_cell in updates.items():
+            if updated_cell.cell_type in {0,1,3,4,5,8}:
+                position_map[i,j,k] = updated_cell
+                continue
+
             next_position = updated_cell.get_next_position()
             if next_position not in position_map:
                 position_map[next_position] = updated_cell
@@ -364,6 +368,13 @@ class World:
         Returns:
             Particle: The resolved cell after the collision.
         """
+
+        logging.info(f"in resolve collision, cell1 type:{cell1.cell_type} cell2 type:{cell2.cell_type}")
+        if cell1.cell_type in {6,8} and cell2.cell_type in {0}:
+            logging.info("sea air collision")
+        elif cell2.cell_type in {6,8} and cell1.cell_type in {0}:
+            logging.info("sea air collision")
+
         if (cell1.cell_type == 6 and cell2.cell_type == 6):
             return cell1 if cell1.water_mass > cell2.water_mass else cell2
         # Prevent land (desert) from overriding ocean

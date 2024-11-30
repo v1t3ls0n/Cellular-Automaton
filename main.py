@@ -7,6 +7,9 @@ import logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(message)s",  # Remove the default logging level prefix
+    filename="simulation.log",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 logging.info("Simulation started.")
