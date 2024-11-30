@@ -171,8 +171,6 @@ The simulation is inspired by cellular automata, a mathematical model used for s
    python main.py
    ```
 
----
-
 ## Example Output
 
 ---![UI Results, without tint color](./docs/ui_print_screen_01.png)
