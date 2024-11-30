@@ -13,10 +13,10 @@ config = {
     "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)
     # Ratios for land cell types in the initial grid
     "initial_ratios": {
-        "forest": 0.2,  # Proportion of forest cells
-        "city": 0.2,    # Proportion of city cells
+        "forest": 0.4,  # Proportion of forest cells
+        "city": 0.4,    # Proportion of city cells
         "desert": 0.1,  # Proportion of desert cells
-        "vacuum": 0.5,  # Proportion of vacuum cells
+        "vacuum": 0.1,  # Proportion of vacuum cells
     },
     # Cell type configurations:
     # 0: Ocean | 1: Desert | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
@@ -90,7 +90,7 @@ config = {
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
-    "evaporation_rate": 0.1,  # Rate at which water evaporates
+    "evaporation_rate": 0.05,  # Rate at which water evaporates
 
     # Base colors for visual representation of cell types
     "base_colors": {

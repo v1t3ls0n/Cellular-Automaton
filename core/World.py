@@ -129,9 +129,7 @@ class World:
 
                     if k == 0:
                         # Surface layer: Assign initial sea or land
-                        cell_type = np.random.choice(
-                            [0, 1], p=[0.5, 0.5]  # 50% Sea, 50% Land
-                        )
+                        cell_type = 1
                         plane_surfaces_map[(i, j, k)] = (
                             'unused_land' if cell_type == 1 else 'sea'
                         )
@@ -159,12 +157,11 @@ class World:
                         elif surface_type == 'unused_land':
                             # Land layer behavior
                             if k <= elevation_map[i, j]:
-                                # cell_type = 1  # Unused Land (Desert)
+                                cell_type = 1  # Unused Land (Desert)
                                 cell_type = np.random.choice(
-                                        [1, 4, 5, 8],
-                                        p=[deserts_ratio, forests_ratio,
-                                            cities_ratio, vacuum_ratio]
-                                    )
+                                    [0, 1],
+                                    p=[0.5, 0.5]
+                                )
                             elif k == elevation_map[i, j] + 1:
                                 # Prevent forests/cities above existing forests/cities
                                 if plane_surfaces_map.get((i, j, k - 1)) != 'used_land':
@@ -377,7 +374,9 @@ class World:
         elif cell1.cell_type == 7 and cell2.cell_type == 7:  # Merge rain cells
             cell1.water_mass += cell2.water_mass
             return cell1
-        elif cell1.cell_type == 7 and cell2.cell_type in {0,3}:
+        elif cell1.cell_type == 7 and cell2.cell_type in {0, 8}:
+            return cell2
+        elif cell1.cell_type in {6,7} and cell2.cell_type in {0,1,2,3,4,5,7}:
             return cell2
         # Default collision resolution
         return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
