@@ -71,7 +71,7 @@ class Simulation:
             next_state.update_cells_on_grid()  # Update the grid cells
             self.states.append(next_state)  # Store the new state
             self._update_aggregates(next_state)  # Update aggregates
-            logging.info(f"Next state (Day {day + 1}) added.")
+            # logging.info(f"Next state (Day {day + 1}) added.")
 
     def analyze(self):
         """
