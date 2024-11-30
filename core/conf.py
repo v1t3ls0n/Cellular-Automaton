@@ -59,14 +59,14 @@ config = {
     },
 
    # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.2,  # Rate at which forests absorb pollution
-    "forest_cooling_effect": 0.2,  # Cooling effect of forests on their environment
+    "forest_pollution_absorption_rate": 0.1,  # Rate at which forests absorb pollution
+    "forest_cooling_effect": 0.1,  # Cooling effect of forests on their environment
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.3,  # Rate of pollution increase in cities
-    "city_warming_effect": 0.3,  # Warming effect of cities on their environment
-    "city_temperature_upper_limit": 200,  # Maximum temperature cities can reach
-    "city_pollution_upper_limit": 200,  # Maximum pollution level cities can reach
+    "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
+    "city_warming_effect": 0.1,  # Warming effect of cities on their environment
+    "city_temperature_upper_limit": 100,  # Maximum temperature cities can reach
+    "city_pollution_upper_limit": 100,  # Maximum pollution level cities can reach
 
 
 
@@ -78,6 +78,8 @@ config = {
 
     # Thresholds and rates for water transfer and pollution effects
     "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
+    "water_transfer_rate": 0.1,  # Maximum water transfer per interaction
+    "ocean_conversion_threshold": 1.0,  # Water mass required to convert a cell to ocean
     "pollution_damage_threshold": 5.0,  # Pollution level causing damage to ecosystems
     "pollution_level_tipping_point": 50,  # Point at which pollution accelerates damage
     "natural_pollution_decay_rate": 0.1,  # Rate of pollution decay over time
@@ -86,7 +88,7 @@ config = {
     "natural_temperature_decay_rate": 0.1,  # Rate of temperature equalization to baseline
 
     # Cloud-specific settings
-    "cloud_saturation_threshold": 2.0,  # Minimum water mass for clouds to precipitate as rain
+    "cloud_saturation_threshold": 1.0,  # Minimum water mass for clouds to precipitate as rain
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
