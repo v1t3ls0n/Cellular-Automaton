@@ -377,7 +377,7 @@ class World:
         elif cell1.cell_type == 7 and cell2.cell_type == 7:  # Merge rain cells
             cell1.water_mass += cell2.water_mass
             return cell1
-        elif cell1.cell_type == 7 and cell2.cell_type == 0:
+        elif cell1.cell_type == 7 and cell2.cell_type in {0,3}:
             return cell2
         # Default collision resolution
         return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2

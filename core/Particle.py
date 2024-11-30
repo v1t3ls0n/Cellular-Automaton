@@ -204,8 +204,7 @@ class Particle:
             if self.water_mass <= 0:  # Convert to air if water is fully evaporated
                 self.convert_to_air()
         # Freeze into ice
-        elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and self.is_surrounded_by_sea_cells(neighbors_below):
-
+        elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and (self.is_surrounded_by_sea_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_aligned)):
             self.convert_to_ice()
         else:  # Stabilize if no changes occur
             self.stabilize()
