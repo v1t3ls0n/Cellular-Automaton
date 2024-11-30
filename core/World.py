@@ -150,7 +150,7 @@ class World:
                                 )
                             elif k == elevation_map[i, j]:
                                 cell_type = np.random.choice(
-                                    [0, 3, 6], p=[0.65, 0.05, 0.3]  # Sea/Ice/Air
+                                    [0, 3, 6], p=[0.75, 0.10, 0.15]  # Sea/Ice/Air
                                 )
                             elif k > elevation_map[i, j]:  # Above sea
                                 cell_type = self._get_dynamic_air_or_cloud_type(

@@ -386,7 +386,8 @@ class Particle:
         ):
             self.go_up()
         # else:
-        #     self.direction = self.calculate_dynamic_wind_direction(neighbors)
+            # self.direction = self.calculate_dynamic_wind_direction(neighbors)
+
 
 
     def _update_rain(self, neighbors):
