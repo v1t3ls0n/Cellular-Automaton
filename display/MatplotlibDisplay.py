@@ -229,12 +229,12 @@ class MatplotlibDisplay:
                        markersize=10, markerfacecolor=self.config["base_colors"][7]),
             plt.Line2D([0], [0], marker='o', color='w', label='8: Vacuum (Transparent)',
                        markersize=10, markerfacecolor=self.config["base_colors"][8])]
-        
+
         if self.config['tint']:
             tinted_red = plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution Levels (Tinted Color)',
-                        markersize=10, markerfacecolor='red')
+                                    markersize=10, markerfacecolor='red')
             legend_elements.append(tinted_red)
-        
+
         self.ax_color_map.legend(
             handles=legend_elements,
             loc="center",
@@ -252,7 +252,7 @@ class MatplotlibDisplay:
             for x in range(state.grid.shape[0]):
                 for y in range(state.grid.shape[1]):
                     for z in range(state.grid.shape[2]):
-        
+
                         cell = state.grid[x][y][z]
                         if cell.get_color() is not None:
                             # Interpolate multiple points for "densification"
@@ -296,7 +296,6 @@ class MatplotlibDisplay:
 
         self.fig.canvas.draw_idle()
 
-
     def handle_key_press(self, event):
         """Handle key presses for navigating and zooming/panning the graphs."""
         if event.key == "right":
@@ -313,13 +312,6 @@ class MatplotlibDisplay:
         if self.current_day > 0:
             self.current_day -= 1
             self.render_day(self.current_day)
-
-
-
-
-
-
-
 
     def render_forests_graph(self):
         """Render the forest count graph over time with standard deviation."""
@@ -464,7 +456,9 @@ class MatplotlibDisplay:
             )
 
             # Plot the average pollution
-            self.ax_pollution.plot(days, avg_pollution, color="red", label="Pollution")
+            self.ax_pollution.plot(days, avg_pollution,
+                                   color="red", label="Pollution")
             self.ax_pollution.legend()
         else:
-            logging.error("Data length mismatch in pollution graph or standard deviation.")
+            logging.error(
+                "Data length mismatch in pollution graph or standard deviation.")
