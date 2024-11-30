@@ -271,7 +271,6 @@ class World:
                                                    persistence=persistence, lacunarity=lacunarity) + 1) * (self.grid_size[2] // 5))
 
         return elevation_map
-
     def update_cells_on_grid(self):
         """
         Update all cells in the grid based on their next states and resolve collisions.
@@ -334,9 +333,61 @@ class World:
         self.grid = new_grid
         self._recalculate_global_attributes()
 
+    # def resolve_collision(self, cell1, cell2):
+    #     """
+    #     Resolve collisions between two cells with improved handling of interactions.
+
+    #     Args:
+    #         cell1 (Particle): The first cell involved in the collision.
+    #         cell2 (Particle): The second cell involved in the collision.
+
+    #     Returns:
+    #         Particle: The resolved cell after the collision.
+    #     """
+    #     # Prevent land (desert) from overriding ocean
+    #     if (cell1.cell_type == 1 and cell2.cell_type == 0) or (cell1.cell_type == 0 and cell2.cell_type == 1):
+    #         return cell1 if cell1.cell_type == 0 else cell2
+
+    #     # Prevent vacuum or air from overriding ocean or land
+    #     if cell1.cell_type in {6, 8} and cell2.cell_type in {0, 1, 3, 4, 5}:
+    #         return cell2
+    #     if cell2.cell_type in {6, 8} and cell1.cell_type in {0, 1, 3, 4, 5}:
+    #         return cell1
+
+    #     # Handle rain interactions
+    #     if cell1.cell_type == 7:  # Cell1 is Rain
+    #         if cell2.cell_type in {6, 8}:  # Air or Vacuum
+    #             return cell1  # Rain continues falling
+    #         elif cell2.cell_type in {0, 1, 3, 4, 5}:  # Ocean, Desert, etc.
+    #             cell2.water_mass += cell1.water_mass  # Add rainwater
+    #             return cell2
+
+    #     if cell2.cell_type == 7:  # Cell2 is Rain
+    #         if cell1.cell_type in {6, 8}:  # Air or Vacuum
+    #             return cell2  # Rain continues falling
+    #         elif cell1.cell_type in {0, 1, 3, 4, 5}:  # Ocean, Desert, etc.
+    #             cell1.water_mass += cell2.water_mass  # Add rainwater
+    #             return cell1
+
+    #     # Ensure desert cannot override ocean even in other cases
+    #     if cell1.cell_type == 1 and cell2.cell_type == 0:
+    #         return cell2
+    #     if cell2.cell_type == 1 and cell1.cell_type == 0:
+    #         return cell1
+
+    #     # Default behavior based on cell type weights
+    #     return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
+
+
+
+
+
+
+
+
     def resolve_collision(self, cell1, cell2):
         """
-        Resolve collisions between two cells, prioritizing non-vacuum and non-air cells.
+        Resolve collisions between two cells.
 
         Args:
             cell1 (Particle): The first cell involved in the collision.
@@ -345,41 +396,22 @@ class World:
         Returns:
             Particle: The resolved cell after the collision.
         """
-        # Handle rain interactions first
-        if cell1.cell_type == 7 or cell2.cell_type == 7:
-            return self.handle_rain_collision(cell1, cell2)
-
-        # Prevent vacuum or air from overriding ocean or land
-        if cell1.cell_type in {6, 8} and cell2.cell_type in {0, 1, 3, 4, 5}:
-            return cell2
-        if cell2.cell_type in {6, 8} and cell1.cell_type in {0, 1, 3, 4, 5}:
+        # Rain falls through air or vacuum
+        if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:
             return cell1
-
-        # Prevent desert from overriding ocean
-        if (cell1.cell_type == 1 and cell2.cell_type == 0) or (cell1.cell_type == 0 and cell2.cell_type == 1):
-            return cell1 if cell1.cell_type == 0 else cell2
-
-        # Default behavior based on cell type weights
+        elif cell2.cell_type == 7 and cell1.cell_type in {6, 8}:
+            return cell2
+        elif cell1.cell_type == 7 and cell2.cell_type == 7:  # Merge rain cells
+            cell1.water_mass += cell2.water_mass
+            return cell1
+        # Default collision resolution
         return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
 
-    def handle_rain_collision(self, cell1, cell2):
-        """
-        Handle collisions involving rain particles.
-        """
-        if cell1.cell_type == 7:  # Cell1 is Rain
-            if cell2.cell_type in {6, 8}:  # Air or Vacuum
-                return cell1  # Rain continues falling
-            elif cell2.cell_type in {0, 1, 3, 4, 5}:  # Ocean, Desert, etc.
-                cell2.water_mass += cell1.water_mass  # Add rainwater
-                return cell2
-        elif cell2.cell_type == 7:  # Cell2 is Rain
-            if cell1.cell_type in {6, 8}:  # Air or Vacuum
-                return cell2  # Rain continues falling
-            elif cell1.cell_type in {0, 1, 3, 4, 5}:  # Ocean, Desert, etc.
-                cell1.water_mass += cell2.water_mass  # Add rainwater
-                return cell1
 
-        return cell1  # Default fallback
+
+
+
+
 
 
 
@@ -447,6 +479,12 @@ class World:
         self.total_cities = total_cities
         self.total_forests = total_forests
         self.total_rain = total_rain
+        
+        
+        
+
+
+        
         # logging.info(
         #     f"Recalculated global attributes: Avg Temp={
         #         self.avg_temperature}, "

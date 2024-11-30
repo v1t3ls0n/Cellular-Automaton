@@ -202,7 +202,11 @@ class Particle:
             evaporation_rate = self.config["evaporation_rate"]
             self.water_mass -= evaporation_rate  # Water evaporates
             if self.water_mass <= 0:  # Convert to air if water is fully evaporated
+                self.exchange_water_mass(
+                    neighbors)  # Share water with neighboring cells
                 self.convert_to_air()
+                self.direction = self.calculate_dynamic_wind_direction()
+
         # Freeze into ice
         elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and not self.is_surrounded_by_land_cells(neighbors_aligned) and (self.is_surrounded_by_sea_cells(neighbors_below+neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_above)):
             self.convert_to_ice()
@@ -427,6 +431,8 @@ class Particle:
             # Convert to air (dry up) if surrounded by land cells
             elif self.is_surrounded_by_land_cells(neighbors):
                 self.convert_to_air()
+                self.direction = self.calculate_dynamic_wind_direction()
+
 
     ####################################################################################################################
     ###################################### CELL CONVERSIONS ###########################################################
@@ -528,7 +534,7 @@ class Particle:
         """
         self.cell_type = 6  # Set cell type to air
         # Evaporation reduces water mass
-        self.water_mass = max(0.0, self.water_mass - 0.5)
+        self.water_mass = max(0.0, self.water_mass - 0.2)
         self.temperature += 2  # Air warms during evaporation
         self.go_up()  # Air moves upward
 
@@ -649,16 +655,13 @@ class Particle:
                     transfer_amount = diff * 0.05
                     if transfer_amount > 0:
                         # Transfer water from the neighbor to self
-                        neighbor.water_mass -= transfer_amount
                         self.water_mass += transfer_amount
                     else:
                         # Transfer water from self to the neighbor
-                        neighbor.water_mass += -transfer_amount
                         self.water_mass -= -transfer_amount
 
                     # Check if rain should convert to ocean
-                    if self.cell_type == 7 and self.water_mass > 0.8:
-                        self.convert_to_ocean()
+
 
     ####################################################################################################################
     ###################################### CELL ELEVATION ##############################################################

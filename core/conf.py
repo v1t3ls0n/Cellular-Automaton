@@ -96,7 +96,7 @@ config = {
 
     # Base colors for visual representation of cell types
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.1),  # Air (transparent white)
+        6: (1.0, 1.0, 1.0, 0.2),  # Air (transparent white)
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
         3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
