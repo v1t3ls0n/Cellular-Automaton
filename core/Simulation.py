@@ -1,45 +1,6 @@
 from core.World import World  # Import the World class
 import logging
 import numpy as np
-class Simulation:
-    """
-    The Simulation class is responsible for managing the lifecycle of a simulation,
-    including initialization, precomputing states over a specified number of days,
-    and analyzing results.
-    """
-
-    def __init__(self, grid_size, initial_ratios, days):
-        """
-        Initialize the Simulation class with initial conditions.
-
-        Args:
-            grid_size (tuple): Dimensions of the grid (x, y, z).
-            initial_ratios (dict): Initial ratios for different cell types (e.g., forest, city, desert).
-            days (int): Number of days to run the simulation.
-        """
-        self.grid_size = grid_size
-        self.initial_ratios = initial_ratios
-        self.days = days
-
-        self.states = []  # Store the history of World objects (one per day)
-
-        # Aggregates to track various metrics over time
-        self.pollution_over_time = []  # Average pollution over time
-        self.temperature_over_time = []  # Average temperature over time
-        self.city_population_over_time = []  # Total number of city cells over time
-        self.forest_count_over_time = []  # Total number of forest cells over time
-
-        # Standard deviation tracking
-        self.std_dev_pollution = []
-        self.std_dev_temperature = []
-        self.std_dev_cities = []
-        self.std_dev_forests = []
-
-
-from core.World import World  # Import the World class
-import logging
-import numpy as np
-
 
 class Simulation:
     """
