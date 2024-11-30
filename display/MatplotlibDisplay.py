@@ -78,9 +78,6 @@ class MatplotlibDisplay:
         self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[2, 1])
         self.ax_std_dev_temperature_graph = self.fig.add_subplot(spec[2, 2])
 
-        # Add legend or color map
-        self.add_cell_type_legend()
-
         # Render initial graphs
         self.precompute_visualizations()
         self.render_pollution_graph()
@@ -89,6 +86,12 @@ class MatplotlibDisplay:
         self.render_forests_graph()
         self.render_std_dev_pollution_graph()
         self.render_std_dev_temperature_graph()
+        
+        # Add legend or color map
+        self.add_cell_type_legend()
+
+        self.fig.canvas.draw_idle()  # Force the canvas to update
+
         self.render_day(self.current_day)
 
         # Configuration table
@@ -231,13 +234,15 @@ class MatplotlibDisplay:
                         markersize=10, markerfacecolor='red')
             )
 
-        self.ax_temperature.legend(
+        
+        self.ax_color_map.legend(
             handles=legend_elements,
-            loc="upper center",  # Center the legend above the plot
-            bbox_to_anchor=(0.5, -0.2),  # Position the legend below the plot
-            ncol=3,  # Arrange items in multiple columns
-            frameon=False  # Remove the legend box (optional)
+            loc="center",
+            title="Cell Types",
+            frameon=False
         )
+
+
 
 
 
