@@ -210,10 +210,6 @@ class MatplotlibDisplay:
         self.config_window.geometry(
             f"{int(window_width)}x{int(window_height)}")
 
-        # Remove the topmost attribute after focusing on the window
-        self.config_window.after(
-            1000, lambda: self.config_window.attributes("-topmost", False))
-
     def open_3d_in_new_window(self):
         """Open a resizable 3D graph window with a Matplotlib legend and keyboard navigation."""
         self.three_d_window = tk.Toplevel()
@@ -224,7 +220,7 @@ class MatplotlibDisplay:
         self.three_d_window.columnconfigure(1, weight=1)  # Column for legend
         self.three_d_window.rowconfigure(
             0, weight=1)  # Flexible row for content
-
+        self.three_d_window.attributes("-topmost", True)
         # Frame for the 3D plot
         fig = plt.Figure(figsize=(8, 6), constrained_layout=True)
         ax_3d = fig.add_subplot(111, projection="3d")
@@ -293,6 +289,9 @@ class MatplotlibDisplay:
         legend_canvas.get_tk_widget().grid(
             row=0, column=1, sticky="nsew", padx=(5, 10), pady=10)
         legend_canvas.draw()
+        # Remove the topmost attribute after focusing on the window
+        self.config_window.after(
+            1000, lambda: self.config_window.attributes("-topmost", False))
 
         # Handle keyboard events for navigation
         def handle_key_press(event):
@@ -348,6 +347,7 @@ class MatplotlibDisplay:
             bg="white"
         )
         title_label.pack(pady=(10, 10))  # Add space above and below the title
+        # self.config_window.attributes("-topmost", True)
 
         # Define legend items
         legend_items = [
