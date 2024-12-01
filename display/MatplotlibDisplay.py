@@ -33,6 +33,11 @@ class MatplotlibDisplay:
 
     def plot_3d(self):
         self.precompute_visualizations()
+
+        # Open 3D visualization in a separate window
+        self.open_3d_in_new_window()
+
+        
         """Create the plot with all relevant graphs, including the configuration window."""
         # Create the main Tkinter root window for the simulation
         root = tk.Tk()
@@ -49,13 +54,14 @@ class MatplotlibDisplay:
         # Set the window close protocol
         root.protocol("WM_DELETE_WINDOW", on_close)
 
-        # Configure row and column resizing
-        root.rowconfigure(1, weight=1)  # Make the second row (plot area) expandable
-        root.columnconfigure(0, weight=1)  # Make the first column expandable
 
-        # Create a frame for the simulation plot and buttons
-        main_frame = tk.Frame(root)
-        main_frame.grid(row=0, column=0, sticky="nsew")
+        # Configure row and column resizing for the root
+        root.rowconfigure(1, weight=1)  # Make the plot area expandable
+        root.columnconfigure(0, weight=1)
+
+        # Create a frame for the buttons (minimal height)
+        control_frame = tk.Frame(root)
+        control_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
 
         # Create a frame for the control buttons
         control_frame = tk.Frame(main_frame)
@@ -72,18 +78,19 @@ class MatplotlibDisplay:
         tk.Button(control_frame, text="Bring 3D Visualization to Front",
                 command=self.bring_3d_to_front, width=button_width).pack(side=tk.LEFT, padx=5)
 
-        # Create a frame for the simulation plot
-        plot_frame = tk.Frame(main_frame)
-        plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Create a frame for the plots (maximum height)
+        plot_frame = tk.Frame(root)
+        plot_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
 
-        # Configure row and column resizing for the plot area
+        # Configure plot frame to expand
         plot_frame.rowconfigure(0, weight=1)
         plot_frame.columnconfigure(0, weight=1)
 
         # Create the main figure
         self.fig = plt.Figure(figsize=(16, 8), constrained_layout=True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+
 
         # Use GridSpec for flexible layout
         spec = gridspec.GridSpec(nrows=3, ncols=2, figure=self.fig)
@@ -104,8 +111,7 @@ class MatplotlibDisplay:
         self.render_std_dev_pollution_graph()
         self.render_std_dev_temperature_graph()
 
-        # Open 3D visualization in a separate window
-        self.open_3d_in_new_window()
+
 
         # Start the Tkinter event loop
         root.mainloop()
