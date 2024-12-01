@@ -41,7 +41,8 @@ class MatplotlibDisplay:
         root = tk.Tk()
         root.title("Environmental Simulation Results")
         self.main_window = root
-        root.state("zoomed")  # Maximize the window without entering full-screen mode
+        # Maximize the window without entering full-screen mode
+        root.state("zoomed")
 
         def on_close():
             root.destroy()
@@ -75,7 +76,7 @@ class MatplotlibDisplay:
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         spec = gridspec.GridSpec(nrows=4, ncols=2, figure=self.fig)
-        
+
         # Configure axes for the plots
         self.ax_pollution = self.fig.add_subplot(spec[0, 0])
         self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[0, 1])
@@ -98,20 +99,10 @@ class MatplotlibDisplay:
 
         self.main_window = root
 
-
-
         # Open 3D visualization in a separate window
         self.open_3d_in_new_window(root)
         self.add_config_table_with_scrollbar(root)
         root.mainloop()
-
-
-
-
-
-
-
-
 
     def add_config_table_with_scrollbar(self, root=None):
         """Create a configuration table window with scrollbars and add control buttons."""
@@ -165,9 +156,11 @@ class MatplotlibDisplay:
         for key, value in self.config.items():
             if key in key_labels:
                 formatted_value = format_config_value(key, value)
-                tree.insert("", "end", values=(key_labels[key], formatted_value))
+                tree.insert("", "end", values=(
+                    key_labels[key], formatted_value))
                 # Calculate maximum width for the Parameter column
-                parameter_width = max(parameter_width, len(key_labels[key]) * 10)
+                parameter_width = max(
+                    parameter_width, len(key_labels[key]) * 10)
 
                 # Calculate maximum width for the Value column
                 value_width = max(value_width, len(formatted_value) * 7)
@@ -223,28 +216,28 @@ class MatplotlibDisplay:
         # Legend elements
         legend_elements = [
             plt.Line2D([0], [0], marker="o", color="w", label="0 : Ocean", markersize=10,
-                    markerfacecolor=self.config["base_colors"][0]),
+                       markerfacecolor=self.config["base_colors"][0]),
             plt.Line2D([0], [0], marker="o", color="w", label="1 : Desert", markersize=10,
-                    markerfacecolor=self.config["base_colors"][1]),
+                       markerfacecolor=self.config["base_colors"][1]),
             plt.Line2D([0], [0], marker="o", color="w", label="2 : Cloud", markersize=10,
-                    markerfacecolor=self.config["base_colors"][2]),
+                       markerfacecolor=self.config["base_colors"][2]),
             plt.Line2D([0], [0], marker="o", color="w", label="3 : Ice", markersize=10,
-                    markerfacecolor=self.config["base_colors"][3]),
+                       markerfacecolor=self.config["base_colors"][3]),
             plt.Line2D([0], [0], marker="o", color="w", label="4 : Forest", markersize=10,
-                    markerfacecolor=self.config["base_colors"][4]),
+                       markerfacecolor=self.config["base_colors"][4]),
             plt.Line2D([0], [0], marker="o", color="w", label="5 : City", markersize=10,
-                    markerfacecolor=self.config["base_colors"][5]),
+                       markerfacecolor=self.config["base_colors"][5]),
             plt.Line2D([0], [0], marker="o", color="w", label="6 : Air", markersize=10,
-                    markerfacecolor=self.config["base_colors"][6]),
+                       markerfacecolor=self.config["base_colors"][6]),
             plt.Line2D([0], [0], marker="o", color="w", label="7 : Rain", markersize=10,
-                    markerfacecolor=self.config["base_colors"][7]),
+                       markerfacecolor=self.config["base_colors"][7]),
             plt.Line2D([0], [0], marker="o", color="w", label="8 : Vacuum", markersize=10,
-                    markerfacecolor=self.config["base_colors"][8]),
+                       markerfacecolor=self.config["base_colors"][8]),
         ]
         if self.config.get('tint'):
             legend_elements.append(
                 plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution (Tint)',
-                            markersize=10, markerfacecolor='red')
+                           markersize=10, markerfacecolor='red')
             )
 
         # Add a single legend to the color map axis
@@ -290,12 +283,6 @@ class MatplotlibDisplay:
 
         # Bind the keyboard event handler
         fig.canvas.mpl_connect("key_press_event", handle_key_press)
-
-
-
-
-
-
 
     def add_cell_type_legend_to_frame(self, legend_frame):
         """Add a well-padded legend explaining the cell colors and cell type numbers."""
@@ -559,7 +546,6 @@ class MatplotlibDisplay:
             logging.error(
                 "Data length mismatch in temperature Standard deviation graph.")
 
-
     def render_water_mass_graph(self):
         """Render the average water mass graph over time with standard deviation limits."""
         self.ax_water_mass.cla()
@@ -585,16 +571,18 @@ class MatplotlibDisplay:
             )
 
             # Plot the average water mass
-            self.ax_water_mass.plot(days, avg_water_mass, color="blue", label="Average Water Mass")
+            self.ax_water_mass.plot(
+                days, avg_water_mass, color="blue", label="Average Water Mass")
             self.ax_water_mass.legend()
         else:
-            logging.error("Data length mismatch in water mass graph or standard deviation.")
-
+            logging.error(
+                "Data length mismatch in water mass graph or standard deviation.")
 
     def render_std_dev_water_mass_graph(self):
         """Render the standard deviation of water mass graph over time."""
         self.ax_std_dev_water_mass.cla()
-        self.ax_std_dev_water_mass.set_title("Standard Deviation of Water Mass Over Time")
+        self.ax_std_dev_water_mass.set_title(
+            "Standard Deviation of Water Mass Over Time")
         self.ax_std_dev_water_mass.set_xlabel("Day")
         self.ax_std_dev_water_mass.set_ylabel("Water Mass Std Dev")
 
@@ -609,9 +597,6 @@ class MatplotlibDisplay:
         else:
             logging.error("Data length mismatch in water mass std dev graph.")
 
-
-
-
     def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:
             self.current_day += 1
@@ -621,7 +606,6 @@ class MatplotlibDisplay:
         if self.current_day > 0:
             self.current_day -= 1
             self.render_day(self.current_day)
-
 
     def bring_config_to_front(self):
         """Bring the configuration window to the front."""
@@ -662,5 +646,3 @@ class MatplotlibDisplay:
             self.three_d_window.iconify()
         else:
             self.open_3d_in_new_window()
-
-
