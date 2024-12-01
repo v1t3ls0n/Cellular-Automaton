@@ -95,54 +95,57 @@ class MatplotlibDisplay:
 
 
 
-
-        # Create a Matplotlib figure with adjusted figsize to match the window
-        fig = plt.Figure(figsize=(18, 24))  # Adjust size to make the graphs fill the window
-        gs = fig.add_gridspec(7, 2, width_ratios=[1, 1], hspace=0.5, wspace=0.3)  # Equal width for both columns, balanced spacing
+        # Create a Matplotlib figure with adjusted size to fill the window
+        fig = plt.Figure(figsize=(18, 24))  # Adjusted size to fit all graphs
+        gs = fig.add_gridspec(8, 2, width_ratios=[1, 1], hspace=0.8, wspace=0.3)  # Increased hspace for padding
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
 
-
-
-
-
-
         # Create subplots
         self.axes = {
-            "pollution": self.fig.add_subplot(gs[0, 0]),
-            "std_dev_pollution": self.fig.add_subplot(gs[0, 1]),
-            "temperature": self.fig.add_subplot(gs[1, 0]),
-            "std_dev_temperature": self.fig.add_subplot(gs[1, 1]),
-            "water_mass": self.fig.add_subplot(gs[2, 0]),
-            "std_dev_water_mass": self.fig.add_subplot(gs[2, 1]),
-            "population": self.fig.add_subplot(gs[3, 0]),
-            "forests": self.fig.add_subplot(gs[3, 1]),
-            "cell_distribution_std_dev": self.fig.add_subplot(gs[4, 0]),
-            "std_forests": self.fig.add_subplot(gs[4, 1]),  # Standardized Forests graph
-            "std_population": self.fig.add_subplot(gs[5, 0]),  # Standardized Population graph
-            "std_temperature": self.fig.add_subplot(gs[5, 1]),  # Standardized Temperature graph
-            "std_pollution": self.fig.add_subplot(gs[6, 0]),  # Standardized Pollution graph
+            # Standardized and Standard Deviation graphs in the top section
+            "std_pollution": self.fig.add_subplot(gs[0, 0]),  # Standardized Pollution graph
+            "std_dev_pollution": self.fig.add_subplot(gs[0, 1]),  # Pollution Standard Deviation graph
+            "std_temperature": self.fig.add_subplot(gs[1, 0]),  # Standardized Temperature graph
+            "std_dev_temperature": self.fig.add_subplot(gs[1, 1]),  # Temperature Standard Deviation graph
+            "std_forests": self.fig.add_subplot(gs[2, 0]),  # Standardized Forests graph
+            "std_dev_water_mass": self.fig.add_subplot(gs[2, 1]),  # Water Mass Standard Deviation graph
+
+            # Add padding row for separation
+            "spacer": self.fig.add_subplot(gs[3, :]),
+
+            # Non-standardized data graphs in the bottom section
+            "pollution": self.fig.add_subplot(gs[4, 0]),  # Pollution graph
+            "temperature": self.fig.add_subplot(gs[4, 1]),  # Temperature graph
+            "water_mass": self.fig.add_subplot(gs[5, 0]),  # Water Mass graph
+            "population": self.fig.add_subplot(gs[5, 1]),  # Population graph
+            "forests": self.fig.add_subplot(gs[6, 0]),  # Forests graph
+            "cell_distribution_std_dev": self.fig.add_subplot(gs[6, 1]),  # Cell Distribution Standard Deviation graph
+            "std_population": self.fig.add_subplot(gs[7, 0]),  # Standardized Population graph
         }
+
+        # Hide the spacer row to create padding
+        self.axes["spacer"].axis("off")
 
         # Render graphs
         base_colors = self.config["base_colors"]
 
-        # Render standardized graphs in the top rows
+        # Standardized graphs in the top section (same colors as their non-standardized counterparts)
         self.render_standardized_pollution_graph(self.axes["std_pollution"], color=base_colors[0])  # Standardized Pollution
-        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color=base_colors[2])  # Pollution Standard Deviation
+        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color=base_colors[0])  # Pollution Standard Deviation
         self.render_standardized_temperature_graph(self.axes["std_temperature"], color="red")  # Standardized Temperature
-        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color=base_colors[7])  # Temperature Standard Deviation
+        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color="red")  # Temperature Standard Deviation
         self.render_standardized_forests_graph(self.axes["std_forests"], color="green")  # Standardized Forests
         self.render_std_dev_water_mass_graph(self.axes["std_dev_water_mass"], color=base_colors[4])  # Water Mass Standard Deviation
 
-        # Render original data graphs in the bottom rows
+        # Non-standardized graphs in the bottom section (same colors as their standardized counterparts)
         self.render_pollution_graph(self.axes["pollution"], color=base_colors[0])  # Pollution
-        self.render_temperature_graph(self.axes["temperature"], color=base_colors[3])  # Temperature
+        self.render_temperature_graph(self.axes["temperature"], color="red")  # Temperature
         self.render_water_mass_graph(self.axes["water_mass"], color=base_colors[1])  # Water Mass
-        self.render_population_graph(self.axes["population"], color=base_colors[5])  # Population
-        self.render_forests_graph(self.axes["forests"], color=base_colors[6])  # Forests
+        self.render_population_graph(self.axes["population"], color="purple")  # Population
+        self.render_forests_graph(self.axes["forests"], color="green")  # Forests
         self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color=base_colors[8])  # Cell Distribution Standard Deviation
         self.render_standardized_population_graph(self.axes["std_population"], color="purple")  # Standardized Population
 
@@ -190,7 +193,7 @@ class MatplotlibDisplay:
         # Fetch data for the current day
         points, colors, sizes = self.precomputed_data[self.current_day]
         xs, ys, zs = zip(*points) if points else ([], [], [])
-        ax_3d.scatter(xs, ys, zs, c=colors, marker='s', s=sizes)  # 's' for square
+        ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)  # 's' for square
 
         # Legend area
         ax_color_map = fig.add_subplot(gs[0, 1])
