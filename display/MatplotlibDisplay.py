@@ -30,8 +30,6 @@ class MatplotlibDisplay:
 
 
 
-
-
     def plot_3d(self):
         """Create a scrollable and resizable window with compact graphs."""
         self.precompute_visualizations()
@@ -58,19 +56,15 @@ class MatplotlibDisplay:
         tk.Button(control_frame, text="Hide 3D Grid",
                 command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
-
-        style = ttk.Style()
-        style.configure("TScrollbar", gripcount=0, background="gray", width=40)
-
         # Create a scrollable canvas
         scrollable_canvas = tk.Canvas(self.main_window, highlightthickness=0)
         scrollable_canvas.grid(row=1, column=0, sticky="nsew")
 
         # Add vertical and horizontal scrollbars
-        vertical_scrollbar = tk.Scrollbar(self.main_window, orient="vertical", command=scrollable_canvas.yview,width=30)
+        vertical_scrollbar = tk.Scrollbar(self.main_window, orient="vertical", command=scrollable_canvas.yview, width=25)
         vertical_scrollbar.grid(row=1, column=1, sticky="ns")
 
-        horizontal_scrollbar = tk.Scrollbar(self.main_window, orient="horizontal", command=scrollable_canvas.xview,width = 30)
+        horizontal_scrollbar = tk.Scrollbar(self.main_window, orient="horizontal", command=scrollable_canvas.xview, width = 25)
         horizontal_scrollbar.grid(row=2, column=0, sticky="ew")
 
         scrollable_canvas.configure(yscrollcommand=vertical_scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
@@ -95,8 +89,8 @@ class MatplotlibDisplay:
         scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
         # Create a Matplotlib figure
-        fig = plt.Figure(figsize=(20, 25), constrained_layout=True)  # Adjust figure size
-        gs = fig.add_gridspec(5, 2, width_ratios=[1, 1], hspace=0.3, wspace=0.3)
+        fig = plt.Figure(figsize=(20, 25))  # Adjust figure size
+        gs = fig.add_gridspec(5, 2, width_ratios=[1, 1], hspace=0.4, wspace=0.4)
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
@@ -125,34 +119,9 @@ class MatplotlibDisplay:
         self.render_population_graph(self.axes["population"], color="purple")
         self.render_forests_graph(self.axes["forests"], color="brown")
         self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color="darkgoldenrod")
-        # Set square aspect ratio for all graphs
-        for ax in self.axes.values():
-            ax.set_box_aspect(1)
-
-
-
-        def _on_resize(self, event):
-            """Adjust the figure size dynamically on window resize."""
-            canvas_width = event.width
-            canvas_height = event.height
-            self.fig.set_size_inches(canvas_width / 100, canvas_height / 100)
-            self.fig.tight_layout()
-            self.canvas.draw_idle()
-            # Optimize layout to reduce gray areas
-            self.fig.tight_layout(pad=0.5, h_pad=0.2, w_pad=0.2)
-
-            # Add 3D visualization and config table
-            self.open_3d_in_new_window(self.main_window)
-            self.add_config_table_with_scrollbar(self.main_window)
-        # Bind resizing event to dynamically adjust figure size
-        self.canvas.get_tk_widget().bind("<Configure>", _on_resize)
-
-        # Add scrollbars
-        self._add_scrollbars()
-
 
         # Optimize layout to reduce gray areas
-        self.fig.tight_layout(pad=0.5, h_pad=0.2, w_pad=0.2)
+        # self.fig.tight_layout(pad=0.5, h_pad=0.1, w_pad=0.1)
 
         # Add 3D visualization and config table
         self.open_3d_in_new_window(self.main_window)
@@ -160,6 +129,13 @@ class MatplotlibDisplay:
 
         # Start the Tkinter main loop
         self.main_window.mainloop()
+
+
+
+
+
+
+
 
 
 
