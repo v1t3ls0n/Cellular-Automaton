@@ -490,7 +490,8 @@ class World:
         temperature_values = []  # Store temperature values for global std dev
         pollution_values = []  # Store pollution values for global std dev
         water_mass_values = []  # Store water mass values for global std dev
-
+        total_cities = 0
+        total_forests = 0
         # Iterate over the grid
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
@@ -511,7 +512,10 @@ class World:
                     cell_type_counts[cell.cell_type] += 1
                     cell_type_water_mass[cell.cell_type].append(cell.water_mass)
                     cell_type_temperature[cell.cell_type].append(cell.temperature)
-
+                    if cell.cell_type == 5:  # City
+                        total_cities += 1
+                    elif cell.cell_type == 4:  # Forest
+                        total_forests += 1
                     total_cells += 1
 
         # Global averages
