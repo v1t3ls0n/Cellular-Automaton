@@ -34,10 +34,10 @@ class MatplotlibDisplay:
     def plot_3d(self):
         self.precompute_visualizations()
 
-        # Open 3D visualization in a separate window
-        self.open_3d_in_new_window()
 
-        
+
+
+
         """Create the plot with all relevant graphs, including the configuration window."""
         # Create the main Tkinter root window for the simulation
         root = tk.Tk()
@@ -59,24 +59,25 @@ class MatplotlibDisplay:
         root.rowconfigure(1, weight=1)  # Make the plot area expandable
         root.columnconfigure(0, weight=1)
 
+        # Simulation's Custom Parameters Table
+        self.add_config_table_with_scrollbar(root)
+
         # Create a frame for the buttons (minimal height)
         control_frame = tk.Frame(root)
         control_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
 
-        # Create a frame for the control buttons
-        control_frame = tk.Frame(main_frame)
-        control_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
 
         # Add buttons to the control frame with reduced width
         # button_width = 25  # Set a fixed width for all buttons
-        tk.Button(control_frame, text="Bring Initial Parameters Table Window to Front",
-                command=self.bring_config_to_front, width=button_width).pack(side=tk.LEFT, padx=5)
-        tk.Button(control_frame, text="Minimize Initial Parameters Table Window",
-                command=self.minimize_config_window, width=button_width).pack(side=tk.LEFT, padx=5)
-        tk.Button(control_frame, text="Minimize 3D Window",
-                command=self.minimize_3d_window, width=button_width).pack(side=tk.LEFT, padx=5)
-        tk.Button(control_frame, text="Bring 3D Visualization to Front",
-                command=self.bring_3d_to_front, width=button_width).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Show Custom Parameters Table",
+                command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Hide Custom Parameters Table",
+                command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Show 3D Grid",
+                command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Hide 3D Grid",
+                command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
+
 
         # Create a frame for the plots (maximum height)
         plot_frame = tk.Frame(root)
@@ -111,10 +112,11 @@ class MatplotlibDisplay:
         self.render_std_dev_pollution_graph()
         self.render_std_dev_temperature_graph()
 
-
-
+        # Open 3D visualization in a separate window
+        self.open_3d_in_new_window()
         # Start the Tkinter event loop
         root.mainloop()
+
 
     def bring_config_to_front(self):
         """Bring the configuration window to the front."""
