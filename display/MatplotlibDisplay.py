@@ -58,6 +58,10 @@ class MatplotlibDisplay:
         tk.Button(control_frame, text="Hide 3D Grid",
                 command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
+
+        style = ttk.Style()
+        style.configure("TScrollbar", gripcount=0, background="gray", width=25)
+
         # Create a scrollable canvas
         scrollable_canvas = tk.Canvas(self.main_window, highlightthickness=0)
         scrollable_canvas.grid(row=1, column=0, sticky="nsew")
