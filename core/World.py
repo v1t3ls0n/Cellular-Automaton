@@ -393,8 +393,8 @@ class World:
         if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
                 return cell1 
 
-        # Default behavior based on cell type weights
-        return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
+        # Default behavior based on cell type weights (Currently Not In Use Since All Moving Particles Are Rain, Clouds and Air)
+        # return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
 
     def get_neighbor_positions(self, i, j, k):
         """
@@ -455,20 +455,6 @@ class World:
             if cell and cell.cell_type in {2, 6}:  # Cloud or Air
                 cell.water_mass += transfer_amount
 
-    def total_water_mass(self):
-        """
-        Calculate the total water mass in the grid for debugging purposes.
-
-        Returns:
-            float: Total water mass in the grid.
-        """
-        return sum(
-            self.grid[i][j][k].water_mass
-            for i in range(self.grid_size[0])
-            for j in range(self.grid_size[1])
-            for k in range(self.grid_size[2])
-            if self.grid[i, j, k] and self.grid[i, j, k].cell_type in {2, 6, 7}
-        )
 
     def _recalculate_global_attributes(self):
         """
