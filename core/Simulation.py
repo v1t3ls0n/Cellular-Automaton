@@ -22,7 +22,6 @@ class Simulation:
         self.initial_ratios = initial_ratios
         self.days = days
         self.states = []  # Store the history of World objects (one per day)
-
         # Aggregates to track various metrics over time
         self.pollution_over_time = []  # Average pollution over time
         self.temperature_over_time = []  # Average temperature over time
@@ -35,8 +34,17 @@ class Simulation:
         self.cell_type_counts_over_time = {cell_type: [] for cell_type in range(10)}  # Track counts of each cell type
         self.cell_type_std_dev_over_time = {cell_type: [] for cell_type in range(10)}  # Track std dev per cell type
         self.std_dev_cell_distribution_over_time = []  # Standard deviation of cell type distribution over time
+        self.std_dev_forest_count_over_time = []  # Standard deviation of forest count
+        self.std_dev_city_population_over_time = []  # Standard deviation of city population
+
 
     def _update_aggregates(self, state):
+        """
+        Update aggregate metrics based on the current state of the simulation.
+
+        Args:
+            state (World): Current World object representing the state of the grid.
+        """
         self.pollution_over_time.append(state.avg_pollution)
         self.temperature_over_time.append(state.avg_temperature)
         self.city_population_over_time.append(state.total_cities)
@@ -46,26 +54,21 @@ class Simulation:
         self.std_dev_temperature_over_time.append(state.std_dev_temperature)
         self.std_dev_water_mass_over_time.append(state.std_dev_water_mass)
 
-        # Update cell type counts and standard deviations
         for cell_type, stats in state.cell_type_stats.items():
             self.cell_type_std_dev_over_time[cell_type].append(stats["std_dev_temperature"])
             self.cell_type_counts_over_time[cell_type].append(stats["count"])
 
         # Calculate standard deviation of cell counts
         cell_counts = [stats["count"] for stats in state.cell_type_stats.values()]
-        if len(cell_counts) > 0:
-            std_dev_distribution = np.std(cell_counts)
-            self.std_dev_cell_distribution_over_time.append(std_dev_distribution)
+        self.std_dev_cell_distribution_over_time.append(self._calculate_standard_deviation(cell_counts))
 
-            # Calculate standardized values for cell counts
-            mean_count = np.mean(cell_counts)
-            std_dev_count = std_dev_distribution  # Already calculated
-            standardized_counts = [(count - mean_count) / std_dev_count if std_dev_count > 0 else 0 for count in cell_counts]
-
-            # Log standardized values for debugging or further processing
-            logging.info(f"Day {state.day_number}: Standardized Cell Counts = {standardized_counts}")
-        else:
-            self.std_dev_cell_distribution_over_time.append(0)
+        # Compute standard deviation for forests and cities
+        self.std_dev_forest_count_over_time.append(
+            self._calculate_standard_deviation(self.forest_count_over_time)
+        )
+        self.std_dev_city_population_over_time.append(
+            self._calculate_standard_deviation(self.city_population_over_time)
+        )
 
         # Log aggregate metrics
         logging.info(f"Day {state.day_number}: Total forests = {state.total_forests}")
@@ -80,10 +83,14 @@ class Simulation:
             if len(values) > 1:  # Ensure enough data points for calculations
                 mean_value = np.mean(values)
                 std_dev_value = np.std(values)
-                standardized_values = [(value - mean_value) / std_dev_value if std_dev_value > 0 else 0 for value in values]
-                logging.info(f"Day {state.day_number}: Standardized {param.capitalize()} Values = {standardized_values}")
-
-            
+                standardized_values = [
+                    (value - mean_value) / std_dev_value if std_dev_value > 0 else 0
+                    for value in values
+                ]
+                logging.info(
+                    f"Day {state.day_number}: Standardized {param.capitalize()} Values = {standardized_values}"
+                )
+                
     def precompute(self):
         """
         Run the simulation for the specified number of days and precompute all states.
@@ -139,3 +146,15 @@ class Simulation:
                 "water_mass": self.std_dev_water_mass_over_time,
             }
         }
+    
+    def _calculate_standard_deviation(self, data_list):
+        """
+        Calculate standard deviation for a list of data points.
+
+        Args:
+            data_list (list): A list of numerical data points.
+
+        Returns:
+            float: Standard deviation of the data.
+        """
+        return np.std(data_list) if data_list else 0.0
