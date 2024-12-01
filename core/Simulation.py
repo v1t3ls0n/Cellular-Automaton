@@ -29,8 +29,10 @@ class Simulation:
         self.temperature_over_time = []  # Average temperature over time
         self.city_population_over_time = []  # Total number of city cells over time
         self.forest_count_over_time = []  # Total number of forest cells over time
+        self.water_mass_over_time = []
         self.std_dev_pollution_over_time = []  # Standard deviation of pollution
         self.std_dev_temperature_over_time = []  # Standard deviation of temperature
+        self.std_dev_water_mass_over_time = []
 
     def _update_aggregates(self, state):
         """
@@ -43,8 +45,10 @@ class Simulation:
         self.temperature_over_time.append(state.avg_temperature)
         self.city_population_over_time.append(state.total_cities)
         self.forest_count_over_time.append(state.total_forests)
+        self.water_mass_over_time.append(state.avg_water_mass)
         self.std_dev_pollution_over_time.append(state.std_dev_pollution)
         self.std_dev_temperature_over_time.append(state.std_dev_temperature)
+        self.std_dev_water_mass_over_time.append(state.std_dev_water_mass)
 
     def precompute(self):
         """
@@ -79,37 +83,39 @@ class Simulation:
             self._update_aggregates(next_state)  # Update aggregates
 
     def get_averages_and_std_dev_over_time(self):
-        """
-        Retrieve averages and standard deviations of metrics over the simulation period.
+            """
+            Retrieve averages and standard deviations of metrics over the simulation period.
 
-        Returns:
-            dict: Averages and standard deviations of temperature, pollution, city counts, and forest counts.
-        """
-        return {
-            "averages": {
-                "temperature": self.temperature_over_time,
-                "pollution": self.pollution_over_time,
-                "cities": self.city_population_over_time,
-                "forests": self.forest_count_over_time,
-            },
-            "std_devs": {
-                "temperature": self.std_dev_temperature_over_time,
-                "pollution": self.std_dev_pollution_over_time,
+            Returns:
+                dict: Averages and standard deviations of temperature, pollution, water mass, city counts, and forest counts.
+            """
+            return {
+                "averages": {
+                    "temperature": self.temperature_over_time,
+                    "pollution": self.pollution_over_time,
+                    "water_mass": self.water_mass_over_time,
+                    "cities": self.city_population_over_time,
+                    "forests": self.forest_count_over_time,
+                },
+                "std_devs": {
+                    "temperature": self.std_dev_temperature_over_time,
+                    "pollution": self.std_dev_pollution_over_time,
+                    "water_mass": self.std_dev_water_mass_over_time,
+                }
             }
-        }
 
     def calculate_statistics(self):
-        """
-        Calculate mean and standard deviation for each parameter over the entire simulation.
+            """
+            Calculate mean and standard deviation for each parameter over the entire simulation.
 
-        Returns:
-            dict: Mean and standard deviation for each parameter.
-        """
-        data = self.get_averages_and_std_dev_over_time()["averages"]
-        stats = {}
-        for param, values in data.items():
-            stats[param] = {
-                "mean": np.mean(values),
-                "std_dev": np.std(values)
-            }
-        return stats
+            Returns:
+                dict: Mean and standard deviation for each parameter.
+            """
+            data = self.get_averages_and_std_dev_over_time()["averages"]
+            stats = {}
+            for param, values in data.items():
+                stats[param] = {
+                    "mean": np.mean(values),
+                    "std_dev": np.std(values)
+                }
+            return stats

@@ -474,7 +474,7 @@ class World:
         """
         Recalculate global attributes like average temperature, pollution, water mass,
         and counts of cities, forests, and rain cells. Also calculates and saves the 
-        standard deviation of pollution and temperature.
+        standard deviation of pollution, temperature, and water mass.
         """
         total_temperature = 0
         total_pollution = 0
@@ -486,6 +486,7 @@ class World:
 
         temperature_values = []  # Store temperature values for standard deviation
         pollution_values = []  # Store pollution values for standard deviation
+        water_mass_values = []  # Store water mass values for standard deviation
 
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
@@ -499,6 +500,7 @@ class World:
                     total_water_mass += cell.water_mass
                     temperature_values.append(cell.temperature)
                     pollution_values.append(cell.pollution_level)
+                    water_mass_values.append(cell.water_mass)
 
                     if cell.cell_type == 5:  # City
                         total_cities += 1
@@ -533,6 +535,17 @@ class World:
         else:
             self.std_dev_pollution = 0
 
+        # Calculate standard deviation for water mass and save in self
+        if total_cells > 0:
+            water_mass_variance = sum(
+                (mass - self.avg_water_mass) ** 2 for mass in water_mass_values) / total_cells
+            self.std_dev_water_mass = math.sqrt(water_mass_variance)
+        else:
+            self.std_dev_water_mass = 0
+
         # Log or print for debugging (optional)
-        logging.info(f"Avg Temperature: {self.avg_temperature}, Std Dev: {
-              self.std_dev_temperature}")
+        logging.info(
+            f"Avg Temperature: {self.avg_temperature}, Std Dev Temperature: {self.std_dev_temperature}, "
+            f"Avg Pollution: {self.avg_pollution}, Std Dev Pollution: {self.std_dev_pollution}, "
+            f"Avg Water Mass: {self.avg_water_mass}, Std Dev Water Mass: {self.std_dev_water_mass}"
+        )

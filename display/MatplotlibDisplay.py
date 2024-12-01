@@ -3,7 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
 import numpy as np
 import logging
-from core.conf import config, key_labels,  format_config_value
+from core.conf import config, key_labels, format_config_value
 import matplotlib.gridspec as gridspec
 import tkinter as tk
 from tkinter import ttk
@@ -24,6 +24,8 @@ class MatplotlibDisplay:
         self.ax_temperature = None
         self.ax_population = None
         self.ax_forests = None
+        self.ax_water_mass = None
+        self.ax_std_dev_water_mass = None
         self.ax_std_dev_pollution_graph = None
         self.ax_std_dev_temperature_graph = None
         self.ax_ice_coverage = None
@@ -39,29 +41,20 @@ class MatplotlibDisplay:
         root = tk.Tk()
         root.title("Environmental Simulation Results")
         self.main_window = root
-        # Maximize the window without entering full-screen mode
-        root.state("zoomed")
+        root.state("zoomed")  # Maximize the window without entering full-screen mode
 
-        # Define a clean exit function
         def on_close():
-            root.destroy()  # Close the main simulation window
-            exit(0)  # Ensure the Python script exits
+            root.destroy()
+            exit(0)
 
-        # Set the window close protocol
         root.protocol("WM_DELETE_WINDOW", on_close)
-
-        # Configure row and column resizing for the root
-        root.rowconfigure(1, weight=1)  # Make the plot area expandable
+        root.rowconfigure(1, weight=1)
         root.columnconfigure(0, weight=1)
 
-      
-
-        # Create a frame for the buttons (minimal height)
+        # Control Frame
         control_frame = tk.Frame(root)
         control_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
 
-        # Add buttons to the control frame with reduced width
-        # button_width = 25  # Set a fixed width for all buttons
         tk.Button(control_frame, text="Show Custom Parameters Table",
                   command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Hide Custom Parameters Table",
@@ -71,50 +64,43 @@ class MatplotlibDisplay:
         tk.Button(control_frame, text="Hide 3D Grid",
                   command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
-        # Create a frame for the plots (maximum height)
+        # Plot Frame
         plot_frame = tk.Frame(root)
         plot_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
-
-        # Configure plot frame to expand
         plot_frame.rowconfigure(0, weight=1)
         plot_frame.columnconfigure(0, weight=1)
 
-        # Create the main figure
         self.fig = plt.Figure(figsize=(16, 8), constrained_layout=False)
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
-        # Use GridSpec for flexible layout
-        spec = gridspec.GridSpec(nrows=3, ncols=2, figure=self.fig)
+        spec = gridspec.GridSpec(nrows=4, ncols=2, figure=self.fig)
 
         # Configure axes for the plots
         self.ax_pollution = self.fig.add_subplot(spec[0, 0])
         self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[1, 0])
         self.ax_temperature = self.fig.add_subplot(spec[0, 1])
         self.ax_std_dev_temperature_graph = self.fig.add_subplot(spec[1, 1])
-        self.ax_population = self.fig.add_subplot(spec[2, 0])
-        self.ax_forests = self.fig.add_subplot(spec[2, 1])
+        self.ax_water_mass = self.fig.add_subplot(spec[2, 0])
+        self.ax_std_dev_water_mass = self.fig.add_subplot(spec[2, 1])
+        self.ax_population = self.fig.add_subplot(spec[3, 0])
+        self.ax_forests = self.fig.add_subplot(spec[3, 1])
 
         # Render initial graphs
         self.render_pollution_graph()
         self.render_temperature_graph()
         self.render_population_graph()
         self.render_forests_graph()
+        self.render_water_mass_graph()
         self.render_std_dev_pollution_graph()
-        self.render_std_dev_temperature_graph()        
-        self.main_window = root
+        self.render_std_dev_temperature_graph()
+        self.render_std_dev_water_mass_graph()
 
-        # # Simulation's Custom Parameters Table
-        # self.add_config_table_with_scrollbar(root)
-        
+        self.main_window = root
 
         # Open 3D visualization in a separate window
         self.open_3d_in_new_window(root)
-        
-        # Start the Tkinter event loop
         root.mainloop()
-
-
 
 
 
@@ -258,6 +244,7 @@ class MatplotlibDisplay:
                             markersize=10, markerfacecolor='red')
             )
 
+        # Add a single legend to the color map axis
         ax_color_map.legend(
             handles=legend_elements,
             loc="center",
@@ -270,26 +257,9 @@ class MatplotlibDisplay:
         canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
         canvas.draw()
 
-        # Handle resizing and avoid excessive lag
-        def on_resize(event):
-            """Dynamically resize the plot and ensure smooth resizing."""
-            window_width = max(three_d_window.winfo_width(), 1000)  # Minimum width
-            window_height = max(three_d_window.winfo_height(), 600)  # Minimum height
-
-            # Apply scaling limits
-            plot_width = min(window_width * 0.75 / 100, 8)
-            plot_height = min(window_height * 0.9 / 100, 6)
-
-            # Update figure size
-            fig.set_size_inches(plot_width, plot_height)
-            canvas.draw_idle()
-
-        # Bind resize event
-        three_d_window.bind("<Configure>", on_resize)
+        # Save axes for future updates
         self.ax_3d = ax_3d
-
-
-
+        self.ax_color_map = ax_color_map
 
 
 
