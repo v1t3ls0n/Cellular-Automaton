@@ -392,7 +392,9 @@ class MatplotlibDisplay:
         ax.add_collection3d(poly)
 
     def precompute_visualizations(self):
-        """Precompute 3D scatter data for all precomputed states."""
+        """
+        Precompute 3D scatter data for all precomputed states to make particles appear denser.
+        """
         logging.info("Precomputing 3D visualizations...")
         for state in self.simulation.states:
             points = []
@@ -402,24 +404,35 @@ class MatplotlibDisplay:
                 for y in range(state.grid.shape[1]):
                     for z in range(state.grid.shape[2]):
                         cell = state.grid[x][y][z]
-                        rgba_color = to_rgba(cell.get_color())
+                        color = to_rgba(cell.get_color())
 
-                        # Skip vacuum cells (fully transparent)
-                        if rgba_color and rgba_color[3] != 0.0:
-                            # Ensure full opacity for all non-vacuum cells
-                            rgba_color = (
-                                rgba_color[0], rgba_color[1], rgba_color[2], 1.0)
+                        # Ignore fully transparent cells
+                        if color and color[3] != 0.0:
+                            # Add interpolation for density
+                            # 3 interpolated points along x-axis
+                            for dx in np.linspace(-0.2, 0.2, 3):
+                                # 3 interpolated points along y-axis
+                                for dy in np.linspace(-0.2, 0.2, 3):
+                                    # 3 interpolated points along z-axis
+                                    for dz in np.linspace(-0.2, 0.2, 3):
+                                        points.append((x + dx, y + dy, z + dz))
+                                        # Slightly reduced alpha
+                                        interpolated_color = (
+                                            color[0], color[1], color[2], 0.9)
+                                        colors.append(interpolated_color)
+                                        # Adjust size for interpolated points
+                                        sizes.append(50.0)
 
-                            # Add the cell to the visualization data
+                            # Add the original point
                             points.append((x, y, z))
-                            colors.append(rgba_color)
-                            # Set a consistent size for squares
+                            # Full opacity
+                            solid_color = (color[0], color[1], color[2], 1.0)
+                            colors.append(solid_color)
+                            # Larger size for original points
                             sizes.append(100.0)
 
-            # Store the computed data for this state
             self.precomputed_data.append((points, colors, sizes))
-
-        logging.info("3D Precomputation complete.")
+        logging.info("3D precomputation complete.")
 
     def render_day(self, day):
         """Render the cached 3D visualization for a specific day."""
