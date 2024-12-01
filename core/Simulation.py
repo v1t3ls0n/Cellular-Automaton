@@ -21,7 +21,6 @@ class Simulation:
         self.grid_size = grid_size
         self.initial_ratios = initial_ratios
         self.days = days
-        print("days in simulation:",days)
         self.states = []  # Store the history of World objects (one per day)
 
         # Aggregates to track various metrics over time
