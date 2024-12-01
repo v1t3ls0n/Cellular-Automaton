@@ -151,4 +151,7 @@ if __name__ == "__main__":
     simulation.precompute()
     logging.info("Simulation complete. Displaying results...")
     display = MatplotlibDisplay(simulation)
-    display.plot_3d()
+    display.precompute_visualizations() 
+    display.plot_3d(layout="row")
+
+   
