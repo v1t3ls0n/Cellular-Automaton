@@ -161,6 +161,16 @@ class MatplotlibDisplay:
         # Start the Tkinter main loop
         self.main_window.mainloop()
 
+
+
+
+
+
+
+
+
+
+
     def open_3d_in_new_window(self, root=None):
             """Open a resizable 3D graph window with a 3D plot and integrated legend."""
             three_d_window = tk.Toplevel()
