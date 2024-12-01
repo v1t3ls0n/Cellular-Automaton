@@ -30,7 +30,7 @@ class MatplotlibDisplay:
         self.ax_std_dev_water_mass = None
         self.ax_std_dev_pollution_graph = None
         self.ax_std_dev_temperature_graph = None
-        self.ax_std_dev_cell_distribution_graph = None
+        self.ax_std_dev_cell_distribution = None
 
         self.ax_ice_coverage = None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
@@ -81,13 +81,15 @@ class MatplotlibDisplay:
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
         if layout == "row":
-            spec = gridspec.GridSpec(nrows=6, ncols=2, figure=self.fig)  # הגדל ל-6 שורות
-            self.ax_cell_type_distribution = self.fig.add_subplot(spec[4, :])  # Full row
-            self.ax_std_dev_cell_distribution_graph = self.fig.add_subplot(spec[5, :])  # Full new row
+            spec = gridspec.GridSpec(nrows=6, ncols=2, figure=self.fig)  # מגדיר 6 שורות
+            self.ax_std_dev_cell_distribution = self.fig.add_subplot(spec[4, :])  # שורה חמישית מלאה
+            self.ax_std_dev_cell_distribution_graph = self.fig.add_subplot(spec[5, :])  # שורה שישית מלאה
         elif layout == "column":
-            spec = gridspec.GridSpec(nrows=5, ncols=3, figure=self.fig)
-            self.ax_cell_type_distribution = self.fig.add_subplot(spec[4, 1])  # Column
-            self.ax_std_dev_cell_distribution_graph = self.fig.add_subplot(spec[4, 2])  # Column
+            spec = gridspec.GridSpec(nrows=4, ncols=3, figure=self.fig)  # מגדיר 4 שורות ו־3 עמודות
+            self.ax_std_dev_cell_distribution = self.fig.add_subplot(spec[3, 1])  # עמודה שנייה בשורה רביעית
+            self.ax_std_dev_cell_distribution_graph = self.fig.add_subplot(spec[3, 2])  # עמודה שלישית בשורה רביעית
+
+
         else:
             raise ValueError("Invalid layout type. Choose 'row' or 'column'.")
         # Configure axes for the plots
@@ -110,7 +112,6 @@ class MatplotlibDisplay:
         self.render_std_dev_temperature_graph()
         self.render_std_dev_water_mass_graph()
         self.render_std_dev_cell_distribution_graph()
-        self.render_cell_type_std_dev_graph()
         self.main_window = root
 
         # Open 3D visualization in a separate window
@@ -610,21 +611,6 @@ class MatplotlibDisplay:
             self.ax_std_dev_water_mass.legend()
         else:
             logging.error("Data length mismatch in water mass std dev graph.")
-
-
-    def render_cell_type_std_dev_graph(self):
-        """Render a bar graph showing the standard deviation of each cell type over time."""
-        self.ax_cell_type_std_dev.cla()
-        self.ax_cell_type_std_dev.set_title("Cell Type Standard Deviations Over Time")
-        self.ax_cell_type_std_dev.set_xlabel("Day")
-        self.ax_cell_type_std_dev.set_ylabel("Standard Deviation (Temperature)")
-
-        # Plot each cell type's standard deviation
-        for cell_type, std_devs in self.simulation.cell_type_std_dev_over_time.items():
-            days = range(len(std_devs))
-            self.ax_cell_type_std_dev.plot(days, std_devs, label=f"Cell Type {cell_type}")
-
-        self.ax_cell_type_std_dev.legend()
 
 
 
