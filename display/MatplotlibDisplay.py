@@ -37,7 +37,7 @@ class MatplotlibDisplay:
         self.current_elev = 20  # Default elevation
         self.current_azim = 45  # Default azimuth
 
-    def plot_3d(self, layout="row"):
+    def plot_3d(self, layout="column"):
         self.precompute_visualizations()
 
         """Create the plot with all relevant graphs, including the configuration window."""
