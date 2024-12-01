@@ -536,5 +536,3 @@ class World:
         # Log or print for debugging (optional)
         logging.info(f"Avg Temperature: {self.avg_temperature}, Std Dev: {
               self.std_dev_temperature}")
-        logging.info(f"Avg Pollution: {self.avg_pollution}, Std Dev: {
-              self.std_dev_pollution}")

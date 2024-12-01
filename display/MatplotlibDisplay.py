@@ -276,17 +276,17 @@ class MatplotlibDisplay:
             legend_elements.append(tinted_red)
 
 
-
-        # Add the legend to the legend_ax
-        legend_ax.legend(
+        # Add legend inside the 3D grid section
+        ax_3d.legend(
             handles=legend_elements,
-            loc="center",
+            loc="upper right",  # Position the legend inside the plot
+            bbox_to_anchor=(2, 1),  # Adjust position to avoid overlap
+            borderaxespad=0.0,         # Remove padding between axes and legend
             title="Cell Types",
             frameon=True,
-            fontsize=12,
-            title_fontsize=14,
+            fontsize=10,
+            title_fontsize=12,
         )
-
         # Add the legend figure to the Tkinter window
         legend_canvas = FigureCanvasTkAgg(
             legend_fig, master=three_d_window)
