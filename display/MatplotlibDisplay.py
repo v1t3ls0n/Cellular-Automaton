@@ -241,6 +241,19 @@ class MatplotlibDisplay:
         self.three_d_window.columnconfigure(1, weight=0)  # Column for legend
         self.three_d_window.rowconfigure(0, weight=1)  # Flexible row for content
 
+
+
+        # Create a frame for the control button
+        control_frame = tk.Frame(self.three_d_window)
+        control_frame.grid(row=0, column=0, columnspan=2, sticky="nw", padx=5, pady=5)
+
+        # Add button to bring the main window to the front
+        tk.Button(
+            control_frame,
+            text="Bring Main Window to Front",
+            command=lambda: self.bring_main_window_to_front(),
+        ).pack(side=tk.LEFT, padx=5, pady=5)
+
         # Frame for the 3D plot
         fig = plt.Figure(figsize=(6, 6), constrained_layout=False)
         ax_3d = fig.add_subplot(111, projection="3d")
@@ -311,11 +324,6 @@ class MatplotlibDisplay:
             row=0, column=1, sticky="nsew", padx=(5, 10), pady=5)
         legend_canvas.draw()
 
-
-
-        # Remove the topmost attribute after focusing on the window
-        self.config_window.after(
-            1000, lambda: self.config_window.attributes("-topmost", False))
 
         # Handle keyboard events for navigation
         def handle_key_press(event):
