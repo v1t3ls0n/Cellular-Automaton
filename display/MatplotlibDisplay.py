@@ -238,7 +238,7 @@ class MatplotlibDisplay:
 
         # Add the 3D plot to the window
         canvas = FigureCanvasTkAgg(fig, master=three_d_window)
-        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew",ipadx=5,ipay=5, padx=5, pady=5)
+        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew",ipadx=5,ipady=5, padx=5, pady=5)
         canvas.draw()
 
         # Create a separate Matplotlib figure for the legend
