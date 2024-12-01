@@ -393,8 +393,8 @@ class World:
         if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
                 return cell1 
 
-        # Default behavior based on cell type weights (Currently Not In Use Since All Moving Particles Are Rain, Clouds and Air)
-        # return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
+        # Default behavior based on cell type weights 
+        return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
 
     def get_neighbor_positions(self, i, j, k):
         """
