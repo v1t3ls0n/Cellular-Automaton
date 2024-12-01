@@ -35,8 +35,8 @@ class MatplotlibDisplay:
         self.main_window = tk.Toplevel()
         self.main_window.title("Environmental Simulation Application Main Window")
         # self.main_window.state("zoomed")  # Start in full-screen mode
-        self.main_window.geometry("800x600")  # Default size
-        self.main_window.minsize(800, 600)  # Minimum size
+        self.main_window.geometry("1000x1080")  # Default size
+        # self.main_window.minsize(800, 600)  # Minimum size
 
         # Configure grid layout for the main window
         self.main_window.rowconfigure(1, weight=1)  # The canvas should expand vertically
@@ -79,7 +79,7 @@ class MatplotlibDisplay:
         scrollable_frame.bind("<Configure>", _on_configure)
 
         # Create a Matplotlib figure and attach it to the scrollable frame
-        fig = plt.Figure(figsize=(10, 18), constrained_layout=False)  # Smaller figure size
+        fig = plt.Figure(figsize=(18, 12), constrained_layout=False)  # Smaller figure size
         gs = fig.add_gridspec(5, 2, width_ratios=[1, 1], hspace=0.4, wspace=0.4)  # Reduced spacing
 
         self.fig = fig
