@@ -104,47 +104,15 @@ class MatplotlibDisplay:
         self.render_std_dev_temperature_graph()        
         self.main_window = root
 
+        # # Simulation's Custom Parameters Table
+        # self.add_config_table_with_scrollbar(root)
+        
 
         # Open 3D visualization in a separate window
         self.open_3d_in_new_window(root)
-          # Simulation's Custom Parameters Table
-        self.add_config_table_with_scrollbar(root)
+        
         # Start the Tkinter event loop
         root.mainloop()
-
-    def bring_config_to_front(self):
-        """Bring the configuration window to the front."""
-        if self.config_window and self.config_window.winfo_exists():
-            self.config_window.deiconify()
-            self.config_window.lift()
-            self.config_window.focus_force()
-
-    def bring_main_window_to_front(self):
-        """Bring the main window to the front."""
-        self.minimize_3d_window()
-        if self.main_window and self.main_window.winfo_exists():
-            self.main_window.deiconify()
-            self.main_window.lift()
-            self.main_window.focus_force()
-
-    def bring_3d_to_front(self):
-        """Bring the 3D visualization window to the front."""
-        if self.three_d_window and self.three_d_window.winfo_exists():
-            self.three_d_window.deiconify()
-            self.three_d_window.lift()
-            self.three_d_window.focus_force()
-        else:
-            self.open_3d_in_new_window()
-
-    def minimize_config_window(self):
-        """Minimize the configuration window."""
-        if self.config_window and self.config_window.winfo_exists():
-            self.config_window.iconify()
-
-    def minimize_3d_window(self):
-        """Minimize the 3D visualization window."""
-        if self.three_d_window and self.three_d_window.winfo_exists():
-            self.three_d_window.iconify()
 
 
 
@@ -226,32 +194,31 @@ class MatplotlibDisplay:
 
 
 
-
-
-
-    def open_3d_in_new_window(self,root = None):
+    def open_3d_in_new_window(self, root=None):
         """Open a resizable 3D graph window with a Matplotlib legend and keyboard navigation."""
-        self.three_d_window = tk.Toplevel()
-        self.three_d_window.title("3D Visualization")
-        self.three_d_window.geometry("800x600")  # Default size
-        self.three_d_window.minsize(800, 600)  # Minimum size
+        three_d_window = tk.Toplevel()
+        three_d_window.title("3D Visualization")
+        three_d_window.geometry("1000x600")  # Default size
+        three_d_window.minsize(800, 600)  # Minimum size
 
         # Configure flexible resizing
-        self.three_d_window.columnconfigure(0, weight=1)  # Column for 3D plot
-        self.three_d_window.columnconfigure(1, weight=0)  # Column for legend
-        self.three_d_window.rowconfigure(0, weight=1)  # Flexible row for content
+        three_d_window.columnconfigure(0, weight=3)  # Column for 3D plot
+        three_d_window.columnconfigure(1, weight=1)  # Column for legend
+        three_d_window.rowconfigure(0, weight=0)  # Fixed height for control buttons
+        three_d_window.rowconfigure(1, weight=1)  # Flexible height for content
 
 
+        self.three_d_window = three_d_window
 
-        # Create a frame for the control button
-        control_frame = tk.Frame(self.three_d_window)
-        control_frame.grid(row=0, column=0, columnspan=2, sticky="nw", padx=5, pady=5)
+        # Add a control frame for the button at the top
+        control_frame = tk.Frame(three_d_window)
+        control_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
         # Add button to bring the main window to the front
         tk.Button(
             control_frame,
             text="Bring Main Window to Front",
-            command=lambda: self.bring_main_window_to_front(),
+            command=lambda: root.lift(),  # Bring the main window to the front
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
         # Frame for the 3D plot
@@ -270,8 +237,8 @@ class MatplotlibDisplay:
         ax_3d.set_zlabel("Z Axis")
 
         # Add the 3D plot to the window
-        canvas = FigureCanvasTkAgg(fig, master=self.three_d_window)
-        canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        canvas = FigureCanvasTkAgg(fig, master=three_d_window)
+        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
         canvas.draw()
 
         # Create a separate Matplotlib figure for the legend
@@ -307,6 +274,14 @@ class MatplotlibDisplay:
                         markerfacecolor="red")
             )
 
+
+
+        if self.config.get("tint"):
+            legend_elements.append(
+                plt.Line2D([0], [0], marker="o", color="w", label="9: Pollution", markersize=10,
+                        markerfacecolor="red")
+            )
+
         # Add the legend to the legend_ax
         legend_ax.legend(
             handles=legend_elements,
@@ -319,11 +294,10 @@ class MatplotlibDisplay:
 
         # Add the legend figure to the Tkinter window
         legend_canvas = FigureCanvasTkAgg(
-            legend_fig, master=self.three_d_window)
+            legend_fig, master=three_d_window)
         legend_canvas.get_tk_widget().grid(
-            row=0, column=1, sticky="nsew", padx=(5, 10), pady=5)
+            row=1, column=1, sticky="nsew", padx=(5, 10), pady=5)
         legend_canvas.draw()
-
 
         # Handle keyboard events for navigation
         def handle_key_press(event):
@@ -355,16 +329,16 @@ class MatplotlibDisplay:
 
         # Bind the keyboard event handler to the canvas
         fig.canvas.mpl_connect("key_press_event", handle_key_press)
-        
+
         # Handle dynamic resizing
         def on_resize(event):
             """Dynamically resize the plot and legend based on window size."""
-            window_width = self.three_d_window.winfo_width()
-            window_height = self.three_d_window.winfo_height()
+            window_width = three_d_window.winfo_width()
+            window_height = three_d_window.winfo_height()
 
             # Dynamically adjust plot size
             plot_width = max(window_width * 0.6 / 100, 6)
-            plot_height = max(window_height * 0.9 / 100, 6)
+            plot_height = max(window_height * 0.8 / 100, 6)
 
             # Dynamically adjust legend size to fit content
             legend_width = max(window_width * 0.2 / 100, 2)
@@ -377,20 +351,7 @@ class MatplotlibDisplay:
             legend_canvas.draw_idle()
 
         # Bind resize event
-        self.three_d_window.bind("<Configure>", on_resize)
-
-
-
-
-
-
-
-
-
-
-
-
-
+        three_d_window.bind("<Configure>", on_resize)
 
 
 
@@ -676,3 +637,44 @@ class MatplotlibDisplay:
         if self.current_day > 0:
             self.current_day -= 1
             self.render_day(self.current_day)
+
+
+    def bring_config_to_front(self):
+        """Bring the configuration window to the front."""
+        if self.config_window:
+            self.config_window.deiconify()
+            self.config_window.lift()
+            self.config_window.focus_force()
+        else:
+            self.add_config_table_with_scrollbar(self.main_window)
+
+    def bring_main_window_to_front(self):
+        """Bring the main window to the front."""
+        self.minimize_3d_window()
+        if self.main_window and self.main_window.winfo_exists():
+            self.main_window.deiconify()
+            self.main_window.lift()
+            self.main_window.focus_force()
+
+    def bring_3d_to_front(self):
+        """Bring the 3D visualization window to the front."""
+        if self.three_d_window and self.three_d_window.winfo_exists():
+            self.three_d_window.deiconify()
+            self.three_d_window.lift()
+            self.three_d_window.focus_force()
+        else:
+            self.open_3d_in_new_window()
+
+    def minimize_config_window(self):
+        """Minimize the configuration window."""
+        if self.config_window and self.config_window.winfo_exists():
+            self.config_window.iconify()
+        else:
+            self.add_config_table_with_scrollbar(self.main_window)
+
+    def minimize_3d_window(self):
+        """Minimize the 3D visualization window."""
+        if self.three_d_window and self.three_d_window.winfo_exists():
+            self.three_d_window.iconify()
+        else:
+            self.open_3d_in_new_window()
