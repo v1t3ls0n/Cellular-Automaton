@@ -95,59 +95,65 @@ class MatplotlibDisplay:
 
 
 
-        # Create a Matplotlib figure with adjusted size to fill the window
+        # Create a Matplotlib figure with adjusted size to fit the window
         fig = plt.Figure(figsize=(18, 24))  # Adjusted size to fit all graphs
-        gs = fig.add_gridspec(8, 2, width_ratios=[1, 1], hspace=0.8, wspace=0.3)  # Increased hspace for padding
+        gs = fig.add_gridspec(8, 2, width_ratios=[2, 1], hspace=0.8, wspace=0.3)  # Increased hspace for padding
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
 
-        # Create subplots
+        # Create subplots with the desired layout
         self.axes = {
-            # Standardized and Standard Deviation graphs in the top section
+            # Pollution-related graphs in the left column
             "std_pollution": self.fig.add_subplot(gs[0, 0]),  # Standardized Pollution graph
-            "std_dev_pollution": self.fig.add_subplot(gs[0, 1]),  # Pollution Standard Deviation graph
-            "std_temperature": self.fig.add_subplot(gs[1, 0]),  # Standardized Temperature graph
-            "std_dev_temperature": self.fig.add_subplot(gs[1, 1]),  # Temperature Standard Deviation graph
-            "std_forests": self.fig.add_subplot(gs[2, 0]),  # Standardized Forests graph
-            "std_dev_water_mass": self.fig.add_subplot(gs[2, 1]),  # Water Mass Standard Deviation graph
+            "pollution": self.fig.add_subplot(gs[1, 0]),  # Pollution graph
+            "std_dev_pollution": self.fig.add_subplot(gs[2, 0]),  # Pollution Standard Deviation graph
 
-            # Add padding row for separation
-            "spacer": self.fig.add_subplot(gs[3, :]),
+            # Temperature-related graphs in the right column
+            "std_temperature": self.fig.add_subplot(gs[0, 1]),  # Standardized Temperature graph
+            "temperature": self.fig.add_subplot(gs[1, 1]),  # Temperature graph
+            "std_dev_temperature": self.fig.add_subplot(gs[2, 1]),  # Temperature Standard Deviation graph
 
-            # Non-standardized data graphs in the bottom section
-            "pollution": self.fig.add_subplot(gs[4, 0]),  # Pollution graph
-            "temperature": self.fig.add_subplot(gs[4, 1]),  # Temperature graph
-            "water_mass": self.fig.add_subplot(gs[5, 0]),  # Water Mass graph
-            "population": self.fig.add_subplot(gs[5, 1]),  # Population graph
-            "forests": self.fig.add_subplot(gs[6, 0]),  # Forests graph
-            "cell_distribution_std_dev": self.fig.add_subplot(gs[6, 1]),  # Cell Distribution Standard Deviation graph
-            "std_population": self.fig.add_subplot(gs[7, 0]),  # Standardized Population graph
+            # Population and Forest graphs stacked vertically in the left column
+            "std_population": self.fig.add_subplot(gs[3, 0]),  # Standardized Population graph
+            "population": self.fig.add_subplot(gs[4, 0]),  # Population graph
+            "std_forests": self.fig.add_subplot(gs[3, 1]),  # Standardized Forests graph
+            "forests": self.fig.add_subplot(gs[4, 1]),  # Forests graph
+
+            # Water Mass-related graphs in the left column
+            "std_dev_water_mass": self.fig.add_subplot(gs[5, 0]),  # Water Mass Standard Deviation graph
+            "water_mass": self.fig.add_subplot(gs[6, 0]),  # Water Mass graph
+
+            # Cell distribution graph in the bottom right
+            "cell_distribution_std_dev": self.fig.add_subplot(gs[7, 1]),  # Cell Distribution Standard Deviation graph
         }
-
-        # Hide the spacer row to create padding
-        self.axes["spacer"].axis("off")
 
         # Render graphs
         base_colors = self.config["base_colors"]
 
-        # Standardized graphs in the top section (same colors as their non-standardized counterparts)
-        self.render_standardized_pollution_graph(self.axes["std_pollution"], color=base_colors[0])  # Standardized Pollution
-        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color=base_colors[0])  # Pollution Standard Deviation
-        self.render_standardized_temperature_graph(self.axes["std_temperature"], color="red")  # Standardized Temperature
-        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color="red")  # Temperature Standard Deviation
-        self.render_standardized_forests_graph(self.axes["std_forests"], color="green")  # Standardized Forests
-        self.render_std_dev_water_mass_graph(self.axes["std_dev_water_mass"], color=base_colors[4])  # Water Mass Standard Deviation
+        # Pollution-related graphs
+        self.render_standardized_pollution_graph(self.axes["std_pollution"], color="black")  # Standardized Pollution
+        self.render_pollution_graph(self.axes["pollution"], color="black")  # Pollution
+        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color="black")  # Pollution Standard Deviation
 
-        # Non-standardized graphs in the bottom section (same colors as their standardized counterparts)
-        self.render_pollution_graph(self.axes["pollution"], color=base_colors[0])  # Pollution
+        # Temperature-related graphs
+        self.render_standardized_temperature_graph(self.axes["std_temperature"], color="red")  # Standardized Temperature
         self.render_temperature_graph(self.axes["temperature"], color="red")  # Temperature
-        self.render_water_mass_graph(self.axes["water_mass"], color=base_colors[1])  # Water Mass
-        self.render_population_graph(self.axes["population"], color="purple")  # Population
-        self.render_forests_graph(self.axes["forests"], color="green")  # Forests
-        self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color=base_colors[8])  # Cell Distribution Standard Deviation
+        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color="red")  # Temperature Standard Deviation
+
+        # Population and Forest graphs
         self.render_standardized_population_graph(self.axes["std_population"], color="purple")  # Standardized Population
+        self.render_population_graph(self.axes["population"], color="purple")  # Population
+        self.render_standardized_forests_graph(self.axes["std_forests"], color="green")  # Standardized Forests
+        self.render_forests_graph(self.axes["forests"], color="green")  # Forests
+
+        # Water Mass-related graphs
+        self.render_std_dev_water_mass_graph(self.axes["std_dev_water_mass"], color="cyan")  # Water Mass Std Dev
+        self.render_water_mass_graph(self.axes["water_mass"], color="cyan")  # Water Mass
+
+        # Cell distribution graph
+        self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color="orange")  # Cell Distribution Std Dev
 
         # Add 3D visualization and config table
         self.open_3d_in_new_window(self.main_window)
