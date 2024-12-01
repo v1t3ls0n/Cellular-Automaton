@@ -125,6 +125,31 @@ class MatplotlibDisplay:
         self.render_population_graph(self.axes["population"], color="purple")
         self.render_forests_graph(self.axes["forests"], color="brown")
         self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color="darkgoldenrod")
+        # Set square aspect ratio for all graphs
+        for ax in self.axes.values():
+            ax.set_box_aspect(1)
+
+
+
+        def _on_resize(self, event):
+            """Adjust the figure size dynamically on window resize."""
+            canvas_width = event.width
+            canvas_height = event.height
+            self.fig.set_size_inches(canvas_width / 100, canvas_height / 100)
+            self.fig.tight_layout()
+            self.canvas.draw_idle()
+            # Optimize layout to reduce gray areas
+            self.fig.tight_layout(pad=0.5, h_pad=0.2, w_pad=0.2)
+
+            # Add 3D visualization and config table
+            self.open_3d_in_new_window(self.main_window)
+            self.add_config_table_with_scrollbar(self.main_window)
+        # Bind resizing event to dynamically adjust figure size
+        self.canvas.get_tk_widget().bind("<Configure>", _on_resize)
+
+        # Add scrollbars
+        self._add_scrollbars()
+
 
         # Optimize layout to reduce gray areas
         self.fig.tight_layout(pad=0.5, h_pad=0.2, w_pad=0.2)
@@ -135,10 +160,6 @@ class MatplotlibDisplay:
 
         # Start the Tkinter main loop
         self.main_window.mainloop()
-
-
-
-
 
     def open_3d_in_new_window(self, root=None):
             """Open a resizable 3D graph window with a 3D plot and integrated legend."""
