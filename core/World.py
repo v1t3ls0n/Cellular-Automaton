@@ -369,44 +369,29 @@ class World:
             Particle: The resolved cell after the collision.
         """
 
-        logging.info(f"in resolve collision, cell1 type:{cell1.cell_type} cell2 type:{cell2.cell_type}")
-        if cell1.cell_type in {6,8} and cell2.cell_type in {0}:
-            logging.info("sea air collision")
-        elif cell2.cell_type in {6,8} and cell1.cell_type in {0}:
-            logging.info("sea air collision")
-
         if (cell1.cell_type == 6 and cell2.cell_type == 6):
-            return cell1 if cell1.water_mass > cell2.water_mass else cell2
-        # Prevent land (desert) from overriding ocean
+            return cell1 if (cell1.water_mass + cell1.temperature) > (cell2.water_mass+cell2.temperature) else cell2
 
-        # Prevent vacuum or air from overriding ocean or land
-        if cell1.cell_type in {6, 8} and cell2.cell_type in {0, 1, 3, 4, 5}:
+        # Prevent vacuum overwrite air or cloud
+        if cell1.cell_type == 8 and cell2.cell_type in {2,6}:
             return cell2
-        if cell2.cell_type in {6, 8} and cell1.cell_type in {0, 1, 3, 4, 5}:
+        if cell2.cell_type == 8 and cell1.cell_type in {2,6}:
             return cell1
 
         # Handle rain interactions
-        if cell1.cell_type == 7:  # Cell1 is Rain
-            if cell2.cell_type in {6, 8}:  # Air or Vacuum
+        if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
                 return cell1  # Rain continues falling
-            elif cell2.cell_type in {0, 1, 3, 4, 5}:  # Ocean, Desert, etc.
-                cell2.water_mass += cell1.water_mass  # Add rainwater
-                return cell2
 
-        if cell2.cell_type == 7:  # Cell2 is Rain
-            if cell1.cell_type in {6, 8}:  # Air or Vacuum
+        if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
                 return cell2  # Rain continues falling
-            elif cell1.cell_type in {0, 1, 3, 4, 5}:  # Ocean, Desert, etc.
-                cell1.water_mass += cell2.water_mass  # Add rainwater
-                return cell1
+        
 
-        # Ensure desert cannot override ocean even in other cases
-        if cell1.cell_type == 1 and cell2.cell_type == 0:
-            logging.info("desert sea collision")
-            return cell2
-        if cell2.cell_type == 1 and cell1.cell_type == 0:
-            logging.info("desert sea collision")
-            return cell1
+        # Handle rain clouds interactions (Clouds replace air)
+        if cell1.cell_type == 6 and cell2.cell_type == 2:  # Cell1 is Rain
+                return cell2  
+
+        if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
+                return cell1 
 
         # Default behavior based on cell type weights
         return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2

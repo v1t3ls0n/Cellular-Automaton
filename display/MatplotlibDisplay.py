@@ -199,7 +199,7 @@ class MatplotlibDisplay:
         three_d_window = tk.Toplevel()
         three_d_window.title("3D Visualization")
         three_d_window.geometry("1000x600")  # Default size
-        three_d_window.minsize(800, 600)  # Minimum size
+        three_d_window.minsize(1000, 600)  # Minimum size
 
         # Configure flexible resizing
         three_d_window.columnconfigure(0, weight=3)  # Column for 3D plot
@@ -296,7 +296,7 @@ class MatplotlibDisplay:
         legend_canvas = FigureCanvasTkAgg(
             legend_fig, master=three_d_window)
         legend_canvas.get_tk_widget().grid(
-            row=1, column=1, sticky="nsew", padx=(5, 10), pady=5)
+            row=1, column=1, sticky="nsew", padx=(10, 10), pady=5)
         legend_canvas.draw()
 
         # Handle keyboard events for navigation
