@@ -27,22 +27,25 @@ class MatplotlibDisplay:
         self.days = range(len(simulation.states))
 
 
+
+
+
+
+
     def plot_3d(self):
-        """Create a scrollable and resizable window with compact, individually resizable graphs."""
+        """Create a scrollable and resizable window with compact graphs."""
         self.precompute_visualizations()
 
         # Initialize main Tkinter window
-        self.main_window = tk.Toplevel()
+        self.main_window = tk.Tk()
         self.main_window.title("Environmental Simulation Application Main Window")
         self.main_window.state("zoomed")  # Start in full-screen mode
-        # self.main_window.geometry("1000x1080")  # Default size
-        # self.main_window.minsize(800, 600)  # Minimum size
 
         # Configure grid layout for the main window
-        self.main_window.rowconfigure(1, weight=1)  # The canvas should expand vertically
-        self.main_window.columnconfigure(0, weight=1)  # The canvas should expand horizontally
+        self.main_window.rowconfigure(1, weight=1)
+        self.main_window.columnconfigure(0, weight=1)
 
-        # Add control buttons at the top
+        # Add control buttons
         control_frame = tk.Frame(self.main_window)
         control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
 
@@ -55,32 +58,41 @@ class MatplotlibDisplay:
         tk.Button(control_frame, text="Hide 3D Grid",
                 command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
-        # Create a scrollable frame
-        scrollable_canvas = tk.Canvas(self.main_window)
+        # Create a scrollable canvas
+        scrollable_canvas = tk.Canvas(self.main_window, highlightthickness=0)
         scrollable_canvas.grid(row=1, column=0, sticky="nsew")
 
-        scrollbar = tk.Scrollbar(self.main_window, orient="vertical", command=scrollable_canvas.yview)
-        scrollbar.grid(row=1, column=1, sticky="ns")
+        # Add vertical and horizontal scrollbars
+        vertical_scrollbar = tk.Scrollbar(self.main_window, orient="vertical", command=scrollable_canvas.yview)
+        vertical_scrollbar.grid(row=1, column=1, sticky="ns")
 
-        scrollable_canvas.configure(yscrollcommand=scrollbar.set)
+        horizontal_scrollbar = tk.Scrollbar(self.main_window, orient="horizontal", command=scrollable_canvas.xview)
+        horizontal_scrollbar.grid(row=2, column=0, sticky="ew")
+
+        scrollable_canvas.configure(yscrollcommand=vertical_scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
+
+        # Create a frame inside the canvas for Matplotlib content
         scrollable_frame = tk.Frame(scrollable_canvas)
         scrollable_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
-        # Bind the scroll event
-        def _on_mouse_wheel(event):
-            scrollable_canvas.yview_scroll(-1 * (event.delta // 120), "units")
-
-        scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
-
-        # Configure scrollable frame resizing
+        # Dynamically adjust the canvas size
         def _on_configure(event):
             scrollable_canvas.configure(scrollregion=scrollable_canvas.bbox("all"))
 
         scrollable_frame.bind("<Configure>", _on_configure)
 
-        # Create a Matplotlib figure and attach it to the scrollable frame
-        fig = plt.Figure(figsize=(18, 24), constrained_layout=False)  # Smaller figure size
-        gs = fig.add_gridspec(5, 2, width_ratios=[1, 1], hspace=0.2, wspace=0.4)  # Reduced spacing
+        # Enable mouse wheel scrolling
+        def _on_mouse_wheel(event):
+            if event.state & 0x1:  # Shift key pressed -> horizontal scroll
+                scrollable_canvas.xview_scroll(-1 * (event.delta // 120), "units")
+            else:
+                scrollable_canvas.yview_scroll(-1 * (event.delta // 120), "units")
+
+        scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
+
+        # Create a Matplotlib figure
+        fig = plt.Figure(figsize=(20, 25), constrained_layout=True)  # Adjust figure size
+        gs = fig.add_gridspec(5, 2, width_ratios=[1, 1], hspace=0.3, wspace=0.3)
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
@@ -110,8 +122,8 @@ class MatplotlibDisplay:
         self.render_forests_graph(self.axes["forests"], color="brown")
         self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color="darkgoldenrod")
 
-        # Use tight_layout to optimize spacing
-        self.fig.tight_layout(pad=0.3, h_pad=0.4, w_pad=0.1)  # Tighter padding
+        # Optimize layout to reduce gray areas
+        self.fig.tight_layout(pad=0.5, h_pad=0.2, w_pad=0.2)
 
         # Add 3D visualization and config table
         self.open_3d_in_new_window(self.main_window)
@@ -120,11 +132,6 @@ class MatplotlibDisplay:
         # Start the Tkinter main loop
         self.main_window.mainloop()
 
-
-    # def _on_resize(self, event):
-    #     """Handle resizing of the window and adjust graph sizes."""
-    #     self.fig.set_size_inches(event.width / 100, event.height / 100, forward=True)
-    #     self.canvas.draw_idle()
 
 
 
