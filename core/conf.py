@@ -65,17 +65,17 @@ config = {
     "forest_pollution_absorption_rate": 0.1,
     "forest_cooling_effect": 0.1,  # Cooling effect of forests on their environment
     # Cooling effect of forests on their environment
-    "forest_pollution_extinction_point": 80,
+    "forest_pollution_extinction_point": 100,
     # Cooling effect of forests on their environment
-    "forest_temperature_extinction_point": 80,
+    "forest_temperature_extinction_point": 100,
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.5,  # Rate of pollution increase in cities
-    "city_warming_effect": 0.5,  # Warming effect of cities on their environment
-    "city_temperature_upper_limit": 1000,  # Maximum temperature cities can reach
-    "city_pollution_upper_limit": 1000,  # Maximum pollution level cities can reach
+    "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
+    "city_warming_effect": 0.1,  # Warming effect of cities on their environment
+    "city_temperature_upper_limit": 200,  # Maximum temperature cities can reach
+    "city_pollution_upper_limit": 500,  # Maximum pollution level cities can reach
     # Maximum temperature before extinction effects
-    "city_temperature_extinction_point": 1660,
+    "city_temperature_extinction_point": 70,
 
 
 
@@ -86,7 +86,7 @@ config = {
 
     # Thresholds and rates for water transfer and pollution effects
     "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
-    "water_transfer_rate": 0.1,  # Maximum water transfer per interaction
+    "water_transfer_rate": 0.4,  # Maximum water transfer per interaction
     # Water mass required to convert a cell to ocean
     "ocean_conversion_threshold": 1.0,
     "pollution_damage_threshold": 5.0,  # Pollution level causing damage to ecosystems
@@ -100,7 +100,7 @@ config = {
 
     # Cloud-specific settings
     # Minimum water mass for clouds to precipitate as rain
-    "cloud_saturation_threshold": 2.0,
+    "cloud_saturation_threshold": 3.0,
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
@@ -108,7 +108,7 @@ config = {
 
     # Base colors for visual representation of cell types
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.005),  # Air (transparent white)
+        6: (1.0, 1.0, 1.0, 0.3),  # Air (transparent white)
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
         3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
