@@ -11,6 +11,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
 class ScrollableFrame(ttk.Frame):
+      config = config
       def __init__(self, container, *args, **kwargs):
           super().__init__(container, *args, **kwargs)
           self.canvas = tk.Canvas(self)
@@ -31,6 +32,7 @@ class ScrollableFrame(ttk.Frame):
           self.scrollbar.pack(side="right", fill="y")
 
 class MatplotlibDisplay:
+    config = config
 
     def __init__(self, simulation):
         self.simulation = simulation
