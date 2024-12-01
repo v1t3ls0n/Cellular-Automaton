@@ -109,9 +109,8 @@ class MatplotlibDisplay:
         self.render_std_dev_pollution_graph()
         self.render_std_dev_temperature_graph()
         self.render_std_dev_water_mass_graph()
-        self.render_cell_type_distribution_graph()
         self.render_std_dev_cell_distribution_graph()
-
+        self.render_cell_type_std_dev_graph()
         self.main_window = root
 
         # Open 3D visualization in a separate window
