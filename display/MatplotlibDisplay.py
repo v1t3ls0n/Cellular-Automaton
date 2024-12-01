@@ -34,10 +34,6 @@ class MatplotlibDisplay:
     def plot_3d(self):
         self.precompute_visualizations()
 
-
-
-
-
         """Create the plot with all relevant graphs, including the configuration window."""
         # Create the main Tkinter root window for the simulation
         root = tk.Tk()
@@ -54,7 +50,6 @@ class MatplotlibDisplay:
         # Set the window close protocol
         root.protocol("WM_DELETE_WINDOW", on_close)
 
-
         # Configure row and column resizing for the root
         root.rowconfigure(1, weight=1)  # Make the plot area expandable
         root.columnconfigure(0, weight=1)
@@ -66,18 +61,16 @@ class MatplotlibDisplay:
         control_frame = tk.Frame(root)
         control_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
 
-
         # Add buttons to the control frame with reduced width
         # button_width = 25  # Set a fixed width for all buttons
         tk.Button(control_frame, text="Show Custom Parameters Table",
-                command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
+                  command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Hide Custom Parameters Table",
-                command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
+                  command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Show 3D Grid",
-                command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
+                  command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Hide 3D Grid",
-                command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
-
+                  command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
         # Create a frame for the plots (maximum height)
         plot_frame = tk.Frame(root)
@@ -92,10 +85,9 @@ class MatplotlibDisplay:
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
-
         # Use GridSpec for flexible layout
         spec = gridspec.GridSpec(nrows=3, ncols=2, figure=self.fig)
-        
+
         # Configure axes for the plots
         self.ax_pollution = self.fig.add_subplot(spec[0, 0])
         self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[1, 0])
@@ -116,7 +108,6 @@ class MatplotlibDisplay:
         self.open_3d_in_new_window()
         # Start the Tkinter event loop
         root.mainloop()
-
 
     def bring_config_to_front(self):
         """Bring the configuration window to the front."""
@@ -222,19 +213,6 @@ class MatplotlibDisplay:
         # Remove the topmost attribute after focusing on the window
         self.config_window.after(
             1000, lambda: self.config_window.attributes("-topmost", False))
-   
-
-
-
-
-
-
-
-
-
-
-
-
 
     def open_3d_in_new_window(self):
         """Open a resizable 3D graph window with a Matplotlib legend and keyboard navigation."""
@@ -244,7 +222,8 @@ class MatplotlibDisplay:
         self.three_d_window.minsize(800, 500)  # Minimum size
         self.three_d_window.columnconfigure(0, weight=3)  # Column for 3D plot
         self.three_d_window.columnconfigure(1, weight=1)  # Column for legend
-        self.three_d_window.rowconfigure(0, weight=1)  # Flexible row for content
+        self.three_d_window.rowconfigure(
+            0, weight=1)  # Flexible row for content
 
         # Frame for the 3D plot
         fig = plt.Figure(figsize=(8, 6), constrained_layout=True)
@@ -273,29 +252,29 @@ class MatplotlibDisplay:
         # Create legend elements
         legend_elements = [
             plt.Line2D([0], [0], marker="o", color="w", label="0: Ocean", markersize=10,
-                    markerfacecolor=self.config["base_colors"][0]),
+                       markerfacecolor=self.config["base_colors"][0]),
             plt.Line2D([0], [0], marker="o", color="w", label="1: Desert", markersize=10,
-                    markerfacecolor=self.config["base_colors"][1]),
+                       markerfacecolor=self.config["base_colors"][1]),
             plt.Line2D([0], [0], marker="o", color="w", label="2: Cloud", markersize=10,
-                    markerfacecolor=self.config["base_colors"][2]),
+                       markerfacecolor=self.config["base_colors"][2]),
             plt.Line2D([0], [0], marker="o", color="w", label="3: Ice", markersize=10,
-                    markerfacecolor=self.config["base_colors"][3]),
+                       markerfacecolor=self.config["base_colors"][3]),
             plt.Line2D([0], [0], marker="o", color="w", label="4: Forest", markersize=10,
-                    markerfacecolor=self.config["base_colors"][4]),
+                       markerfacecolor=self.config["base_colors"][4]),
             plt.Line2D([0], [0], marker="o", color="w", label="5: City", markersize=10,
-                    markerfacecolor=self.config["base_colors"][5]),
+                       markerfacecolor=self.config["base_colors"][5]),
             plt.Line2D([0], [0], marker="o", color="w", label="6: Air", markersize=10,
-                    markerfacecolor=self.config["base_colors"][6]),
+                       markerfacecolor=self.config["base_colors"][6]),
             plt.Line2D([0], [0], marker="o", color="w", label="7: Rain", markersize=10,
-                    markerfacecolor=self.config["base_colors"][7]),
+                       markerfacecolor=self.config["base_colors"][7]),
             plt.Line2D([0], [0], marker="o", color="w", label="8: Vacuum", markersize=10,
-                    markerfacecolor=self.config["base_colors"][8]),
+                       markerfacecolor=self.config["base_colors"][8]),
         ]
 
         if self.config.get("tint"):
             legend_elements.append(
                 plt.Line2D([0], [0], marker="o", color="w", label="9: Pollution", markersize=10,
-                        markerfacecolor="red")
+                           markerfacecolor="red")
             )
 
         # Add the legend to the legend_ax
@@ -309,8 +288,10 @@ class MatplotlibDisplay:
         )
 
         # Add the legend figure to the Tkinter window
-        legend_canvas = FigureCanvasTkAgg(legend_fig, master=self.three_d_window)
-        legend_canvas.get_tk_widget().grid(row=0, column=1, sticky="nsew", padx=(5, 10), pady=10)
+        legend_canvas = FigureCanvasTkAgg(
+            legend_fig, master=self.three_d_window)
+        legend_canvas.get_tk_widget().grid(
+            row=0, column=1, sticky="nsew", padx=(5, 10), pady=10)
         legend_canvas.draw()
 
         # Handle keyboard events for navigation
@@ -357,16 +338,6 @@ class MatplotlibDisplay:
 
         self.three_d_window.bind("<Configure>", on_resize)
 
-
-
-
-
-
-
-
-
-
-
     def add_cell_type_legend_to_frame(self, legend_frame):
         """Add a well-padded legend explaining the cell colors and cell type numbers."""
         # Add a title at the top of the legend
@@ -403,15 +374,19 @@ class MatplotlibDisplay:
         # Add each legend item with padding
         for text, color in legend_items:
             # Convert RGBA color to Hex if necessary
-            hex_color = rgba_to_hex(color) if isinstance(color, tuple) else color
+            hex_color = rgba_to_hex(color) if isinstance(
+                color, tuple) else color
 
             item_frame = tk.Frame(legend_frame, bg="white")
-            item_frame.pack(fill=tk.X, padx=(20, 20), pady=(10, 10))  # Add padding around each item
+            item_frame.pack(fill=tk.X, padx=(20, 20), pady=(
+                10, 10))  # Add padding around each item
 
             # Create a circular color indicator using Canvas
-            canvas = tk.Canvas(item_frame, width=24, height=24, bg="white", highlightthickness=0)
+            canvas = tk.Canvas(item_frame, width=24, height=24,
+                               bg="white", highlightthickness=0)
             canvas.pack(side=tk.LEFT, padx=(10, 10))
-            canvas.create_oval(2, 2, 22, 22, fill=hex_color, outline="black")  # Draw a circle
+            canvas.create_oval(2, 2, 22, 22, fill=hex_color,
+                               outline="black")  # Draw a circle
 
             # Add the text description
             text_label = tk.Label(
@@ -421,8 +396,8 @@ class MatplotlibDisplay:
                 bg="white",
                 anchor="w"
             )
-            text_label.pack(side=tk.LEFT, padx=(10, 10))  # Add space between text and circle
-
+            # Add space between text and circle
+            text_label.pack(side=tk.LEFT, padx=(10, 10))
 
     def precompute_visualizations(self):
         # # Render initial graphs
@@ -449,9 +424,10 @@ class MatplotlibDisplay:
                             #             # Larger size for denser appearance
                             #             sizes.append(80)
 
-                            points.append((x , y , z ))
+                            points.append((x, y, z))
                             colors.append(to_rgba(cell.get_color()))
-                            sizes.append(100)  # Larger size for denser appearance
+                            # Larger size for denser appearance
+                            sizes.append(100)
 
             self.precomputed_data.append((points, colors, sizes))
         logging.info("3D Precomputation complete.")
@@ -570,10 +546,13 @@ class MatplotlibDisplay:
             )
 
             # Plot the average pollution
-            self.ax_pollution.plot(days, avg_pollution, color="red", label="Pollution")
+            self.ax_pollution.plot(days, avg_pollution,
+                                   color="red", label="Pollution")
             self.ax_pollution.legend()
         else:
-            logging.error("Data length mismatch in pollution graph or standard deviation.")
+            logging.error(
+                "Data length mismatch in pollution graph or standard deviation.")
+
     def render_std_dev_pollution_graph(self):
         """Render the standard deviation of pollution graph over time."""
         self.ax_std_dev_pollution_graph.cla()
