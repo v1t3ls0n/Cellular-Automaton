@@ -190,17 +190,12 @@ class MatplotlibDisplay:
 
 
 
-
-
-
-
     def open_3d_in_new_window(self, root=None):
-        """Open a resizable 3D graph window with a Matplotlib legend and keyboard navigation."""
+        """Open a resizable 3D graph window with a Matplotlib legend integrated into the same figure."""
         three_d_window = tk.Toplevel()
         three_d_window.title("3D Visualization")
-        three_d_window.geometry("1280x600")  # Default size
-        three_d_window.minsize(1000, 600)  # Minimum size
-
+        three_d_window.geometry("800x600")  # Default size
+        three_d_window.minsize(800, 600)  # Minimum size
 
         # Configure flexible resizing
         three_d_window.columnconfigure(0, weight=1)  # Single column for grid and legend
@@ -213,9 +208,6 @@ class MatplotlibDisplay:
         control_frame = tk.Frame(three_d_window)
         control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
 
-
-        self.three_d_window = three_d_window
-
         # Add button to bring the main window to the front
         tk.Button(
             control_frame,
@@ -223,9 +215,14 @@ class MatplotlibDisplay:
             command=lambda: root.lift(),  # Bring the main window to the front
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
-        # Frame for the 3D plot
-        fig = plt.Figure(figsize=(6, 6), constrained_layout=False)
-        ax_3d = fig.add_subplot(111, projection="3d")
+        # Create a Matplotlib figure with GridSpec
+        fig = plt.Figure(figsize=(8, 6))
+        gs = fig.add_gridspec(1, 2, width_ratios=[4, 1], wspace=0.3)  # Adjust `wspace` for padding
+
+        # Add the 3D plot
+        ax_3d = fig.add_subplot(gs[0, 0], projection="3d")
+        ax_color_map = fig.add_subplot(gs[0, 1])  # Color map legend
+        ax_color_map.axis("off")  # Hide axes for the legend
 
         # Fetch data for the current day
         points, colors, sizes = self.precomputed_data[self.current_day]
@@ -238,17 +235,7 @@ class MatplotlibDisplay:
         ax_3d.set_ylabel("Y Axis")
         ax_3d.set_zlabel("Z Axis")
 
-        # Add the 3D plot to the window
-        canvas = FigureCanvasTkAgg(fig, master=three_d_window)
-        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-        canvas.draw()
-
-        # Create a separate Matplotlib figure for the legend
-        legend_fig = plt.Figure(figsize=(2, 6), constrained_layout=False)
-        legend_ax = legend_fig.add_subplot(111)
-        legend_ax.axis("off")  # Hide axes
-
-        # Create legend elements
+        # Add legend elements
         legend_elements = [
             plt.Line2D([0], [0], marker="o", color="w", label="0 : Ocean", markersize=10,
                     markerfacecolor=self.config["base_colors"][0]),
@@ -275,23 +262,18 @@ class MatplotlibDisplay:
                                     markersize=10, markerfacecolor='red')
             legend_elements.append(tinted_red)
 
-
-        # Add legend inside the 3D grid section
-        ax_3d.legend(
+        # Add the legend
+        ax_color_map.legend(
             handles=legend_elements,
-            loc="upper right",  # Position the legend inside the plot
-            bbox_to_anchor=(2, 1),  # Adjust position to avoid overlap
-            borderaxespad=0.0,         # Remove padding between axes and legend
+            loc="center",
             title="Cell Types",
-            frameon=True,
-            fontsize=10,
-            title_fontsize=12,
+            frameon=False
         )
-        # Add the legend figure to the Tkinter window
-        legend_canvas = FigureCanvasTkAgg(
-            legend_fig, master=three_d_window)
-        legend_canvas.get_tk_widget().grid(row=1, column=1, sticky="nsew",ipadx=20)
-        legend_canvas.draw()
+
+        # Add the figure to the Tkinter window
+        canvas = FigureCanvasTkAgg(fig, master=three_d_window)
+        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        canvas.draw()
 
         # Handle keyboard events for navigation
         def handle_key_press(event):
@@ -306,46 +288,37 @@ class MatplotlibDisplay:
                     update_plot()
 
         def update_plot():
-            """Update the 3D plot in the separate window."""
+            """Update the 3D plot and refresh the window."""
             ax_3d.cla()
-            ax_3d.set_title(f"Day {self.current_day}", pad=20)  # Add padding above the title
+            ax_3d.set_title(f"Day {self.current_day}", pad=20)
             ax_3d.set_xlabel("X Axis")
             ax_3d.set_ylabel("Y Axis")
             ax_3d.set_zlabel("Z Axis")
-
-            # Fetch data for the updated day
             points, colors, sizes = self.precomputed_data[self.current_day]
             xs, ys, zs = zip(*points) if points else ([], [], [])
             ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
-
-            # Redraw the canvas
             canvas.draw_idle()
 
-        # Bind the keyboard event handler to the canvas
+        # Bind the keyboard event handler
         fig.canvas.mpl_connect("key_press_event", handle_key_press)
 
         # Handle dynamic resizing
         def on_resize(event):
-            """Dynamically resize the plot and legend based on window size."""
+            """Dynamically resize the plot and ensure the layout remains consistent."""
             window_width = max(three_d_window.winfo_width(), 100)  # Ensure minimum width
             window_height = max(three_d_window.winfo_height(), 100)  # Ensure minimum height
 
-            # Calculate dynamic sizes, ensuring minimum values
-            plot_width = max(window_width * 0.6 / 100, 6)
-            plot_height = max(window_height * 0.8 / 100, 6)
-            legend_width = max(window_width * 0.2 / 100, 2)
+            # Calculate dynamic sizes, limited to minimum window dimensions
+            plot_width = min(window_width * 0.6 / 100, 6)
+            plot_height = min(window_height * 0.8 / 100, 6)
+            legend_width = min(window_width * 0.2 / 100, 2)
 
             # Apply the sizes
             fig.set_size_inches(plot_width, plot_height)
-            legend_fig.set_size_inches(legend_width, plot_height)
-
-            # Redraw canvases
             canvas.draw_idle()
-            legend_canvas.draw_idle()
 
         # Bind resize event
         three_d_window.bind("<Configure>", on_resize)
-
 
 
 
@@ -620,6 +593,46 @@ class MatplotlibDisplay:
         else:
             logging.error(
                 "Data length mismatch in temperature Standard deviation graph.")
+
+
+    def render_water_mass_graph(self):
+        """Render the average water mass graph over time."""
+        self.ax_water_mass.cla()
+        self.ax_water_mass.set_title("Average Water Mass Over Time")
+        self.ax_water_mass.set_xlabel("Day")
+        self.ax_water_mass.set_ylabel("Average Water Mass")
+
+        days = range(len(self.simulation.water_mass_over_time))
+        avg_water_mass = self.simulation.water_mass_over_time
+
+        if len(days) == len(avg_water_mass):
+            self.ax_water_mass.plot(
+                days, avg_water_mass, color="blue", label="Water Mass"
+            )
+            self.ax_water_mass.legend()
+        else:
+            logging.error("Data length mismatch in water mass graph.")
+
+    def render_std_dev_water_mass_graph(self):
+        """Render the standard deviation of water mass graph over time."""
+        self.ax_std_dev_water_mass.cla()
+        self.ax_std_dev_water_mass.set_title("Standard Deviation of Water Mass Over Time")
+        self.ax_std_dev_water_mass.set_xlabel("Day")
+        self.ax_std_dev_water_mass.set_ylabel("Water Mass Std Dev")
+
+        days = range(len(self.simulation.std_dev_water_mass_over_time))
+        std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
+
+        if len(days) == len(std_dev_water_mass):
+            self.ax_std_dev_water_mass.plot(
+                days, std_dev_water_mass, color="cyan", label="Water Mass Std Dev"
+            )
+            self.ax_std_dev_water_mass.legend()
+        else:
+            logging.error("Data length mismatch in water mass std dev graph.")
+
+
+
 
     def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:
