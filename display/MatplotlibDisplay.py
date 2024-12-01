@@ -93,7 +93,7 @@ class MatplotlibDisplay:
         scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
         # Create a Matplotlib figure
-        fig = plt.Figure(figsize=(20, 25))  # Adjust figure size
+        fig = plt.Figure(figsize=(15, 20))  # Adjust figure size
         gs = fig.add_gridspec(5, 2, width_ratios=[
                               1, 1], hspace=0.4, wspace=0.4)
 
@@ -107,27 +107,27 @@ class MatplotlibDisplay:
             "std_dev_pollution": self.fig.add_subplot(gs[0, 1]),
             "temperature": self.fig.add_subplot(gs[1, 0]),
             "std_dev_temperature": self.fig.add_subplot(gs[1, 1]),
-            "water_mass": self.fig.add_subplot(gs[2, 0]),
-            "std_dev_water_mass": self.fig.add_subplot(gs[2, 1]),
-            "population": self.fig.add_subplot(gs[3, 0]),
-            "forests": self.fig.add_subplot(gs[3, 1]),
+            "water_mass": self.fig.add_subplot(gs[3, 0]),
+            "std_dev_water_mass": self.fig.add_subplot(gs[3, 1]),
+            "population": self.fig.add_subplot(gs[2, 0]),
+            "forests": self.fig.add_subplot(gs[2, 1]),
             "cell_distribution_std_dev": self.fig.add_subplot(gs[4, 0]),
         }
 
         # Render graphs
-        self.render_pollution_graph(self.axes["pollution"], color="red")
-        self.render_std_dev_pollution_graph(
-            self.axes["std_dev_pollution"], color="orange")
-        self.render_temperature_graph(self.axes["temperature"], color="blue")
-        self.render_std_dev_temperature_graph(
-            self.axes["std_dev_temperature"], color="cyan")
-        self.render_water_mass_graph(self.axes["water_mass"], color="green")
-        self.render_std_dev_water_mass_graph(
-            self.axes["std_dev_water_mass"], color="lime")
-        self.render_population_graph(self.axes["population"], color="purple")
-        self.render_forests_graph(self.axes["forests"], color="brown")
-        self.render_std_dev_cell_distribution_graph(
-            self.axes["cell_distribution_std_dev"], color="darkgoldenrod")
+        base_colors = self.config["base_colors"]
+
+        # Render graphs using dynamic colors from base_colors
+        self.render_pollution_graph(self.axes["pollution"], color=base_colors[0])  # Ocean (deep blue)
+        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color=base_colors[2])  # Cloud (light gray)
+        self.render_temperature_graph(self.axes["temperature"], color=base_colors[3])  # Ice (light cyan)
+        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color=base_colors[7])  # Rain (grayish blue)
+        self.render_water_mass_graph(self.axes["water_mass"], color=base_colors[1])  # Desert (sandy gold)
+        self.render_std_dev_water_mass_graph(self.axes["std_dev_water_mass"], color=base_colors[4])  # Forest (lush green)
+        self.render_population_graph(self.axes["population"], color=base_colors[5])  # City (dark purple)
+        self.render_forests_graph(self.axes["forests"], color=base_colors[6])  # Air (transparent white)
+        self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color=base_colors[8])  # Vacuum (fully transparent/black)
+
 
         # Optimize layout to reduce gray areas
         # self.fig.tight_layout(pad=0.5, h_pad=0.1, w_pad=0.1)
@@ -443,146 +443,170 @@ class MatplotlibDisplay:
 
         self.fig.canvas.draw_idle()
 
+    def render_generic_graph(self,ax, title, xlabel, ylabel, days, data, std_dev=None, color="blue", label=None, fill_label=None):
+        """
+        Render a generic graph with optional standard deviation shading.
+
+        Args:
+            ax (matplotlib.axes.Axes): The Axes to draw the graph on.
+            title (str): Title of the graph.
+            xlabel (str): Label for the x-axis.
+            ylabel (str): Label for the y-axis.
+            days (range): Range of days for the x-axis.
+            data (list): Data points for the graph.
+            std_dev (list, optional): Standard deviation values for shading. Defaults to None.
+            color (str): Color of the graph. Defaults to "blue".
+            label (str, optional): Label for the main line. Defaults to None.
+            fill_label (str, optional): Label for the shaded area. Defaults to None.
+        """
+        ax.cla()
+        ax.set_title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+
+        if len(days) == len(data):
+            if std_dev is not None:
+                ax.fill_between(
+                    days,
+                    np.array(data) - np.array(std_dev),
+                    np.array(data) + np.array(std_dev),
+                    color=color, alpha=0.2, label=fill_label
+                )
+            ax.plot(days, data, color=color, label=label)
+            if label or fill_label:
+                ax.legend()
+        else:
+            logging.error(f"Data length mismatch in graph: {title}")
+
+
     def render_population_graph(self, ax, color):
         """Render the city population graph over time."""
-        ax.cla()
-        ax.set_title("City Population Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Number of Cities")
+        self.render_generic_graph(
+            ax=ax,
+            title="City Population Over Time",
+            xlabel="Day",
+            ylabel="Number of Cities",
+            days=self.days,
+            data=self.simulation.city_population_over_time,
+            color=color,
+            label="Cities"
+        )
 
-        # Retrieve data
-        city_population = self.simulation.city_population_over_time
-
-        # Plot the data
-        ax.plot(self.days, city_population, color=color, label="Cities")
-        ax.legend()
 
     def render_forests_graph(self, ax, color):
         """Render the forest count graph over time."""
-        ax.cla()
-        ax.set_title("Forest Count Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Number of Forests")
+        self.render_generic_graph(
+            ax=ax,
+            title="Forest Count Over Time",
+            xlabel="Day",
+            ylabel="Number of Forests",
+            days=self.days,
+            data=self.simulation.forest_count_over_time,
+            color=color,
+            label="Forests"
+        )
 
-        # Retrieve data
-        forest_count = self.simulation.forest_count_over_time
-
-        ax.plot(self.days, forest_count, color=color, label="Forests")
-        ax.legend()
 
     def render_temperature_graph(self, ax, color):
-        """Render the standard deviation of temperature graph over time."""
-        ax.cla()
-        ax.set_title("Temperature Standard Deviation Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Standard Deviation Temperature")
-
-        # Ensure correct data availability
-        avg_temperature = self.simulation.temperature_over_time
-        std_dev_temperature = self.simulation.std_dev_temperature_over_time
-
-        # Add standard deviation as shaded region
-        ax.fill_between(
-            self.days,
-            np.array(avg_temperature) - np.array(std_dev_temperature),
-            np.array(avg_temperature) + np.array(std_dev_temperature),
-            color="blue", alpha=0.1, label="Temperature Std Dev Range"
+        """Render the temperature graph with standard deviation over time."""
+        self.render_generic_graph(
+            ax=ax,
+            title="Temperature Over Time",
+            xlabel="Day",
+            ylabel="Average Temperature",
+            days=self.days,
+            data=self.simulation.temperature_over_time,
+            std_dev=self.simulation.std_dev_temperature_over_time,
+            color=color,
+            label="Average Temperature",
+            fill_label="Temperature Std Dev Range"
         )
 
-        ax.plot(self.days, avg_temperature, color=color,
-                label="Average Temperature")
-        ax.legend()
 
     def render_pollution_graph(self, ax, color):
-        """Render the pollution graph over time with standard deviation."""
-        ax.cla()
-        ax.set_title("Pollution Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Average Pollution")
-
-        avg_pollution = self.simulation.pollution_over_time
-        pollution_std_dev = self.simulation.std_dev_pollution_over_time
-
-        # Add standard deviation as shaded region
-        ax.fill_between(
-            self.days,
-            np.array(avg_pollution) - np.array(pollution_std_dev),
-            np.array(avg_pollution) + np.array(pollution_std_dev),
-            color="red", alpha=0.2, label="Pollution Std Dev Range"
+        """Render the pollution graph with standard deviation over time."""
+        self.render_generic_graph(
+            ax=ax,
+            title="Pollution Over Time",
+            xlabel="Day",
+            ylabel="Average Pollution",
+            days=self.days,
+            data=self.simulation.pollution_over_time,
+            std_dev=self.simulation.std_dev_pollution_over_time,
+            color=color,
+            label="Pollution",
+            fill_label="Pollution Std Dev Range"
         )
 
-        ax.plot(self.days, avg_pollution, color=color, label="Pollution")
-        ax.legend()
 
     def render_std_dev_pollution_graph(self, ax, color):
         """Render the standard deviation of pollution graph over time."""
-        ax.cla()
-        ax.set_title("Pollution Standard Deviation Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Standard Deviation Pollution")
+        self.render_generic_graph(
+            ax=ax,
+            title="Pollution Standard Deviation Over Time",
+            xlabel="Day",
+            ylabel="Standard Deviation Pollution",
+            days=self.days,
+            data=self.simulation.std_dev_pollution_over_time,
+            color=color,
+            label="Pollution Std Dev"
+        )
 
-        std_dev_pollution = self.simulation.std_dev_pollution_over_time
-        ax.plot(self.days, std_dev_pollution,
-                color=color, label="Pollution Std Dev")
-        ax.legend()
 
     def render_std_dev_temperature_graph(self, ax, color):
         """Render the standard deviation of temperature graph over time."""
-        ax.cla()
-        ax.set_title("Temperature Standard Deviation Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Standard Deviation Temperature")
-
-        std_dev_temperature = self.simulation.std_dev_temperature_over_time
-        ax.plot(self.days, std_dev_temperature,
-                color=color, label="Temperature Std Dev")
-        ax.legend()
-
-    def render_water_mass_graph(self, ax, color):
-        """Render the average water mass graph over time with standard deviation limits."""
-        ax.cla()
-        ax.set_title("Average Water Mass Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Average Water Mass")
-
-        avg_water_mass = self.simulation.water_mass_over_time
-        std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
-
-        # Add standard deviation as shaded region
-        ax.fill_between(
-            self.days,
-            np.array(avg_water_mass) - np.array(std_dev_water_mass),
-            np.array(avg_water_mass) + np.array(std_dev_water_mass),
-            color="blue", alpha=0.1, label="Water Mass Std Dev Range"
+        self.render_generic_graph(
+            ax=ax,
+            title="Temperature Standard Deviation Over Time",
+            xlabel="Day",
+            ylabel="Standard Deviation Temperature",
+            days=self.days,
+            data=self.simulation.std_dev_temperature_over_time,
+            color=color,
+            label="Temperature Std Dev"
         )
-
-        ax.plot(self.days, avg_water_mass, color=color,
-                label="Average Water Mass")
-        ax.legend()
 
     def render_std_dev_water_mass_graph(self, ax, color):
         """Render the standard deviation of water mass graph over time."""
-        ax.cla()
-        ax.set_title("Standard Deviation of Water Mass Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Water Mass Std Dev")
+        self.render_generic_graph(
+            ax=ax,
+            title="Standard Deviation of Water Mass Over Time",
+            xlabel="Day",
+            ylabel="Water Mass Std Dev",
+            days=self.days,
+            data=self.simulation.std_dev_water_mass_over_time,
+            color=color,
+            label="Water Mass Std Dev"
+        )
 
-        std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
-        ax.plot(self.days, std_dev_water_mass,
-                color=color, label="Water Mass Std Dev")
-        ax.legend()
+    def render_water_mass_graph(self, ax, color):
+        """Render the average water mass graph with standard deviation over time."""
+        self.render_generic_graph(
+            ax=ax,
+            title="Average Water Mass Over Time",
+            xlabel="Day",
+            ylabel="Average Water Mass",
+            days=self.days,
+            data=self.simulation.water_mass_over_time,
+            std_dev=self.simulation.std_dev_water_mass_over_time,
+            color=color,
+            label="Average Water Mass",
+            fill_label="Water Mass Std Dev Range"
+        )
+
 
     def render_std_dev_cell_distribution_graph(self, ax, color):
-        """Render the standard deviation of cell type distribution over time."""
-        ax.cla()
-        ax.set_title("Std Dev of Cell Type Distribution Over Time")
-        ax.set_xlabel("Day")
-        ax.set_ylabel("Std Dev of Cell Counts")
-
-        std_dev_distribution = self.simulation.std_dev_cell_distribution_over_time
-        ax.plot(self.days, std_dev_distribution, color=color,
-                label="Std Dev Cell Distribution")
-        ax.legend()
+        """Render the standard deviation of cell type distribution graph over time."""
+        self.render_generic_graph(
+            ax=ax,
+            title="Cell Type Distribution Std Dev Over Time",
+            xlabel="Day",
+            ylabel="Std Dev of Cell Counts",
+            days=self.days,
+            data=self.simulation.std_dev_cell_distribution_over_time,
+            color=color,
+            label="Cell Type Distribution Std Dev"
+        )
 
     def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:

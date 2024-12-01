@@ -56,6 +56,9 @@ class Simulation:
             self.std_dev_cell_distribution_over_time.append(std_dev_distribution)
         else:
             self.std_dev_cell_distribution_over_time.append(0)
+        logging.info(f"Day {state.day_number}: Total forests = {state.total_forests}")
+        logging.info(f"Aggregated forest count: {self.forest_count_over_time}")
+
             
     def precompute(self):
         """

@@ -484,8 +484,9 @@ class World:
                 for k in range(self.grid_size[2]):
                     cell = self.grid[i, j, k]
                     if cell is None:
+                        logging.info("cell is none")
                         continue
-
+                    total_cells += 1
                     total_temperature += cell.temperature
                     total_pollution += cell.pollution_level
                     total_water_mass += cell.water_mass
@@ -502,7 +503,6 @@ class World:
                         total_cities += 1
                     elif cell.cell_type == 4:  # Forest
                         total_forests += 1
-                    total_cells += 1
 
         # Global averages
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
@@ -556,6 +556,7 @@ class World:
                 }
 
         # Log results (optional)
+
         logging.info(
             f"Global - Avg Temp: {self.avg_temperature:.2f}, Std Dev Temp: {self.std_dev_temperature:.2f}, "
             f"Avg Pollution: {self.avg_pollution:.2f}, Std Dev Pollution: {self.std_dev_pollution:.2f}, "
