@@ -116,8 +116,8 @@ class MatplotlibDisplay:
             "water_mass": self.fig.add_subplot(gs[5, 0]),  # Water Mass graph
 
             "std_dev_pollution": self.fig.add_subplot(gs[5, 1]),  # Pollution Standard Deviation graph
-            "std_dev_temperature": self.fig.add_subplot(gs[6, 0]),  # Temperature Standard Deviation graph
-            "std_dev_water_mass": self.fig.add_subplot(gs[6, 1]),  # Water Mass Standard Deviation graph
+            "std_dev_temperature": self.fig.add_subplot(gs[6, 1]),  # Temperature Standard Deviation graph
+            "std_dev_water_mass": self.fig.add_subplot(gs[6, 0]),  # Water Mass Standard Deviation graph
         }
 
         # Render standardized graphs
