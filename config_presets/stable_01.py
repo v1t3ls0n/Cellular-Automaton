@@ -35,7 +35,7 @@ config = {
         0,   # Ice: Pristine areas with negligible pollution
         2,   # Forest: Absorbs pollution, very low levels
         20,  # City: High pollution due to vehicles and factories
-        50,   # Air: Variable pollution based on proximity to cities
+        5,   # Air: Variable pollution based on proximity to cities
         0,   # Rain: Cleanses the atmosphere
         0,   # Vacuum: No pollution in empty space
     ],
@@ -102,6 +102,8 @@ config = {
         8: (0.0, 0.0, 0.0, 0.0),  # Vacuum (fully transparent/black)
     },
 }
+
+
 # Labels for configuration keys to provide context in the UI or logs
 key_labels = {
     "baseline_temperature": "Baseline Temperature (°C)",
