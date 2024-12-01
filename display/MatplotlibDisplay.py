@@ -198,7 +198,7 @@ class MatplotlibDisplay:
         """Open a resizable 3D graph window with a Matplotlib legend and keyboard navigation."""
         three_d_window = tk.Toplevel()
         three_d_window.title("3D Visualization")
-        three_d_window.geometry("1000x600")  # Default size
+        three_d_window.geometry("1280x600")  # Default size
         three_d_window.minsize(1000, 600)  # Minimum size
 
         # Configure flexible resizing
@@ -248,39 +248,32 @@ class MatplotlibDisplay:
 
         # Create legend elements
         legend_elements = [
-            plt.Line2D([0], [0], marker="o", color="w", label="0: Ocean", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="0 : Ocean", markersize=10,
                     markerfacecolor=self.config["base_colors"][0]),
-            plt.Line2D([0], [0], marker="o", color="w", label="1: Desert", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="1 : Desert", markersize=10,
                     markerfacecolor=self.config["base_colors"][1]),
-            plt.Line2D([0], [0], marker="o", color="w", label="2: Cloud", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="2 : Cloud", markersize=10,
                     markerfacecolor=self.config["base_colors"][2]),
-            plt.Line2D([0], [0], marker="o", color="w", label="3: Ice", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="3 : Ice", markersize=10,
                     markerfacecolor=self.config["base_colors"][3]),
-            plt.Line2D([0], [0], marker="o", color="w", label="4: Forest", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="4 : Forest", markersize=10,
                     markerfacecolor=self.config["base_colors"][4]),
-            plt.Line2D([0], [0], marker="o", color="w", label="5: City", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="5 : City", markersize=10,
                     markerfacecolor=self.config["base_colors"][5]),
-            plt.Line2D([0], [0], marker="o", color="w", label="6: Air", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="6 : Air", markersize=10,
                     markerfacecolor=self.config["base_colors"][6]),
-            plt.Line2D([0], [0], marker="o", color="w", label="7: Rain", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="7 : Rain", markersize=10,
                     markerfacecolor=self.config["base_colors"][7]),
-            plt.Line2D([0], [0], marker="o", color="w", label="8: Vacuum", markersize=10,
+            plt.Line2D([0], [0], marker="o", color="w", label="8 : Vacuum", markersize=10,
                     markerfacecolor=self.config["base_colors"][8]),
         ]
 
-        if self.config.get("tint"):
-            legend_elements.append(
-                plt.Line2D([0], [0], marker="o", color="w", label="9: Pollution", markersize=10,
-                        markerfacecolor="red")
-            )
+        if self.config['tint']:
+            tinted_red = plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution (Tint)',
+                                    markersize=10, markerfacecolor='red')
+            legend_elements.append(tinted_red)
 
 
-
-        if self.config.get("tint"):
-            legend_elements.append(
-                plt.Line2D([0], [0], marker="o", color="w", label="9: Pollution", markersize=10,
-                        markerfacecolor="red")
-            )
 
         # Add the legend to the legend_ax
         legend_ax.legend(
@@ -288,15 +281,14 @@ class MatplotlibDisplay:
             loc="center",
             title="Cell Types",
             frameon=True,
-            fontsize=10,
-            title_fontsize=12,
+            fontsize=12,
+            title_fontsize=14,
         )
 
         # Add the legend figure to the Tkinter window
         legend_canvas = FigureCanvasTkAgg(
             legend_fig, master=three_d_window)
-        legend_canvas.get_tk_widget().grid(
-            row=1, column=1, sticky="nsew", padx=(10, 10), pady=5)
+        legend_canvas.get_tk_widget().grid(row=1, column=1, sticky="nsew",ipadx=20)
         legend_canvas.draw()
 
         # Handle keyboard events for navigation
@@ -336,17 +328,9 @@ class MatplotlibDisplay:
             window_width = three_d_window.winfo_width()
             window_height = three_d_window.winfo_height()
 
-            # Dynamically adjust plot size
-            plot_width = max(window_width * 0.6 / 100, 6)
-            plot_height = max(window_height * 0.8 / 100, 6)
-
-            # Dynamically adjust legend size to fit content
-            legend_width = max(window_width * 0.2 / 100, 2)
-            legend_height = plot_height
-
-            fig.set_size_inches(plot_width, plot_height)
-            legend_fig.set_size_inches(legend_width, legend_height)
-
+            fig.set_size_inches(min(69,int(window_width * 0.8)//96), min(11,int(window_height * 0.8))//96)
+            legend_fig.set_size_inchesmin(69,int(window_width * 0.2)//96), min(11,int(window_height * 0.8)//96)
+            legend_fig.size_
             canvas.draw_idle()
             legend_canvas.draw_idle()
 
