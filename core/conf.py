@@ -7,9 +7,9 @@
 
 config = {
 
-    "default_days": 50,  # Duration of the simulation in days
+    "default_days": 365,  # Duration of the simulation in days
     # Visualization settings
-    "tint": True,  # Use tint for better visual representation of pollution levels
+    "tint": False,  # Use tint for better visual representation of pollution levels
     # Default simulation parameters
     # Dimensions of the simulation grid (X, Y, Z)
     "default_grid_size": (10, 10, 10),
@@ -42,7 +42,7 @@ config = {
         0,   # Ice: Pristine areas with negligible pollution
         2,   # Forest: Absorbs pollution, very low levels
         20,  # City: High pollution due to vehicles and factories
-        200,   # Air: Variable pollution based on proximity to cities
+        5,   # Air: Variable pollution based on proximity to cities
         0,   # Rain: Cleanses the atmosphere
         0,   # Vacuum: No pollution in empty space
     ],
