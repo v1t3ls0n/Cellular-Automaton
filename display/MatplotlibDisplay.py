@@ -328,8 +328,8 @@ class MatplotlibDisplay:
             window_width = three_d_window.winfo_width()
             window_height = three_d_window.winfo_height()
 
-            fig.set_size_inches(min(69,int(window_width * 0.8)//96), min(11,int(window_height * 0.8))//96)
-            legend_fig.set_size_inchesmin(69,int(window_width * 0.2)//96), min(11,int(window_height * 0.8)//96)
+            fig.set_size_inches(min(69,window_width // 768), min(11,window_height//768))
+            legend_fig.set_size_inchesmin(min(69,window_width //16), min(11,window_height // 768))
             legend_fig.size_
             canvas.draw_idle()
             legend_canvas.draw_idle()
