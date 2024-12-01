@@ -330,7 +330,8 @@ class MatplotlibDisplay:
 
             fig.set_size_inches(min(69,window_width // 768), min(11,window_height//768))
             legend_fig.set_size_inches(min(69,window_width //16), min(11,window_height // 768))
-            legend_fig.size_
+
+
             canvas.draw_idle()
             legend_canvas.draw_idle()
 
