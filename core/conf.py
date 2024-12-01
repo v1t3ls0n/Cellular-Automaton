@@ -82,7 +82,7 @@ config = {
     # Temperature thresholds for specific behaviors
     "freezing_point": -15,              # Temperature at which water freezes
     "melting_point": 20,                # Temperature at which ice melts
-    "evaporation_point": 35,            # Temperature at which water evaporates
+    "evaporation_point": 25,            # Temperature at which water evaporates
 
     # Thresholds and rates for water transfer and pollution effects
     "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
@@ -92,15 +92,15 @@ config = {
     "pollution_damage_threshold": 5.0,  # Pollution level causing damage to ecosystems
     # Point at which pollution accelerates damage
     "pollution_level_tipping_point": 50,
-    "natural_pollution_decay_rate": 0.1,  # Rate of pollution decay over time
 
     # Rates for natural changes in temperature
     # Rate of temperature equalization to baseline
     "natural_temperature_decay_rate": 0.1,
-
+    # Rate of pollution decay over time
+    "natural_pollution_decay_rate": 0.1,  
     # Cloud-specific settings
     # Minimum water mass for clouds to precipitate as rain
-    "cloud_saturation_threshold": 3.0,
+    "cloud_saturation_threshold": 1.5,
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts

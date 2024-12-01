@@ -164,11 +164,11 @@ class MatplotlibDisplay:
         self.main_window.mainloop()
 
     def open_3d_in_new_window(self, root=None):
-        """Open a resizable 3D graph window with a 3D plot and integrated legend."""
+        """Open a resizable 3D graph window with side-by-side tinted and non-tinted visualizations."""
         three_d_window = tk.Toplevel()
         three_d_window.title("3D Visualization")
-        three_d_window.geometry("1280x600")  # Default size
-        three_d_window.minsize(1000, 600)  # Minimum size
+        three_d_window.geometry("1600x800")  # Increased size for two plots
+        three_d_window.minsize(1200, 600)  # Minimum size
 
         # Configure flexible resizing
         three_d_window.columnconfigure(0, weight=1)
@@ -186,24 +186,26 @@ class MatplotlibDisplay:
             command=lambda: root.lift(),  # Bring the main window to the front
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
-        # Create a Matplotlib figure with GridSpec for 3D plot and legend
-        fig = plt.Figure(figsize=(10, 6))
-        gs = fig.add_gridspec(1, 2, width_ratios=[4, 1], wspace=0.4)
+        # Create a Matplotlib figure with two 3D plots
+        fig = plt.Figure(figsize=(16, 8))  # Larger figure size for two plots
+        gs = fig.add_gridspec(1, 3, width_ratios=[4, 4, 1], wspace=0.3)
 
-        # 3D plot
-        ax_3d = fig.add_subplot(gs[0, 0], projection="3d")
-        ax_3d.set_title(f"Day {self.current_day}", pad=20)
-        ax_3d.set_xlabel("X Axis")
-        ax_3d.set_ylabel("Y Axis")
-        ax_3d.set_zlabel("Z Axis")
+        # Left subplot: Non-tinted visualization
+        ax_non_tinted = fig.add_subplot(gs[0, 0], projection="3d")
+        ax_non_tinted.set_title("Non-Tinted Visualization")
+        ax_non_tinted.set_xlabel("X Axis")
+        ax_non_tinted.set_ylabel("Y Axis")
+        ax_non_tinted.set_zlabel("Z Axis")
 
-        # Fetch data for the current day
-        points, colors, sizes = self.precomputed_data[self.current_day]
-        xs, ys, zs = zip(*points) if points else ([], [], [])
-        ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)  # 's' for square
+        # Right subplot: Tinted visualization
+        ax_tinted = fig.add_subplot(gs[0, 1], projection="3d")
+        ax_tinted.set_title("Tinted Visualization")
+        ax_tinted.set_xlabel("X Axis")
+        ax_tinted.set_ylabel("Y Axis")
+        ax_tinted.set_zlabel("Z Axis")
 
         # Legend area
-        ax_color_map = fig.add_subplot(gs[0, 1])
+        ax_color_map = fig.add_subplot(gs[0, 2])
         ax_color_map.axis("off")  # Hide axes for the legend
 
         # Legend elements dynamically generated based on cell types and colors
@@ -213,11 +215,9 @@ class MatplotlibDisplay:
                 [0],
                 marker="o",
                 color="w",
-                label=f"{cell_type} : {
-                    particle_mapping.get(cell_type, 'Unknown')}",
+                label=f"{cell_type} : {particle_mapping.get(cell_type, 'Unknown')}",
                 markersize=10,
-                markerfacecolor=rgba_to_hex(
-                    color) if isinstance(color, tuple) else color
+                markerfacecolor=rgba_to_hex(color) if isinstance(color, tuple) else color
             )
             for cell_type, color in self.config["base_colors"].items()
         ]
@@ -225,12 +225,10 @@ class MatplotlibDisplay:
         # Add Pollution and Temperature tints if enabled
         if self.config.get("tint"):
             legend_elements.append(
-                plt.Line2D([0], [0], marker='o', color='w',
-                           label='Pollution Tint', markersize=10, markerfacecolor='black')
+                plt.Line2D([0], [0], marker="o", color="w", label="Pollution Tint", markersize=10, markerfacecolor="black")
             )
             legend_elements.append(
-                plt.Line2D([0], [0], marker='o', color='w',
-                           label='Temperature Tint', markersize=10, markerfacecolor='red')
+                plt.Line2D([0], [0], marker="o", color="w", label="Temperature Tint", markersize=10, markerfacecolor="red")
             )
 
         # Add the legend to the plot
@@ -247,10 +245,32 @@ class MatplotlibDisplay:
         canvas.draw()
 
         # Save axes for future updates
-        self.ax_3d = ax_3d
+        self.ax_non_tinted = ax_non_tinted
+        self.ax_tinted = ax_tinted
         self.ax_color_map = ax_color_map
-        # Handle keyboard events for navigation
 
+        # Fetch data for the current day
+        def update_plot():
+            """Update both 3D plots for the current day."""
+            ax_non_tinted.cla()
+            ax_non_tinted.set_title("Non-Tinted Visualization")
+            ax_non_tinted.set_xlabel("X Axis")
+            ax_non_tinted.set_ylabel("Y Axis")
+            ax_non_tinted.set_zlabel("Z Axis")
+            self.render_3d_visualization(ax_non_tinted, tinted=False)
+
+            ax_tinted.cla()
+            ax_tinted.set_title("Tinted Visualization")
+            ax_tinted.set_xlabel("X Axis")
+            ax_tinted.set_ylabel("Y Axis")
+            ax_tinted.set_zlabel("Z Axis")
+            self.render_3d_visualization(ax_tinted, tinted=True)
+
+            canvas.draw_idle()
+
+        update_plot()
+
+        # Handle keyboard events for navigation
         def handle_key_press(event):
             """Handle key presses for navigating between days in the separate window."""
             if event.key == "right":  # Move to the next day
@@ -262,20 +282,6 @@ class MatplotlibDisplay:
                     self.current_day -= 1
                     update_plot()
 
-        def update_plot():
-            """Update the 3D plot and refresh the window."""
-            ax_3d.cla()
-            ax_3d.set_title(f"Day {self.current_day}", pad=20)
-            ax_3d.set_xlabel("X Axis")
-            ax_3d.set_ylabel("Y Axis")
-            ax_3d.set_zlabel("Z Axis")
-            points, colors, sizes = self.precomputed_data[self.current_day]
-            xs, ys, zs = zip(*points) if points else ([], [], [])
-            ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)  # 's' for square
-
-            canvas.draw_idle()
-
-        # Bind the keyboard event handler
         fig.canvas.mpl_connect("key_press_event", handle_key_press)
         self.three_d_window = three_d_window
 
@@ -379,18 +385,6 @@ class MatplotlibDisplay:
 
             # Function to convert RGBA to Hex
 
-    def add_square(self, ax, x, y, z, size, color):
-        """Add a square to the 3D plot."""
-        half_size = size / 2.0
-        square = [
-            (x - half_size, y - half_size, z),
-            (x + half_size, y - half_size, z),
-            (x + half_size, y + half_size, z),
-            (x - half_size, y + half_size, z),
-        ]
-        poly = Poly3DCollection([square], color=color)
-        ax.add_collection3d(poly)
-
     def precompute_visualizations(self):
         """
         Precompute 3D scatter data for all precomputed states to make particles appear denser.
@@ -431,8 +425,8 @@ class MatplotlibDisplay:
         self.ax_3d.grid(True)
 
         points, colors, sizes = self.precomputed_data[day]
-        for (x, y, z), color, size in zip(points, colors, sizes):
-            self.add_square(self.ax_3d, x, y, z, size=size, color=color)
+        xs, ys, zs = zip(*points) if points else ([], [], [])
+        self.ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
 
         self.fig.canvas.draw_idle()
 

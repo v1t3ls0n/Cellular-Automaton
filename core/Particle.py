@@ -77,7 +77,7 @@ class Particle:
 
         return (new_x, new_y, new_z)
 
-    def get_color(self):
+    def get_color(self, tint = False):
         """
         Determines the visual representation (RGBA color) of the particle based on its type and pollution level.
 
@@ -148,40 +148,7 @@ class Particle:
         # Default to white color if the cell type is undefined
         return base_color if base_color[3] != 0.0 else (1.0, 1.0, 1.0, 0.0)
 
-    def get_color_red_tinted_by_pollution(self):
-        """
-        Applies a red tint to the base color based on the pollution level of the particle.
 
-        The red tint increases with higher pollution levels. The green and blue channels are reduced proportionally
-        to enhance the red tint.
-
-        Returns:
-            tuple: RGBA color with red tint applied.
-        """
-        base_color = self.get_base_color()
-
-        if base_color is None or len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {
-                          self.cell_type}: {base_color}")
-            return (1.0, 1.0, 1.0, 1.0)  # Default to white color
-
-        # Scale pollution intensity to a range of [0.0, 1.0]
-        pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 1.0))
-
-        # Apply red tint by modifying the RGB channels
-        red_tinted_color = [
-            # Increase red channel
-            min(1.0, base_color[0] + pollution_intensity),
-            # Decrease green channel
-            max(0.0, base_color[1] * (1.0 - pollution_intensity)),
-            # Decrease blue channel
-            max(0.0, base_color[2] * (1.0 - pollution_intensity)),
-        ]
-
-        # Preserve the alpha (transparency) channel
-        alpha = max(0.0, min(base_color[3], 1.0))
-
-        return (*red_tinted_color, alpha)
 
     ####################################################################################################################
     ###################################### CELL UPDATES: ###############################################################
