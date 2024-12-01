@@ -80,7 +80,7 @@ class MatplotlibDisplay:
         plot_frame.columnconfigure(0, weight=1)
 
         # Create the main figure
-        self.fig = plt.Figure(figsize=(16, 8), constrained_layout=True)
+        self.fig = plt.Figure(figsize=(16, 8), constrained_layout=False)
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
@@ -238,11 +238,11 @@ class MatplotlibDisplay:
 
         # Add the 3D plot to the window
         canvas = FigureCanvasTkAgg(fig, master=three_d_window)
-        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew",ipadx=5,ipay=5, padx=5, pady=5)
         canvas.draw()
 
         # Create a separate Matplotlib figure for the legend
-        legend_fig = plt.Figure(figsize=(2, 6), constrained_layout=True)
+        legend_fig = plt.Figure(figsize=(2, 6), constrained_layout=False)
         legend_ax = legend_fig.add_subplot(111)
         legend_ax.axis("off")  # Hide axes
 
@@ -325,13 +325,19 @@ class MatplotlibDisplay:
         # Handle dynamic resizing
         def on_resize(event):
             """Dynamically resize the plot and legend based on window size."""
-            window_width = three_d_window.winfo_width()
-            window_height = three_d_window.winfo_height()
+            window_width = max(three_d_window.winfo_width(), 100)  # Ensure minimum width
+            window_height = max(three_d_window.winfo_height(), 100)  # Ensure minimum height
 
-            fig.set_size_inches(min(69,window_width // 768), min(11,window_height//768))
-            legend_fig.set_size_inches(min(69,window_width //16), min(11,window_height // 768))
+            # Calculate dynamic sizes, ensuring minimum values
+            plot_width = max(window_width * 0.6 / 100, 6)
+            plot_height = max(window_height * 0.8 / 100, 6)
+            legend_width = max(window_width * 0.2 / 100, 2)
 
+            # Apply the sizes
+            fig.set_size_inches(plot_width, plot_height)
+            legend_fig.set_size_inches(legend_width, plot_height)
 
+            # Redraw canvases
             canvas.draw_idle()
             legend_canvas.draw_idle()
 
