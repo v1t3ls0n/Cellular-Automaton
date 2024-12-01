@@ -165,8 +165,6 @@ class MatplotlibDisplay:
         self.main_window.mainloop()
 
 
-
-
     def open_3d_in_new_window(self, root=None):
         """
         Open a resizable 3D graph window with a 3D plot and integrated legend,
@@ -219,31 +217,19 @@ class MatplotlibDisplay:
 
         # Add legend
         legend_elements = [
-            plt.Line2D(
-                [0], [0], marker="o", color="w",
-                label=f"{cell_type}: {particle_mapping[cell_type]}",
-                markersize=10, markerfacecolor=rgba_to_hex(color)
-            )
+            plt.Line2D([0], [0], marker="o", color="w", label=f"{cell_type}: {particle_mapping[cell_type]}",
+                    markersize=10, markerfacecolor=rgba_to_hex(color))
             for cell_type, color in self.config["base_colors"].items()
         ]
-
-        # Add explanations for pollution and temperature tints
-        if self.tint:
-            legend_elements.append(
-                plt.Line2D([0], [0], marker='o', color='w',
-                        label='Pollution Tint (Black)', markersize=10, markerfacecolor='black')
+    
+        legend_elements.append(
+                plt.Line2D([0], [0], marker='o', color='w', label='Pollution Tint', markersize=10, markerfacecolor='black')
             )
-            legend_elements.append(
-                plt.Line2D([0], [0], marker='o', color='w',
-                        label='Temperature Tint (Red)', markersize=10, markerfacecolor='red')
+        legend_elements.append(
+                plt.Line2D([0], [0], marker='o', color='w', label='Temperature Tint', markersize=10, markerfacecolor='red')
             )
 
-        ax_color_map.legend(
-            handles=legend_elements,
-            loc="center",
-            title="Cell Types & Tints",
-            frameon=False
-        )
+        ax_color_map.legend(handles=legend_elements, loc="center", title="Cell Types", frameon=False)
 
         # Add figure to the window
         canvas = FigureCanvasTkAgg(fig, master=three_d_window)
