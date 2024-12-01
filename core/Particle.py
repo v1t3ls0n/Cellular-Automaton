@@ -146,7 +146,7 @@ class Particle:
             logging.error(f"Base color for cell_type {
                           self.cell_type} is not defined.")
         # Default to white color if the cell type is undefined
-        return base_color if base_color[3] != 0.0 else (1.0, 1.0, 1.0, 1.0)
+        return base_color if base_color[3] != 0.0 else (1.0, 1.0, 1.0, 0.0)
 
     def get_color_red_tinted_by_pollution(self):
         """

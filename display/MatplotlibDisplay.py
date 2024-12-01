@@ -404,32 +404,14 @@ class MatplotlibDisplay:
                 for y in range(state.grid.shape[1]):
                     for z in range(state.grid.shape[2]):
                         cell = state.grid[x][y][z]
-                        color = to_rgba(cell.get_color())
+                        color = cell.get_color()
 
                         # Ignore fully transparent cells
                         if color and color[3] != 0.0:
-                            # Add interpolation for density
-                            # 3 interpolated points along x-axis
-                            for dx in np.linspace(-0.2, 0.2, 3):
-                                # 3 interpolated points along y-axis
-                                for dy in np.linspace(-0.2, 0.2, 3):
-                                    # 3 interpolated points along z-axis
-                                    for dz in np.linspace(-0.2, 0.2, 3):
-                                        points.append((x + dx, y + dy, z + dz))
-                                        # Slightly reduced alpha
-                                        interpolated_color = (
-                                            color[0], color[1], color[2], 0.9)
-                                        colors.append(interpolated_color)
-                                        # Adjust size for interpolated points
-                                        sizes.append(50.0)
-
                             # Add the original point
                             points.append((x, y, z))
-                            # Full opacity
-                            solid_color = (color[0], color[1], color[2], 1.0)
-                            colors.append(solid_color)
-                            # Larger size for original points
-                            sizes.append(100.0)
+                            colors.append(color)
+                            sizes.append(200.0)
 
             self.precomputed_data.append((points, colors, sizes))
         logging.info("3D precomputation complete.")
