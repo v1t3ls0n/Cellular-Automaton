@@ -201,18 +201,20 @@ class MatplotlibDisplay:
         three_d_window.geometry("1280x600")  # Default size
         three_d_window.minsize(1000, 600)  # Minimum size
 
-        # Configure flexible resizing
-        three_d_window.columnconfigure(0, weight=3)  # Column for 3D plot
-        three_d_window.columnconfigure(1, weight=1)  # Column for legend
-        three_d_window.rowconfigure(0, weight=0)  # Fixed height for control buttons
-        three_d_window.rowconfigure(1, weight=1)  # Flexible height for content
 
+        # Configure flexible resizing
+        three_d_window.columnconfigure(0, weight=1)  # Single column for grid and legend
+        three_d_window.rowconfigure(0, weight=0)  # Fixed height for control buttons
+        three_d_window.rowconfigure(1, weight=1)  # Flexible height for the plot
 
         self.three_d_window = three_d_window
 
         # Add a control frame for the button at the top
         control_frame = tk.Frame(three_d_window)
-        control_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
+        control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+
+
+        self.three_d_window = three_d_window
 
         # Add button to bring the main window to the front
         tk.Button(
@@ -238,7 +240,7 @@ class MatplotlibDisplay:
 
         # Add the 3D plot to the window
         canvas = FigureCanvasTkAgg(fig, master=three_d_window)
-        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew",ipadx=5,ipady=5, padx=5, pady=5)
+        canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
         canvas.draw()
 
         # Create a separate Matplotlib figure for the legend
