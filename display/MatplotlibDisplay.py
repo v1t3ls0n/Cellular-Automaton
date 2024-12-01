@@ -98,6 +98,8 @@ class MatplotlibDisplay:
 
         self.main_window = root
 
+
+
         # Open 3D visualization in a separate window
         self.open_3d_in_new_window(root)
         self.add_config_table_with_scrollbar(root)
@@ -262,6 +264,20 @@ class MatplotlibDisplay:
         self.ax_3d = ax_3d
         self.ax_color_map = ax_color_map
 
+        def update_plot():
+            """Update the 3D plot and refresh the window."""
+            ax_3d.cla()
+            ax_3d.set_title(f"Day {self.current_day}", pad=20)
+            ax_3d.set_xlabel("X Axis")
+            ax_3d.set_ylabel("Y Axis")
+            ax_3d.set_zlabel("Z Axis")
+            points, colors, sizes = self.precomputed_data[self.current_day]
+            xs, ys, zs = zip(*points) if points else ([], [], [])
+            ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
+            canvas.draw_idle()
+
+        # Bind the keyboard event handler
+        fig.canvas.mpl_connect("key_press_event", update_plot)
 
 
 
@@ -634,3 +650,4 @@ class MatplotlibDisplay:
             self.three_d_window.iconify()
         else:
             self.open_3d_in_new_window()
+
