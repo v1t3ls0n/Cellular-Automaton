@@ -28,14 +28,15 @@ class MatplotlibDisplay:
 
 
     def plot_3d(self):
-        """Create a scrollable and resizable window with individually resizable graphs."""
+        """Create a scrollable and resizable window with compact, individually resizable graphs."""
         self.precompute_visualizations()
 
-        """Create a resizable window with dynamic square graphs."""
         # Initialize main Tkinter window
         self.main_window = tk.Tk()
         self.main_window.title("Environmental Simulation Application Main Window")
-        self.main_window.state("zoomed")  # Start in full-screen mode
+        # self.main_window.state("zoomed")  # Start in full-screen mode
+        self.main_window.geometry("1280x600")  # Default size
+        self.main_window.minsize(1200, 600)  # Minimum size
 
         # Configure grid layout for the main window
         self.main_window.rowconfigure(1, weight=1)  # The canvas should expand vertically
@@ -45,27 +46,45 @@ class MatplotlibDisplay:
         control_frame = tk.Frame(self.main_window)
         control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
 
-        control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
         tk.Button(control_frame, text="Show Custom Parameters Table",
-                  command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
+                command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Hide Custom Parameters Table",
-                  command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
+                command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Show 3D Grid",
-                  command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
+                command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Hide 3D Grid",
-                  command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
-        
+                command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
-        
-        # Create a Matplotlib figure
-        self.fig = plt.Figure(figsize=(16, 12), constrained_layout=False)  # Increased figure size
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.main_window)
-        self.canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")  # Use grid instead of pack
+        # Create a scrollable frame
+        scrollable_canvas = tk.Canvas(self.main_window)
+        scrollable_canvas.grid(row=1, column=0, sticky="nsew")
 
-        # Define grid layout for graphs using GridSpec
-        num_rows = 5
-        num_cols = 2
-        gs = self.fig.add_gridspec(num_rows, num_cols, wspace=0.3, hspace=0.6)  # Adjusted spacing
+        scrollbar = tk.Scrollbar(self.main_window, orient="vertical", command=scrollable_canvas.yview)
+        scrollbar.grid(row=1, column=1, sticky="ns")
+
+        scrollable_canvas.configure(yscrollcommand=scrollbar.set)
+        scrollable_frame = tk.Frame(scrollable_canvas)
+        scrollable_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+        # Bind the scroll event
+        def _on_mouse_wheel(event):
+            scrollable_canvas.yview_scroll(-1 * (event.delta // 120), "units")
+
+        scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
+
+        # Configure scrollable frame resizing
+        def _on_configure(event):
+            scrollable_canvas.configure(scrollregion=scrollable_canvas.bbox("all"))
+
+        scrollable_frame.bind("<Configure>", _on_configure)
+
+        # Create a Matplotlib figure and attach it to the scrollable frame
+        fig = plt.Figure(figsize=(10, 18), constrained_layout=False)  # Smaller figure size
+        gs = fig.add_gridspec(5, 2, width_ratios=[1, 1], hspace=0.4, wspace=0.4)  # Reduced spacing
+
+        self.fig = fig
+        self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
+        self.canvas.get_tk_widget().pack(fill="both", expand=True)
 
         # Create subplots
         self.axes = {
@@ -80,7 +99,7 @@ class MatplotlibDisplay:
             "cell_distribution_std_dev": self.fig.add_subplot(gs[4, 0]),
         }
 
-                # Render graphs
+        # Render graphs
         self.render_pollution_graph(self.axes["pollution"], color="red")
         self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color="orange")
         self.render_temperature_graph(self.axes["temperature"], color="blue")
@@ -91,15 +110,8 @@ class MatplotlibDisplay:
         self.render_forests_graph(self.axes["forests"], color="brown")
         self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color="darkgoldenrod")
 
-
-
-        # Set square aspect ratio for all graphs
-        for ax in self.axes.values():
-            ax.set_box_aspect(1)
-
-        # Bind resizing events
-        self.canvas.get_tk_widget().bind("<Configure>", self._on_resize)
-
+        # Use tight_layout to optimize spacing
+        self.fig.tight_layout(pad=0.3, h_pad=0.1, w_pad=0.1)  # Tighter padding
 
         # Add 3D visualization and config table
         self.open_3d_in_new_window(self.main_window)
@@ -108,10 +120,11 @@ class MatplotlibDisplay:
         # Start the Tkinter main loop
         self.main_window.mainloop()
 
-    def _on_resize(self, event):
-        """Handle resizing of the window and adjust graph sizes."""
-        self.fig.set_size_inches(event.width / 100, event.height / 100, forward=True)
-        self.canvas.draw_idle()
+
+    # def _on_resize(self, event):
+    #     """Handle resizing of the window and adjust graph sizes."""
+    #     self.fig.set_size_inches(event.width / 100, event.height / 100, forward=True)
+    #     self.canvas.draw_idle()
 
 
 
