@@ -8,8 +8,6 @@
 config = {
 
     "default_days": 365,  # Duration of the simulation in days
-    # Visualization settings
-    "tint": False,  # Use tint for better visual representation of pollution levels
     # Default simulation parameters
     # Dimensions of the simulation grid (X, Y, Z)
     "default_grid_size": (10, 10, 10),

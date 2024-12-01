@@ -84,7 +84,7 @@ class Particle:
         Returns:
             tuple: RGBA color of the particle.
         """
-        if self.config["tint"]:  # If tinting based on pollution is enabled
+        if tint:  # If tinting based on pollution is enabled
             return self.get_color_tinted_by_attributes()
         else:  # Default to the base color of the particle type
             return self.get_base_color()
