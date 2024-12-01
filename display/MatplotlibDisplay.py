@@ -533,22 +533,35 @@ class MatplotlibDisplay:
 
 
     def render_water_mass_graph(self):
-        """Render the average water mass graph over time."""
+        """Render the average water mass graph over time with standard deviation limits."""
         self.ax_water_mass.cla()
         self.ax_water_mass.set_title("Average Water Mass Over Time")
         self.ax_water_mass.set_xlabel("Day")
         self.ax_water_mass.set_ylabel("Average Water Mass")
 
+        # Retrieve data
         days = range(len(self.simulation.water_mass_over_time))
         avg_water_mass = self.simulation.water_mass_over_time
+        std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
 
-        if len(days) == len(avg_water_mass):
-            self.ax_water_mass.plot(
-                days, avg_water_mass, color="blue", label="Water Mass"
+        # Ensure data lengths match
+        if len(days) == len(avg_water_mass) and len(days) == len(std_dev_water_mass):
+            # Add standard deviation as a shaded region
+            self.ax_water_mass.fill_between(
+                days,
+                np.array(avg_water_mass) - np.array(std_dev_water_mass),
+                np.array(avg_water_mass) + np.array(std_dev_water_mass),
+                color="blue",
+                alpha=0.1,
+                label="Water Mass Std Dev Range"
             )
+
+            # Plot the average water mass
+            self.ax_water_mass.plot(days, avg_water_mass, color="blue", label="Average Water Mass")
             self.ax_water_mass.legend()
         else:
-            logging.error("Data length mismatch in water mass graph.")
+            logging.error("Data length mismatch in water mass graph or standard deviation.")
+
 
     def render_std_dev_water_mass_graph(self):
         """Render the standard deviation of water mass graph over time."""
