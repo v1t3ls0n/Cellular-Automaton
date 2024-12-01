@@ -215,14 +215,14 @@ class MatplotlibDisplay:
         self.three_d_window = tk.Toplevel()
         self.three_d_window.title("3D Visualization")
         self.three_d_window.geometry("1200x600")  # Default size
-        self.three_d_window.minsize(800, 500)  # Minimum size
+        self.three_d_window.minsize(500, 500)  # Minimum size
         self.three_d_window.columnconfigure(0, weight=3)  # Column for 3D plot
         self.three_d_window.columnconfigure(1, weight=1)  # Column for legend
-        self.three_d_window.rowconfigure(
-            0, weight=1)  # Flexible row for content
+        self.three_d_window.rowconfigure(0, weight=1)  # Flexible row for content
         self.three_d_window.attributes("-topmost", True)
+
         # Frame for the 3D plot
-        fig = plt.Figure(figsize=(8, 6), constrained_layout=True)
+        fig = plt.Figure(figsize=(8, 6), constrained_layout=False)
         ax_3d = fig.add_subplot(111, projection="3d")
 
         # Fetch data for the current day
@@ -230,10 +230,14 @@ class MatplotlibDisplay:
         xs, ys, zs = zip(*points) if points else ([], [], [])
         ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
 
-        ax_3d.set_title(f"Day {self.current_day}")
+        # Add title with padding
+        ax_3d.set_title(f"Day {self.current_day}", pad=20)  # Add padding above the title
         ax_3d.set_xlabel("X Axis")
         ax_3d.set_ylabel("Y Axis")
         ax_3d.set_zlabel("Z Axis")
+
+        # Adjust layout for padding below the grid
+        fig.subplots_adjust(top=0.9, bottom=0.1, left=0.1, right=0.9)
 
         # Add the 3D plot to the window
         canvas = FigureCanvasTkAgg(fig, master=self.three_d_window)
@@ -269,7 +273,7 @@ class MatplotlibDisplay:
 
         if self.config.get("tint"):
             legend_elements.append(
-                plt.Line2D([0], [0], marker="o", color="w", label="9: Pollution", markersize=10,
+                plt.Line2D([0], [0], marker="o", color="w", label="9: Pollution Levels Of Cells (Tint)", markersize=10,
                            markerfacecolor="red")
             )
 
@@ -415,14 +419,14 @@ class MatplotlibDisplay:
                         if cell.get_color() is not None:
                             # Interpolate multiple points for "densification"
                             # Fine-tune interpolation
-                            # for dx in np.linspace(-0.1, 0.1, 2):
-                            #     for dy in np.linspace(-0.1, 0.1, 2):
-                            #         for dz in np.linspace(-0.1, 0.1, 2):
-                            #             points.append((x + dx, y + dy, z + dz))
-                            #             colors.append(
-                            #                 to_rgba(cell.get_color()))
-                            #             # Larger size for denser appearance
-                            #             sizes.append(80)
+                            for dx in np.linspace(-0.1, 0.1, 2):
+                                for dy in np.linspace(-0.1, 0.1, 2):
+                                    for dz in np.linspace(-0.1, 0.1, 2):
+                                        points.append((x + dx, y + dy, z + dz))
+                                        colors.append(
+                                            to_rgba(cell.get_color()))
+                                        # Larger size for denser appearance
+                                        sizes.append(80)
 
                             points.append((x, y, z))
                             colors.append(to_rgba(cell.get_color()))
