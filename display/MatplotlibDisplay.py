@@ -37,7 +37,7 @@ class MatplotlibDisplay:
         self.current_elev = 20  # Default elevation
         self.current_azim = 45  # Default azimuth
 
-    def plot_3d(self,layout="row"):
+    def plot_3d(self, layout="row"):
         self.precompute_visualizations()
 
         """Create the plot with all relevant graphs, including the configuration window."""
@@ -61,14 +61,13 @@ class MatplotlibDisplay:
         control_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
 
         tk.Button(control_frame, text="Show Custom Parameters Table",
-                  command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
+                command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Hide Custom Parameters Table",
-                  command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
+                command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Show 3D Grid",
-                  command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
+                command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="Hide 3D Grid",
-                  command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
-
+                command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
         # Plot frame
         plot_frame = tk.Frame(root)
@@ -76,22 +75,21 @@ class MatplotlibDisplay:
         plot_frame.rowconfigure(0, weight=1)
         plot_frame.columnconfigure(0, weight=1)
 
-
-    # Main figure
+        # Main figure
         self.fig = plt.Figure(figsize=(18, 12), constrained_layout=True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
-        # Dynamic layout: Update GridSpec
         if layout == "row":
-            spec = gridspec.GridSpec(nrows=5, ncols=2, figure=self.fig)
-            self.ax_cell_type_distribution = self.fig.add_subplot(spec[4, :])  # Full new row
+            spec = gridspec.GridSpec(nrows=6, ncols=2, figure=self.fig)  # הגדל ל-6 שורות
+            self.ax_cell_type_distribution = self.fig.add_subplot(spec[4, :])  # Full row
+            self.ax_std_dev_cell_distribution_graph = self.fig.add_subplot(spec[5, :])  # Full new row
         elif layout == "column":
-            spec = gridspec.GridSpec(nrows=4, ncols=3, figure=self.fig)
-            self.ax_cell_type_distribution = self.fig.add_subplot(spec[3, 2])  # New column
+            spec = gridspec.GridSpec(nrows=5, ncols=3, figure=self.fig)
+            self.ax_cell_type_distribution = self.fig.add_subplot(spec[4, 1])  # Column
+            self.ax_std_dev_cell_distribution_graph = self.fig.add_subplot(spec[4, 2])  # Column
         else:
             raise ValueError("Invalid layout type. Choose 'row' or 'column'.")
-
         # Configure axes for the plots
         self.ax_pollution = self.fig.add_subplot(spec[0, 0])
         self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[0, 1])
@@ -101,9 +99,6 @@ class MatplotlibDisplay:
         self.ax_std_dev_water_mass = self.fig.add_subplot(spec[2, 1])
         self.ax_population = self.fig.add_subplot(spec[3, 0])
         self.ax_forests = self.fig.add_subplot(spec[3, 1])
-        self.ax_cell_type_distributionn = self.fig.add_subplot(spec[4, 0])
-        self.ax_std_dev_cell_distribution_graph =  self.fig.add_subplot(spec[4,1])
-
 
         # Render initial graphs
         self.render_pollution_graph()
@@ -618,47 +613,20 @@ class MatplotlibDisplay:
             logging.error("Data length mismatch in water mass std dev graph.")
 
 
-    def render_cell_type_distribution_graph(self):
-        """
-        Render a bar chart showing the relative distribution of cell types for the current day.
-        """
-        if not self.simulation.states:
-            logging.error("No states available for rendering cell type distribution.")
-            return
+    def render_cell_type_std_dev_graph(self):
+        """Render a bar graph showing the standard deviation of each cell type over time."""
+        self.ax_cell_type_std_dev.cla()
+        self.ax_cell_type_std_dev.set_title("Cell Type Standard Deviations Over Time")
+        self.ax_cell_type_std_dev.set_xlabel("Day")
+        self.ax_cell_type_std_dev.set_ylabel("Standard Deviation (Temperature)")
 
-        # Use the current day's state
-        current_state = self.simulation.states[self.simulation.current_day]
-        cell_type_counts = current_state.cell_type_stats  # Use calculated stats from World
+        # Plot each cell type's standard deviation
+        for cell_type, std_devs in self.simulation.cell_type_std_dev_over_time.items():
+            days = range(len(std_devs))
+            self.ax_cell_type_std_dev.plot(days, std_devs, label=f"Cell Type {cell_type}")
 
-        # Extract data for the bar chart
-        cell_types = list(cell_type_counts.keys())
-        relative_counts = [cell_type_counts[cell_type]["average"] for cell_type in cell_types]
+        self.ax_cell_type_std_dev.legend()
 
-        # Clear the previous graph
-        self.ax_cell_type_distribution.cla()
-
-        # Create the bar chart
-        bars = self.ax_cell_type_distribution.bar(
-            cell_types, relative_counts, color="skyblue", alpha=0.8
-        )
-
-        # Add labels and title
-        self.ax_cell_type_distribution.set_xlabel("Cell Type")
-        self.ax_cell_type_distribution.set_ylabel("Percentage of Total Cells (%)")
-        self.ax_cell_type_distribution.set_title(f"Cell Type Distribution (Day {self.simulation.current_day})")
-
-        # Annotate the bars with exact values
-        for bar, count in zip(bars, relative_counts):
-            self.ax_cell_type_distribution.text(
-                bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 1,
-                f"{count:.2f}%",
-                ha="center",
-                fontsize=10
-            )
-
-        # Update the canvas
-        self.canvas.draw_idle()
 
 
     def render_std_dev_cell_distribution_graph(self):

@@ -34,6 +34,7 @@ class Simulation:
         self.std_dev_temperature_over_time = []  # Standard deviation of temperature
         self.std_dev_water_mass_over_time = []  # Standard deviation of water mass
         self.cell_type_counts_over_time = {}  # Track counts of all cell types over time
+        self.cell_type_std_dev_over_time = {cell_type: [] for cell_type in range(10)}  # סטיית תקן לפי סוג תא
 
         # Initialize a dictionary to store counts for each cell type
         for cell_type in range(10):  # Assuming 10 cell types (0-9)
@@ -54,11 +55,9 @@ class Simulation:
         self.std_dev_pollution_over_time.append(state.std_dev_pollution)
         self.std_dev_temperature_over_time.append(state.std_dev_temperature)
         self.std_dev_water_mass_over_time.append(state.std_dev_water_mass)
-       
-        cell_counts = list(state.cell_type_stats.values())
-        counts_only = [stats['average'] for stats in cell_counts] 
-        std_dev = np.std(counts_only) 
-        self.std_dev_cell_distribution_over_time.append(std_dev)
+        for cell_type, stats in state.cell_type_stats.items():
+            self.cell_type_std_dev_over_time[cell_type].append(stats["std_dev_temperature"])
+
 
     def precompute(self):
         """
