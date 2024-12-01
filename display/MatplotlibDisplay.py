@@ -263,6 +263,18 @@ class MatplotlibDisplay:
         # Save axes for future updates
         self.ax_3d = ax_3d
         self.ax_color_map = ax_color_map
+        # Handle keyboard events for navigation
+
+        def handle_key_press(event):
+            """Handle key presses for navigating between days in the separate window."""
+            if event.key == "right":  # Move to the next day
+                if self.current_day < len(self.simulation.states) - 1:
+                    self.current_day += 1
+                    update_plot()
+            elif event.key == "left":  # Move to the previous day
+                if self.current_day > 0:
+                    self.current_day -= 1
+                    update_plot()
 
         def update_plot():
             """Update the 3D plot and refresh the window."""
@@ -277,7 +289,7 @@ class MatplotlibDisplay:
             canvas.draw_idle()
 
         # Bind the keyboard event handler
-        fig.canvas.mpl_connect("key_press_event", update_plot)
+        fig.canvas.mpl_connect("key_press_event", handle_key_press)
 
 
 
@@ -650,4 +662,5 @@ class MatplotlibDisplay:
             self.three_d_window.iconify()
         else:
             self.open_3d_in_new_window()
+
 
