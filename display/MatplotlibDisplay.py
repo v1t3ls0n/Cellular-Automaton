@@ -95,7 +95,9 @@ class MatplotlibDisplay:
 
         # Create a Matplotlib figure
         fig = plt.Figure(figsize=(20, 25))  # Adjust figure size
-        gs = fig.add_gridspec(7, 2, width_ratios=[1, 1], hspace=0.4, wspace=0.4)  # 7 rows for standardized and non-standardized graphs
+        # 7 rows for standardized and non-standardized graphs
+        gs = fig.add_gridspec(7, 2, width_ratios=[
+                              1, 1], hspace=0.4, wspace=0.4)
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
@@ -103,11 +105,16 @@ class MatplotlibDisplay:
 
         # Create subplots
         self.axes = {
-            "std_pollution": self.fig.add_subplot(gs[0, 0]),  # Standardized Pollution graph
-            "std_temperature": self.fig.add_subplot(gs[0, 1]),  # Standardized Temperature graph
-            "std_population": self.fig.add_subplot(gs[1, 0]),  # Standardized Population graph
-            "std_forests": self.fig.add_subplot(gs[1, 1]),  # Standardized Forests graph
-            "std_water_mass": self.fig.add_subplot(gs[2, 0]),  # Standardized Water Mass graph
+            # Standardized Pollution graph
+            "std_pollution": self.fig.add_subplot(gs[0, 0]),
+            # Standardized Temperature graph
+            "std_temperature": self.fig.add_subplot(gs[0, 1]),
+            # Standardized Population graph
+            "std_population": self.fig.add_subplot(gs[1, 0]),
+            # Standardized Forests graph
+            "std_forests": self.fig.add_subplot(gs[1, 1]),
+            # Standardized Water Mass graph
+            "std_water_mass": self.fig.add_subplot(gs[2, 0]),
 
             "pollution": self.fig.add_subplot(gs[3, 0]),  # Pollution graph
             "temperature": self.fig.add_subplot(gs[3, 1]),  # Temperature graph
@@ -115,17 +122,25 @@ class MatplotlibDisplay:
             "forests": self.fig.add_subplot(gs[4, 1]),  # Forests graph
             "water_mass": self.fig.add_subplot(gs[5, 0]),  # Water Mass graph
 
-            "std_dev_pollution": self.fig.add_subplot(gs[5, 1]),  # Pollution Standard Deviation graph
-            "std_dev_temperature": self.fig.add_subplot(gs[6, 1]),  # Temperature Standard Deviation graph
-            "std_dev_water_mass": self.fig.add_subplot(gs[6, 0]),  # Water Mass Standard Deviation graph
+            # Pollution Standard Deviation graph
+            "std_dev_pollution": self.fig.add_subplot(gs[5, 1]),
+            # Temperature Standard Deviation graph
+            "std_dev_temperature": self.fig.add_subplot(gs[6, 1]),
+            # Water Mass Standard Deviation graph
+            "std_dev_water_mass": self.fig.add_subplot(gs[6, 0]),
         }
 
         # Render standardized graphs
-        self.render_standardized_pollution_graph(self.axes["std_pollution"], color="black")
-        self.render_standardized_temperature_graph(self.axes["std_temperature"], color="red")
-        self.render_standardized_population_graph(self.axes["std_population"], color="purple")
-        self.render_standardized_forests_graph(self.axes["std_forests"], color="green")
-        self.render_standardized_water_mass_graph(self.axes["std_water_mass"], color="cyan")
+        self.render_standardized_pollution_graph(
+            self.axes["std_pollution"], color="black")
+        self.render_standardized_temperature_graph(
+            self.axes["std_temperature"], color="red")
+        self.render_standardized_population_graph(
+            self.axes["std_population"], color="purple")
+        self.render_standardized_forests_graph(
+            self.axes["std_forests"], color="green")
+        self.render_standardized_water_mass_graph(
+            self.axes["std_water_mass"], color="cyan")
 
         # Render non-standardized graphs
         self.render_pollution_graph(self.axes["pollution"], color="black")
@@ -135,9 +150,12 @@ class MatplotlibDisplay:
         self.render_water_mass_graph(self.axes["water_mass"], color="cyan")
 
         # Render standard deviation graphs
-        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color="black")
-        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color="red")
-        self.render_std_dev_water_mass_graph(self.axes["std_dev_water_mass"], color="cyan")
+        self.render_std_dev_pollution_graph(
+            self.axes["std_dev_pollution"], color="black")
+        self.render_std_dev_temperature_graph(
+            self.axes["std_dev_temperature"], color="red")
+        self.render_std_dev_water_mass_graph(
+            self.axes["std_dev_water_mass"], color="cyan")
         # Add 3D visualization and config table
         self.open_3d_in_new_window(self.main_window)
         self.add_config_table_with_scrollbar(self.main_window)
@@ -587,15 +605,12 @@ class MatplotlibDisplay:
             label="Cell Type Distribution Std Dev"
         )
 
-
-
-
-
-
     def render_standardized_pollution_graph(self, ax, color="black"):
         """Render the pollution graph (Standardized)."""
-        standardized_data = self.standardize_data(self.simulation.pollution_over_time)
-        standardized_std_dev = self.standardize_data(self.simulation.std_dev_pollution_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.pollution_over_time)
+        standardized_std_dev = self.standardize_data(
+            self.simulation.std_dev_pollution_over_time)
         self.render_generic_graph(
             ax=ax,
             title="Pollution Graph (Standardized)",
@@ -611,8 +626,10 @@ class MatplotlibDisplay:
 
     def render_standardized_temperature_graph(self, ax, color="red"):
         """Render the temperature graph (Standardized)."""
-        standardized_data = self.standardize_data(self.simulation.temperature_over_time)
-        standardized_std_dev = self.standardize_data(self.simulation.std_dev_temperature_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.temperature_over_time)
+        standardized_std_dev = self.standardize_data(
+            self.simulation.std_dev_temperature_over_time)
         self.render_generic_graph(
             ax=ax,
             title="Temperature Graph (Standardized)",
@@ -628,9 +645,11 @@ class MatplotlibDisplay:
 
     def render_standardized_population_graph(self, ax, color="purple"):
         """Render the population graph (Standardized)."""
-        standardized_data = self.standardize_data(self.simulation.city_population_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.city_population_over_time)
         # Assuming std deviation for population if available; if not, skip.
-        standardized_std_dev = self.standardize_data(self.simulation.std_dev_population_over_time) if hasattr(self.simulation, "std_dev_population_over_time") else None
+        standardized_std_dev = self.standardize_data(self.simulation.std_dev_population_over_time) if hasattr(
+            self.simulation, "std_dev_population_over_time") else None
         self.render_generic_graph(
             ax=ax,
             title="City Population Graph (Standardized)",
@@ -646,8 +665,10 @@ class MatplotlibDisplay:
 
     def render_standardized_forests_graph(self, ax, color="green"):
         """Render the forests graph (Standardized)."""
-        standardized_data = self.standardize_data(self.simulation.forest_count_over_time)
-        standardized_std_dev = self.standardize_data(self.simulation.std_dev_forest_count_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.forest_count_over_time)
+        standardized_std_dev = self.standardize_data(
+            self.simulation.std_dev_forest_count_over_time)
         self.render_generic_graph(
             ax=ax,
             title="Forest Count Graph (Standardized)",
@@ -663,8 +684,10 @@ class MatplotlibDisplay:
 
     def render_standardized_water_mass_graph(self, ax, color="cyan"):
         """Render the water mass graph (Standardized)."""
-        standardized_data = self.standardize_data(self.simulation.water_mass_over_time)
-        standardized_std_dev = self.standardize_data(self.simulation.std_dev_water_mass_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.water_mass_over_time)
+        standardized_std_dev = self.standardize_data(
+            self.simulation.std_dev_water_mass_over_time)
         self.render_generic_graph(
             ax=ax,
             title="Water Mass Graph (Standardized)",
@@ -680,7 +703,8 @@ class MatplotlibDisplay:
 
     def render_standardized_cell_distribution_graph(self, ax, color="grey"):
         """Render the cell type distribution graph (Standardized)."""
-        standardized_data = self.standardize_data(self.simulation.std_dev_cell_distribution_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.std_dev_cell_distribution_over_time)
         self.render_generic_graph(
             ax=ax,
             title="Cell Type Distribution Graph (Standardized)",
@@ -692,13 +716,6 @@ class MatplotlibDisplay:
             color=color,
             label="Standardized Cell Distribution"
         )
-
-
-
-
-
-
-
 
     def standardize_data(self, data):
         """
