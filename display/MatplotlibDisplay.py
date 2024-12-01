@@ -43,7 +43,7 @@ class MatplotlibDisplay:
         self.config_window = None
         self.three_d_window = None
         self.precomputed_data = []  # לשמירת הנתונים לגרף ה-3D
-
+        self.days = range(len(simulation.states))
     def plot_3d(self, layout="row"):
         """Create a scrollable plot window with multiple graphs."""
         root = tk.Tk()
@@ -71,37 +71,50 @@ class MatplotlibDisplay:
         ax_forest_count = self.fig.add_subplot(spec[3, 1])
         ax_cell_distribution_std_dev = self.fig.add_subplot(spec[4, 0])
 
+        # Fetch colors from config
+        base_colors = self.config["base_colors"]
+
         # Pollution Graph
-        days = range(len(self.simulation.pollution_over_time))
-        ax_pollution.plot(days, self.simulation.pollution_over_time, label="Pollution")
+        days = len(self.simulation.states)
+        print("days:", days)
+        ax_pollution.plot(
+            days, self.simulation.pollution_over_time, color=base_colors[0], label="Pollution"
+        )
         ax_std_dev_pollution.plot(
-            days, self.simulation.std_dev_pollution_over_time, label="Pollution Std Dev"
+            days, self.simulation.std_dev_pollution_over_time, color=base_colors[1], label="Pollution Std Dev"
         )
 
         # Temperature Graph
-        ax_temperature.plot(days, self.simulation.temperature_over_time, label="Temperature")
+        ax_temperature.plot(
+            days, self.simulation.temperature_over_time, color=base_colors[4], label="Temperature"
+        )
         ax_std_dev_temperature.plot(
-            days, self.simulation.std_dev_temperature_over_time, label="Temperature Std Dev"
+            days, self.simulation.std_dev_temperature_over_time, color=base_colors[5], label="Temperature Std Dev"
         )
 
         # Water Mass Graph
-        ax_water_mass.plot(days, self.simulation.water_mass_over_time, label="Water Mass")
+        ax_water_mass.plot(
+            days, self.simulation.water_mass_over_time, color=base_colors[3], label="Water Mass"
+        )
         ax_std_dev_water_mass.plot(
-            days, self.simulation.std_dev_water_mass_over_time, label="Water Mass Std Dev"
+            days, self.simulation.std_dev_water_mass_over_time, color=base_colors[7], label="Water Mass Std Dev"
         )
 
         # City Population Graph
         ax_city_population.plot(
-            days, self.simulation.city_population_over_time, label="Cities"
+            days, self.simulation.city_population_over_time, color=base_colors[5], label="Cities"
         )
 
         # Forest Count Graph
-        ax_forest_count.plot(days, self.simulation.forest_count_over_time, label="Forests")
+        ax_forest_count.plot(
+            days, self.simulation.forest_count_over_time, color=base_colors[4], label="Forests"
+        )
 
         # Cell Distribution Std Dev
         ax_cell_distribution_std_dev.plot(
             days,
             self.simulation.std_dev_cell_distribution_over_time,
+            color=base_colors[2],
             label="Cell Distribution Std Dev",
         )
 
@@ -123,7 +136,6 @@ class MatplotlibDisplay:
         self.open_3d_in_new_window(root)
         self.add_config_table_with_scrollbar(root)
         root.mainloop()
-
 
     def add_config_table_with_scrollbar(self, root=None):
             """Create a configuration table window with scrollbars and add control buttons."""
@@ -436,16 +448,11 @@ class MatplotlibDisplay:
             self.ax_population.set_ylabel("Number of Cities")
 
             # Retrieve data
-            days = range(len(self.simulation.city_population_over_time))
             city_population = self.simulation.city_population_over_time
+            self.ax_population.plot(
+                    self.days, city_population, color="purple", label="Cities")
+            self.ax_population.legend()
 
-            # Ensure data matches the length of days
-            if len(days) == len(city_population):
-                self.ax_population.plot(
-                    days, city_population, color="purple", label="Cities")
-                self.ax_population.legend()
-            else:
-                logging.error("Data length mismatch in population graph.")
 
     def render_forests_graph(self):
             """Render the forest count graph over time."""
@@ -455,15 +462,12 @@ class MatplotlibDisplay:
             self.ax_forests.set_ylabel("Number of Forests")
 
             # Retrieve data
-            days = range(len(self.simulation.forest_count_over_time))
             forest_count = self.simulation.forest_count_over_time
 
-            if len(days) == len(forest_count):
-                self.ax_forests.plot(days, forest_count,
+            self.ax_forests.plot(self.days, forest_count,
                                      color="green", label="Forests")
-                self.ax_forests.legend()
-            else:
-                logging.error("Data length mismatch in forest graph.")
+            self.ax_forests.legend()
+         
 
     def render_temperature_graph(self):
             """Render the standard deviation of temperature graph over time."""
@@ -475,25 +479,19 @@ class MatplotlibDisplay:
                 "Standard Deviation Temperature")
 
             # Ensure correct data availability
-            days = range(len(self.simulation.std_dev_temperature_over_time))
             std_dev_temperature = self.simulation.std_dev_temperature_over_time
-
-            if len(days) == len(std_dev_temperature):
-                avg_temperature = self.simulation.temperature_over_time
+            avg_temperature = self.simulation.temperature_over_time
 
                 # Add standard deviation as shaded region
-                self.ax_temperature.fill_between(
-                    days,
+            self.ax_temperature.fill_between(
+                    self.days,
                     np.array(avg_temperature) - np.array(std_dev_temperature),
                     np.array(avg_temperature) + np.array(std_dev_temperature),
                     color="blue", alpha=0.1, label="Temperature Std Dev Range")
 
-                self.ax_temperature.plot(
-                    days, avg_temperature, color="blue", label="Average Temperature")
-                self.ax_temperature.legend()
-            else:
-                logging.error(
-                    "Data length mismatch in temperature standard deviation graph.")
+            self.ax_temperature.plot(
+                    self.days, avg_temperature, color="blue", label="Average Temperature")
+            self.ax_temperature.legend()
 
     def render_pollution_graph(self):
             """Render the pollution graph over time with standard deviation."""
@@ -509,9 +507,8 @@ class MatplotlibDisplay:
             # Calculate standard deviation for pollution
             pollution_std_dev = self.simulation.std_dev_pollution_over_time
 
-            if len(days) == len(avg_pollution) and len(days) == len(pollution_std_dev):
                 # Add standard deviation as shaded region
-                self.ax_pollution.fill_between(
+            self.ax_pollution.fill_between(
                     days,
                     np.array(avg_pollution) - np.array(pollution_std_dev),
                     np.array(avg_pollution) + np.array(pollution_std_dev),
@@ -519,13 +516,10 @@ class MatplotlibDisplay:
                 )
 
                 # Plot the average pollution
-                self.ax_pollution.plot(days, avg_pollution,
+            self.ax_pollution.plot(self.days, avg_pollution,
                                        color="red", label="Pollution")
-                self.ax_pollution.legend()
-            else:
-                logging.error(
-                    "Data length mismatch in pollution graph or standard deviation.")
-
+            self.ax_pollution.legend()
+ 
     def render_std_dev_pollution_graph(self):
             """Render the standard deviation of pollution graph over time."""
             self.ax_std_dev_pollution_graph.cla()
@@ -536,18 +530,12 @@ class MatplotlibDisplay:
                 "Standard deviation Pollution")
 
             # Corrected attribute name
-            days = range(len(self.simulation.std_dev_pollution_over_time))
-            # Corrected attribute name
             std_dev_pollution = self.simulation.std_dev_pollution_over_time
-
-            if len(days) == len(std_dev_pollution):
-                self.ax_std_dev_pollution_graph.plot(
-                    days, std_dev_pollution, color="orange", label="Pollution Standard deviation"
+            self.ax_std_dev_pollution_graph.plot(
+                    self.days, std_dev_pollution, color="orange", label="Pollution Standard deviation"
                 )
-                self.ax_std_dev_pollution_graph.legend()
-            else:
-                logging.error(
-                    "Data length mismatch in pollution Standard deviation graph.")
+            self.ax_std_dev_pollution_graph.legend()
+
 
     def render_std_dev_temperature_graph(self):
             """Render the standard deviation of temperature graph over time."""
@@ -559,18 +547,12 @@ class MatplotlibDisplay:
                 "Standard deviation Temperature")
 
             # Corrected attribute name
-            days = range(len(self.simulation.std_dev_temperature_over_time))
-            # Corrected attribute name
             std_dev_temperature = self.simulation.std_dev_temperature_over_time
 
-            if len(days) == len(std_dev_temperature):
-                self.ax_std_dev_temperature_graph.plot(
-                    days, std_dev_temperature, color="cyan", label="Temperature Standard deviation"
+            self.ax_std_dev_temperature_graph.plot(
+                    self.days, std_dev_temperature, color="cyan", label="Temperature Standard deviation"
                 )
-                self.ax_std_dev_temperature_graph.legend()
-            else:
-                logging.error(
-                    "Data length mismatch in temperature Standard deviation graph.")
+            self.ax_std_dev_temperature_graph.legend()
 
     def render_water_mass_graph(self):
             """Render the average water mass graph over time with standard deviation limits."""
@@ -580,15 +562,13 @@ class MatplotlibDisplay:
             self.ax_water_mass.set_ylabel("Average Water Mass")
 
             # Retrieve data
-            days = range(len(self.simulation.water_mass_over_time))
             avg_water_mass = self.simulation.water_mass_over_time
             std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
 
             # Ensure data lengths match
-            if len(days) == len(avg_water_mass) and len(days) == len(std_dev_water_mass):
                 # Add standard deviation as a shaded region
-                self.ax_water_mass.fill_between(
-                    days,
+            self.ax_water_mass.fill_between(
+                    self.days,
                     np.array(avg_water_mass) - np.array(std_dev_water_mass),
                     np.array(avg_water_mass) + np.array(std_dev_water_mass),
                     color="blue",
@@ -597,13 +577,10 @@ class MatplotlibDisplay:
                 )
 
                 # Plot the average water mass
-                self.ax_water_mass.plot(
-                    days, avg_water_mass, color="blue", label="Average Water Mass")
-                self.ax_water_mass.legend()
-            else:
-                logging.error(
-                    "Data length mismatch in water mass graph or standard deviation.")
-
+            self.ax_water_mass.plot(
+                    self.days, avg_water_mass, color="blue", label="Average Water Mass")
+            self.ax_water_mass.legend()
+     
     def render_std_dev_water_mass_graph(self):
             """Render the standard deviation of water mass graph over time."""
             self.ax_std_dev_water_mass.cla()
@@ -611,18 +588,12 @@ class MatplotlibDisplay:
                 "Standard Deviation of Water Mass Over Time")
             self.ax_std_dev_water_mass.set_xlabel("Day")
             self.ax_std_dev_water_mass.set_ylabel("Water Mass Std Dev")
-
-            days = range(len(self.simulation.std_dev_water_mass_over_time))
             std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
-
-            if len(days) == len(std_dev_water_mass):
-                self.ax_std_dev_water_mass.plot(
-                    days, std_dev_water_mass, color="cyan", label="Water Mass Std Dev"
+            self.ax_std_dev_water_mass.plot(
+                    self.days, std_dev_water_mass, color="cyan", label="Water Mass Std Dev"
                 )
-                self.ax_std_dev_water_mass.legend()
-            else:
-                logging.error(
-                    "Data length mismatch in water mass std dev graph.")
+            self.ax_std_dev_water_mass.legend()
+  
 
     def render_std_dev_cell_distribution_graph(self):
             """
@@ -636,18 +607,12 @@ class MatplotlibDisplay:
                 "Std Dev of Cell Counts")
 
             # Retrieve data
-            days = range(
-                len(self.simulation.std_dev_cell_distribution_over_time))
             std_dev_distribution = self.simulation.std_dev_cell_distribution_over_time
-
-            if len(days) == len(std_dev_distribution):
-                self.ax_std_dev_cell_distribution.plot(
-                    days, std_dev_distribution, color="brown", label="Std Dev Cell Distribution"
+            self.ax_std_dev_cell_distribution.plot(
+                    self.days, std_dev_distribution, color="brown", label="Std Dev Cell Distribution"
                 )
-                self.ax_std_dev_cell_distribution.legend()
-            else:
-                logging.error(
-                    "Data length mismatch in cell distribution std dev graph.")
+            self.ax_std_dev_cell_distribution.legend()
+
 
     def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:
