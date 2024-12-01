@@ -32,11 +32,11 @@ class MatplotlibDisplay:
         self.precompute_visualizations()
 
         # Initialize main Tkinter window
-        self.main_window = tk.Tk()
+        self.main_window = tk.Toplevel()
         self.main_window.title("Environmental Simulation Application Main Window")
         # self.main_window.state("zoomed")  # Start in full-screen mode
-        self.main_window.geometry("1280x600")  # Default size
-        self.main_window.minsize(1200, 600)  # Minimum size
+        self.main_window.geometry("800x600")  # Default size
+        self.main_window.minsize(800, 600)  # Minimum size
 
         # Configure grid layout for the main window
         self.main_window.rowconfigure(1, weight=1)  # The canvas should expand vertically
