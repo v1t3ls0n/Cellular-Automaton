@@ -63,10 +63,10 @@ class MatplotlibDisplay:
         scrollable_canvas.grid(row=1, column=0, sticky="nsew")
 
         # Add vertical and horizontal scrollbars
-        vertical_scrollbar = tk.Scrollbar(self.main_window, orient="vertical", command=scrollable_canvas.yview)
+        vertical_scrollbar = tk.Scrollbar(self.main_window, orient="vertical", command=scrollable_canvas.yview, width=20)
         vertical_scrollbar.grid(row=1, column=1, sticky="ns")
 
-        horizontal_scrollbar = tk.Scrollbar(self.main_window, orient="horizontal", command=scrollable_canvas.xview)
+        horizontal_scrollbar = tk.Scrollbar(self.main_window, orient="horizontal", command=scrollable_canvas.xview,width=20)
         horizontal_scrollbar.grid(row=2, column=0, sticky="ew")
 
         scrollable_canvas.configure(yscrollcommand=vertical_scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
