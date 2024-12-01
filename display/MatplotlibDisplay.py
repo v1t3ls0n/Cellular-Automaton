@@ -10,26 +10,6 @@ from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
-class ScrollableFrame(ttk.Frame):
-      config = config
-      def __init__(self, container, *args, **kwargs):
-          super().__init__(container, *args, **kwargs)
-          self.canvas = tk.Canvas(self)
-          self.scrollbar = ttk.Scrollbar(
-              self, orient="vertical", command=self.canvas.yview)
-          self.scrollable_frame = ttk.Frame(self.canvas)
-
-          self.scrollable_frame.bind(
-              "<Configure>",
-              lambda e: self.canvas.configure(
-                  scrollregion=self.canvas.bbox("all"))
-          )
-          self.canvas.create_window(
-              (0, 0), window=self.scrollable_frame, anchor="nw")
-          self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-          self.canvas.pack(side="left", fill="both", expand=True)
-          self.scrollbar.pack(side="right", fill="y")
 
 class MatplotlibDisplay:
     config = config
@@ -42,166 +22,99 @@ class MatplotlibDisplay:
         self.current_day = 0  # משתנה זה חובה לשימוש בגרף 3D
         self.config_window = None
         self.three_d_window = None
+        self.main_window = None
         self.precomputed_data = []  # לשמירת הנתונים לגרף ה-3D
         self.days = range(len(simulation.states))
-    def plot_3d(self, layout="row"):
-        """Create a scrollable plot window with multiple graphs."""
-        root = tk.Tk()
-        root.title("Environmental Simulation Results")
-        root.state("zoomed")
 
-        # Add a scrollable frame
-        self.scrollable_frame = ScrollableFrame(root)
-        self.scrollable_frame.pack(fill="both", expand=True)
 
-        # Create figure
-        self.fig = plt.Figure(figsize=(18, 18), constrained_layout=True)
-        canvas = FigureCanvasTkAgg(self.fig, master=self.scrollable_frame.scrollable_frame)
-        canvas.get_tk_widget().pack(fill="both", expand=True)
+    def plot_3d(self):
+        """Create a scrollable and resizable window with individually resizable graphs."""
+        self.precompute_visualizations()
 
-        # Dynamic layout: GridSpec configuration
-        spec = gridspec.GridSpec(nrows=8, ncols=2, figure=self.fig)
-        ax_pollution = self.fig.add_subplot(spec[0, 0])
-        ax_std_dev_pollution = self.fig.add_subplot(spec[0, 1])
-        ax_temperature = self.fig.add_subplot(spec[1, 0])
-        ax_std_dev_temperature = self.fig.add_subplot(spec[1, 1])
-        ax_water_mass = self.fig.add_subplot(spec[2, 0])
-        ax_std_dev_water_mass = self.fig.add_subplot(spec[2, 1])
-        ax_city_population = self.fig.add_subplot(spec[3, 0])
-        ax_forest_count = self.fig.add_subplot(spec[3, 1])
-        ax_cell_distribution_std_dev = self.fig.add_subplot(spec[4, 0])
+        """Create a resizable window with dynamic square graphs."""
+        # Initialize main Tkinter window
+        self.main_window = tk.Tk()
+        self.main_window.title("Environmental Simulation Application Main Window")
+        self.main_window.state("zoomed")  # Start in full-screen mode
 
-        # Fetch colors from config
-        base_colors = self.config["base_colors"]
+        # Configure grid layout for the main window
+        self.main_window.rowconfigure(1, weight=1)  # The canvas should expand vertically
+        self.main_window.columnconfigure(0, weight=1)  # The canvas should expand horizontally
 
-        # Pollution Graph
-        days = len(self.simulation.states)
-        print("days:", days)
-        ax_pollution.plot(
-            days, self.simulation.pollution_over_time, color=base_colors[0], label="Pollution"
-        )
-        ax_std_dev_pollution.plot(
-            days, self.simulation.std_dev_pollution_over_time, color=base_colors[1], label="Pollution Std Dev"
-        )
+        # Add control buttons at the top
+        control_frame = tk.Frame(self.main_window)
+        control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
 
-        # Temperature Graph
-        ax_temperature.plot(
-            days, self.simulation.temperature_over_time, color=base_colors[4], label="Temperature"
-        )
-        ax_std_dev_temperature.plot(
-            days, self.simulation.std_dev_temperature_over_time, color=base_colors[5], label="Temperature Std Dev"
-        )
+        control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+        tk.Button(control_frame, text="Show Custom Parameters Table",
+                  command=self.bring_config_to_front).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Hide Custom Parameters Table",
+                  command=self.minimize_config_window).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Show 3D Grid",
+                  command=self.bring_3d_to_front).pack(side=tk.LEFT, padx=5)
+        tk.Button(control_frame, text="Hide 3D Grid",
+                  command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
+        
 
-        # Water Mass Graph
-        ax_water_mass.plot(
-            days, self.simulation.water_mass_over_time, color=base_colors[3], label="Water Mass"
-        )
-        ax_std_dev_water_mass.plot(
-            days, self.simulation.std_dev_water_mass_over_time, color=base_colors[7], label="Water Mass Std Dev"
-        )
+        
+        # Create a Matplotlib figure
+        self.fig = plt.Figure(figsize=(16, 12), constrained_layout=False)  # Increased figure size
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.main_window)
+        self.canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")  # Use grid instead of pack
 
-        # City Population Graph
-        ax_city_population.plot(
-            days, self.simulation.city_population_over_time, color=base_colors[5], label="Cities"
-        )
+        # Define grid layout for graphs using GridSpec
+        num_rows = 5
+        num_cols = 2
+        gs = self.fig.add_gridspec(num_rows, num_cols, wspace=0.3, hspace=0.6)  # Adjusted spacing
 
-        # Forest Count Graph
-        ax_forest_count.plot(
-            days, self.simulation.forest_count_over_time, color=base_colors[4], label="Forests"
-        )
+        # Create subplots
+        self.axes = {
+            "pollution": self.fig.add_subplot(gs[0, 0]),
+            "std_dev_pollution": self.fig.add_subplot(gs[0, 1]),
+            "temperature": self.fig.add_subplot(gs[1, 0]),
+            "std_dev_temperature": self.fig.add_subplot(gs[1, 1]),
+            "water_mass": self.fig.add_subplot(gs[2, 0]),
+            "std_dev_water_mass": self.fig.add_subplot(gs[2, 1]),
+            "population": self.fig.add_subplot(gs[3, 0]),
+            "forests": self.fig.add_subplot(gs[3, 1]),
+            "cell_distribution_std_dev": self.fig.add_subplot(gs[4, 0]),
+        }
 
-        # Cell Distribution Std Dev
-        ax_cell_distribution_std_dev.plot(
-            days,
-            self.simulation.std_dev_cell_distribution_over_time,
-            color=base_colors[2],
-            label="Cell Distribution Std Dev",
-        )
+                # Render graphs
+        self.render_pollution_graph(self.axes["pollution"], color="red")
+        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color="orange")
+        self.render_temperature_graph(self.axes["temperature"], color="blue")
+        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color="cyan")
+        self.render_water_mass_graph(self.axes["water_mass"], color="green")
+        self.render_std_dev_water_mass_graph(self.axes["std_dev_water_mass"], color="lime")
+        self.render_population_graph(self.axes["population"], color="purple")
+        self.render_forests_graph(self.axes["forests"], color="brown")
+        self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color="darkgoldenrod")
 
-        # Add legends
-        for ax in [
-            ax_pollution,
-            ax_std_dev_pollution,
-            ax_temperature,
-            ax_std_dev_temperature,
-            ax_water_mass,
-            ax_std_dev_water_mass,
-            ax_city_population,
-            ax_forest_count,
-            ax_cell_distribution_std_dev,
-        ]:
-            ax.legend()
 
-        # Open 3D visualization in a separate window
-        self.open_3d_in_new_window(root)
-        self.add_config_table_with_scrollbar(root)
-        root.mainloop()
 
-    def add_config_table_with_scrollbar(self, root=None):
-            """Create a configuration table window with scrollbars and add control buttons."""
-            # Create a new window for the configuration table
-            self.config_window = tk.Toplevel(root)
-            self.config_window.title("Configuration Table")
+        # Set square aspect ratio for all graphs
+        for ax in self.axes.values():
+            ax.set_box_aspect(1)
 
-            # Create a frame for the buttons
-            button_frame = tk.Frame(self.config_window)
-            button_frame.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
+        # Bind resizing events
+        self.canvas.get_tk_widget().bind("<Configure>", self._on_resize)
 
-            # Add a "Bring Main Window to Front" button
-            tk.Button(
-                button_frame,
-                text="Bring Main Window to Front",
-                command=lambda: root.lift(),  # Brings the main window to the front
-            ).pack(side=tk.LEFT, padx=5, pady=5)
 
-            # Create a frame to hold the table and scrollbars
-            frame = tk.Frame(self.config_window)
-            frame.pack(fill=tk.BOTH, expand=True)
+        # Add 3D visualization and config table
+        self.open_3d_in_new_window(self.main_window)
+        self.add_config_table_with_scrollbar(self.main_window)
 
-            # Add vertical scrollbar
-            vsb = tk.Scrollbar(frame, orient="vertical", width=20)
-            vsb.pack(side="right", fill="y")
+        # Start the Tkinter main loop
+        self.main_window.mainloop()
 
-            # Add horizontal scrollbar
-            hsb = tk.Scrollbar(frame, orient="horizontal", width=20)
-            hsb.pack(side="bottom", fill="x")
+    def _on_resize(self, event):
+        """Handle resizing of the window and adjust graph sizes."""
+        self.fig.set_size_inches(event.width / 100, event.height / 100, forward=True)
+        self.canvas.draw_idle()
 
-            # Create a treeview for the table
-            tree = ttk.Treeview(
-                frame,
-                columns=("Parameter", "Value"),
-                show="headings",
-                yscrollcommand=vsb.set,
-                xscrollcommand=hsb.set,
-            )
-            tree.heading("Parameter", text="Parameter")
-            tree.heading("Value", text="Value")
 
-            # Attach the scrollbars
-            vsb.config(command=tree.yview)
-            hsb.config(command=tree.xview)
 
-            # Add data to the table
-            parameter_width = 0
-            value_width = 0
-
-            # Populate the treeview with formatted data
-            for key, value in self.config.items():
-                if key in key_labels:
-                    formatted_value = format_config_value(key, value)
-                    tree.insert("", "end", values=(
-                        key_labels[key], formatted_value))
-                    # Calculate maximum width for the Parameter column
-                    parameter_width = max(
-                        parameter_width, len(key_labels[key]) * 10)
-
-                    # Calculate maximum width for the Value column
-                    value_width = max(value_width, len(formatted_value) * 7)
-
-            # Set the column widths to fit the data
-            tree.column("Parameter", width=parameter_width, anchor="w")
-            tree.column("Value", width=value_width, anchor="w")
-            tree.pack(fill=tk.BOTH, side="top", expand=True)
 
     def open_3d_in_new_window(self, root=None):
             """Open a resizable 3D graph window with a 3D plot and integrated legend."""
@@ -316,6 +229,91 @@ class MatplotlibDisplay:
 
                     # Bind the keyboard event handler
             fig.canvas.mpl_connect("key_press_event", handle_key_press)
+            self.three_d_window = three_d_window
+
+
+
+    def add_config_table_with_scrollbar(self, root=None):
+            """Create a configuration table window with scrollbars and add control buttons."""
+            # Create a new window for the configuration table
+            self.config_window = tk.Toplevel(root)
+            self.config_window.title("Configuration Table")
+
+            # Create a frame for the buttons
+            button_frame = tk.Frame(self.config_window)
+            button_frame.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
+
+            # Add a "Bring Main Window to Front" button
+            tk.Button(
+                button_frame,
+                text="Bring Main Window to Front",
+                command=lambda: root.lift(),  # Brings the main window to the front
+            ).pack(side=tk.LEFT, padx=5, pady=5)
+
+            # Create a frame to hold the table and scrollbars
+            frame = tk.Frame(self.config_window)
+            frame.pack(fill=tk.BOTH, expand=True)
+
+            # Add vertical scrollbar
+            vsb = tk.Scrollbar(frame, orient="vertical", width=20)
+            vsb.pack(side="right", fill="y")
+
+            # Add horizontal scrollbar
+            hsb = tk.Scrollbar(frame, orient="horizontal", width=20)
+            hsb.pack(side="bottom", fill="x")
+
+            # Create a treeview for the table
+            tree = ttk.Treeview(
+                frame,
+                columns=("Parameter", "Value"),
+                show="headings",
+                yscrollcommand=vsb.set,
+                xscrollcommand=hsb.set,
+            )
+            tree.heading("Parameter", text="Parameter")
+            tree.heading("Value", text="Value")
+
+            # Attach the scrollbars
+            vsb.config(command=tree.yview)
+            hsb.config(command=tree.xview)
+
+            # Add data to the table
+            parameter_width = 0
+            value_width = 0
+
+            # Populate the treeview with formatted data
+            for key, value in self.config.items():
+                if key in key_labels:
+                    formatted_value = format_config_value(key, value)
+                    tree.insert("", "end", values=(
+                        key_labels[key], formatted_value))
+                    # Calculate maximum width for the Parameter column
+                    parameter_width = max(
+                        parameter_width, len(key_labels[key]) * 10)
+
+                    # Calculate maximum width for the Value column
+                    value_width = max(value_width, len(formatted_value) * 7)
+
+            # Set the column widths to fit the data
+            tree.column("Parameter", width=parameter_width, anchor="w")
+            tree.column("Value", width=value_width, anchor="w")
+            tree.pack(fill=tk.BOTH, side="top", expand=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def add_cell_type_legend_to_frame(self, legend_frame):
             """Add a well-padded legend explaining the cell colors and cell type numbers."""
@@ -440,178 +438,176 @@ class MatplotlibDisplay:
 
             self.fig.canvas.draw_idle()
 
-    def render_population_graph(self):
-            """Render the city population graph over time."""
-            self.ax_population.cla()
-            self.ax_population.set_title("City Population Over Time")
-            self.ax_population.set_xlabel("Day")
-            self.ax_population.set_ylabel("Number of Cities")
-
-            # Retrieve data
-            city_population = self.simulation.city_population_over_time
-            self.ax_population.plot(
-                    self.days, city_population, color="purple", label="Cities")
-            self.ax_population.legend()
 
 
-    def render_forests_graph(self):
-            """Render the forest count graph over time."""
-            self.ax_forests.cla()
-            self.ax_forests.set_title("Forest Count Over Time")
-            self.ax_forests.set_xlabel("Day")
-            self.ax_forests.set_ylabel("Number of Forests")
-
-            # Retrieve data
-            forest_count = self.simulation.forest_count_over_time
-
-            self.ax_forests.plot(self.days, forest_count,
-                                     color="green", label="Forests")
-            self.ax_forests.legend()
-         
-
-    def render_temperature_graph(self):
-            """Render the standard deviation of temperature graph over time."""
-            self.ax_temperature.cla()
-            self.ax_temperature.set_title(
-                "Temperature Standard Deviation Over Time")
-            self.ax_temperature.set_xlabel("Day")
-            self.ax_temperature.set_ylabel(
-                "Standard Deviation Temperature")
-
-            # Ensure correct data availability
-            std_dev_temperature = self.simulation.std_dev_temperature_over_time
-            avg_temperature = self.simulation.temperature_over_time
-
-                # Add standard deviation as shaded region
-            self.ax_temperature.fill_between(
-                    self.days,
-                    np.array(avg_temperature) - np.array(std_dev_temperature),
-                    np.array(avg_temperature) + np.array(std_dev_temperature),
-                    color="blue", alpha=0.1, label="Temperature Std Dev Range")
-
-            self.ax_temperature.plot(
-                    self.days, avg_temperature, color="blue", label="Average Temperature")
-            self.ax_temperature.legend()
-
-    def render_pollution_graph(self):
-            """Render the pollution graph over time with standard deviation."""
-            self.ax_pollution.cla()
-            self.ax_pollution.set_title("Pollution Over Time")
-            self.ax_pollution.set_xlabel("Day")
-            self.ax_pollution.set_ylabel("Average Pollution")
-
-            # Retrieve data
-            days = range(len(self.simulation.pollution_over_time))
-            avg_pollution = self.simulation.pollution_over_time
-
-            # Calculate standard deviation for pollution
-            pollution_std_dev = self.simulation.std_dev_pollution_over_time
-
-                # Add standard deviation as shaded region
-            self.ax_pollution.fill_between(
-                    days,
-                    np.array(avg_pollution) - np.array(pollution_std_dev),
-                    np.array(avg_pollution) + np.array(pollution_std_dev),
-                    color="red", alpha=0.2, label="Pollution Std Dev Range"
-                )
-
-                # Plot the average pollution
-            self.ax_pollution.plot(self.days, avg_pollution,
-                                       color="red", label="Pollution")
-            self.ax_pollution.legend()
- 
-    def render_std_dev_pollution_graph(self):
-            """Render the standard deviation of pollution graph over time."""
-            self.ax_std_dev_pollution_graph.cla()
-            self.ax_std_dev_pollution_graph.set_title(
-                "Pollution Standard deviation Over Time")
-            self.ax_std_dev_pollution_graph.set_xlabel("Day")
-            self.ax_std_dev_pollution_graph.set_ylabel(
-                "Standard deviation Pollution")
-
-            # Corrected attribute name
-            std_dev_pollution = self.simulation.std_dev_pollution_over_time
-            self.ax_std_dev_pollution_graph.plot(
-                    self.days, std_dev_pollution, color="orange", label="Pollution Standard deviation"
-                )
-            self.ax_std_dev_pollution_graph.legend()
 
 
-    def render_std_dev_temperature_graph(self):
-            """Render the standard deviation of temperature graph over time."""
-            self.ax_std_dev_temperature_graph.cla()
-            self.ax_std_dev_temperature_graph.set_title(
-                "Temperature Standard deviation Over Time")
-            self.ax_std_dev_temperature_graph.set_xlabel("Day")
-            self.ax_std_dev_temperature_graph.set_ylabel(
-                "Standard deviation Temperature")
 
-            # Corrected attribute name
-            std_dev_temperature = self.simulation.std_dev_temperature_over_time
+    def render_population_graph(self, ax, color):
+        """Render the city population graph over time."""
+        ax.cla()
+        ax.set_title("City Population Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Number of Cities")
 
-            self.ax_std_dev_temperature_graph.plot(
-                    self.days, std_dev_temperature, color="cyan", label="Temperature Standard deviation"
-                )
-            self.ax_std_dev_temperature_graph.legend()
+        # Retrieve data
+        city_population = self.simulation.city_population_over_time
 
-    def render_water_mass_graph(self):
-            """Render the average water mass graph over time with standard deviation limits."""
-            self.ax_water_mass.cla()
-            self.ax_water_mass.set_title("Average Water Mass Over Time")
-            self.ax_water_mass.set_xlabel("Day")
-            self.ax_water_mass.set_ylabel("Average Water Mass")
+        # Plot the data
+        ax.plot(self.days, city_population, color=color, label="Cities")
+        ax.legend()
 
-            # Retrieve data
-            avg_water_mass = self.simulation.water_mass_over_time
-            std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
 
-            # Ensure data lengths match
-                # Add standard deviation as a shaded region
-            self.ax_water_mass.fill_between(
-                    self.days,
-                    np.array(avg_water_mass) - np.array(std_dev_water_mass),
-                    np.array(avg_water_mass) + np.array(std_dev_water_mass),
-                    color="blue",
-                    alpha=0.1,
-                    label="Water Mass Std Dev Range"
-                )
+        
+    def render_forests_graph(self, ax, color):
+        """Render the forest count graph over time."""
+        ax.cla()
+        ax.set_title("Forest Count Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Number of Forests")
 
-                # Plot the average water mass
-            self.ax_water_mass.plot(
-                    self.days, avg_water_mass, color="blue", label="Average Water Mass")
-            self.ax_water_mass.legend()
-     
-    def render_std_dev_water_mass_graph(self):
-            """Render the standard deviation of water mass graph over time."""
-            self.ax_std_dev_water_mass.cla()
-            self.ax_std_dev_water_mass.set_title(
-                "Standard Deviation of Water Mass Over Time")
-            self.ax_std_dev_water_mass.set_xlabel("Day")
-            self.ax_std_dev_water_mass.set_ylabel("Water Mass Std Dev")
-            std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
-            self.ax_std_dev_water_mass.plot(
-                    self.days, std_dev_water_mass, color="cyan", label="Water Mass Std Dev"
-                )
-            self.ax_std_dev_water_mass.legend()
-  
+        # Retrieve data
+        forest_count = self.simulation.forest_count_over_time
 
-    def render_std_dev_cell_distribution_graph(self):
-            """
-            Render the standard deviation of cell type distribution over time.
-            """
-            self.ax_std_dev_cell_distribution.cla()
-            self.ax_std_dev_cell_distribution.set_title(
-                "Std Dev of Cell Type Distribution Over Time")
-            self.ax_std_dev_cell_distribution.set_xlabel("Day")
-            self.ax_std_dev_cell_distribution.set_ylabel(
-                "Std Dev of Cell Counts")
+        ax.plot(self.days, forest_count, color=color, label="Forests")
+        ax.legend()
 
-            # Retrieve data
-            std_dev_distribution = self.simulation.std_dev_cell_distribution_over_time
-            self.ax_std_dev_cell_distribution.plot(
-                    self.days, std_dev_distribution, color="brown", label="Std Dev Cell Distribution"
-                )
-            self.ax_std_dev_cell_distribution.legend()
+
+
+    def render_temperature_graph(self, ax, color):
+        """Render the standard deviation of temperature graph over time."""
+        ax.cla()
+        ax.set_title("Temperature Standard Deviation Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Standard Deviation Temperature")
+
+        # Ensure correct data availability
+        avg_temperature = self.simulation.temperature_over_time
+        std_dev_temperature = self.simulation.std_dev_temperature_over_time
+
+        # Add standard deviation as shaded region
+        ax.fill_between(
+            self.days,
+            np.array(avg_temperature) - np.array(std_dev_temperature),
+            np.array(avg_temperature) + np.array(std_dev_temperature),
+            color="blue", alpha=0.1, label="Temperature Std Dev Range"
+        )
+
+        ax.plot(self.days, avg_temperature, color=color, label="Average Temperature")
+        ax.legend()
+
+
+
+    def render_pollution_graph(self, ax, color):
+        """Render the pollution graph over time with standard deviation."""
+        ax.cla()
+        ax.set_title("Pollution Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Average Pollution")
+
+        avg_pollution = self.simulation.pollution_over_time
+        pollution_std_dev = self.simulation.std_dev_pollution_over_time
+
+        # Add standard deviation as shaded region
+        ax.fill_between(
+            self.days,
+            np.array(avg_pollution) - np.array(pollution_std_dev),
+            np.array(avg_pollution) + np.array(pollution_std_dev),
+            color="red", alpha=0.2, label="Pollution Std Dev Range"
+        )
+
+        ax.plot(self.days, avg_pollution, color=color, label="Pollution")
+        ax.legend()
+
+
+
+    def render_std_dev_pollution_graph(self, ax, color):
+        """Render the standard deviation of pollution graph over time."""
+        ax.cla()
+        ax.set_title("Pollution Standard Deviation Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Standard Deviation Pollution")
+
+        std_dev_pollution = self.simulation.std_dev_pollution_over_time
+        ax.plot(self.days, std_dev_pollution, color=color, label="Pollution Std Dev")
+        ax.legend()
+
+
+
+    def render_std_dev_temperature_graph(self, ax, color):
+        """Render the standard deviation of temperature graph over time."""
+        ax.cla()
+        ax.set_title("Temperature Standard Deviation Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Standard Deviation Temperature")
+
+        std_dev_temperature = self.simulation.std_dev_temperature_over_time
+        ax.plot(self.days, std_dev_temperature, color=color, label="Temperature Std Dev")
+        ax.legend()
+
+
+
+    def render_water_mass_graph(self, ax, color):
+        """Render the average water mass graph over time with standard deviation limits."""
+        ax.cla()
+        ax.set_title("Average Water Mass Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Average Water Mass")
+
+        avg_water_mass = self.simulation.water_mass_over_time
+        std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
+
+        # Add standard deviation as shaded region
+        ax.fill_between(
+            self.days,
+            np.array(avg_water_mass) - np.array(std_dev_water_mass),
+            np.array(avg_water_mass) + np.array(std_dev_water_mass),
+            color="blue", alpha=0.1, label="Water Mass Std Dev Range"
+        )
+
+        ax.plot(self.days, avg_water_mass, color=color, label="Average Water Mass")
+        ax.legend()
+
+
+
+    def render_std_dev_water_mass_graph(self, ax, color):
+        """Render the standard deviation of water mass graph over time."""
+        ax.cla()
+        ax.set_title("Standard Deviation of Water Mass Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Water Mass Std Dev")
+
+        std_dev_water_mass = self.simulation.std_dev_water_mass_over_time
+        ax.plot(self.days, std_dev_water_mass, color=color, label="Water Mass Std Dev")
+        ax.legend()
+
+
+
+    def render_std_dev_cell_distribution_graph(self, ax, color):
+        """Render the standard deviation of cell type distribution over time."""
+        ax.cla()
+        ax.set_title("Std Dev of Cell Type Distribution Over Time")
+        ax.set_xlabel("Day")
+        ax.set_ylabel("Std Dev of Cell Counts")
+
+        std_dev_distribution = self.simulation.std_dev_cell_distribution_over_time
+        ax.plot(self.days, std_dev_distribution, color=color, label="Std Dev Cell Distribution")
+        ax.legend()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     def next_day(self):
@@ -635,6 +631,7 @@ class MatplotlibDisplay:
     def bring_main_window_to_front(self):
             """Bring the main window to the front."""
             self.minimize_3d_window()
+            self.minimize_config_window()
             if self.main_window and self.main_window.winfo_exists():
                 self.main_window.deiconify()
                 self.main_window.lift()
