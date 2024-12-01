@@ -167,7 +167,6 @@ class MatplotlibDisplay:
 
 
 
-
     def open_3d_in_new_window(self, root=None):
         """
         Open a resizable 3D graph window with a 3D plot and integrated legend,
@@ -220,19 +219,31 @@ class MatplotlibDisplay:
 
         # Add legend
         legend_elements = [
-            plt.Line2D([0], [0], marker="o", color="w", label=f"{cell_type}: {particle_mapping[cell_type]}",
-                    markersize=10, markerfacecolor=rgba_to_hex(color))
+            plt.Line2D(
+                [0], [0], marker="o", color="w",
+                label=f"{cell_type}: {particle_mapping[cell_type]}",
+                markersize=10, markerfacecolor=rgba_to_hex(color)
+            )
             for cell_type, color in self.config["base_colors"].items()
         ]
+
+        # Add explanations for pollution and temperature tints
         if self.tint:
             legend_elements.append(
-                plt.Line2D([0], [0], marker='o', color='w', label='Pollution Tint', markersize=10, markerfacecolor='black')
+                plt.Line2D([0], [0], marker='o', color='w',
+                        label='Pollution Tint (Black)', markersize=10, markerfacecolor='black')
             )
             legend_elements.append(
-                plt.Line2D([0], [0], marker='o', color='w', label='Temperature Tint', markersize=10, markerfacecolor='red')
+                plt.Line2D([0], [0], marker='o', color='w',
+                        label='Temperature Tint (Red)', markersize=10, markerfacecolor='red')
             )
 
-        ax_color_map.legend(handles=legend_elements, loc="center", title="Cell Types", frameon=False)
+        ax_color_map.legend(
+            handles=legend_elements,
+            loc="center",
+            title="Cell Types & Tints",
+            frameon=False
+        )
 
         # Add figure to the window
         canvas = FigureCanvasTkAgg(fig, master=three_d_window)
@@ -261,8 +272,6 @@ class MatplotlibDisplay:
 
         # Render the first day with the default tinting state
         self.render_day(self.current_day)
-
-
 
 
 
@@ -388,7 +397,7 @@ class MatplotlibDisplay:
                             points.append((x, y, z))
                             untinted_colors.append(base_color)
                             tinted_colors.append(tinted_color)
-                            sizes.append(100.0)  # Adjust size as needed
+                            sizes.append(200.0)  # Adjust size as needed
 
             self.precomputed_data.append({
                 "points": points,
