@@ -518,7 +518,10 @@ class World:
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
         self.avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
         self.avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
-
+        # Assign calculated values to instance attributes
+        self.total_cities = total_cities
+        self.total_forests = total_forests
+        self.total_cells = total_cells
         # Global standard deviations
         if total_cells > 0:
             self.std_dev_temperature = math.sqrt(
