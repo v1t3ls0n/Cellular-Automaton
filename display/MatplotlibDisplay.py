@@ -64,22 +64,22 @@ class MatplotlibDisplay:
         tk.Button(control_frame, text="Hide 3D Grid",
                   command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
-        # Plot Frame
+        # Frame for plots
         plot_frame = tk.Frame(root)
         plot_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         plot_frame.rowconfigure(0, weight=1)
         plot_frame.columnconfigure(0, weight=1)
 
-        self.fig = plt.Figure(figsize=(16, 8), constrained_layout=False)
+        # Main figure
+        self.fig = plt.Figure(figsize=(18, 12), constrained_layout=True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
-
         spec = gridspec.GridSpec(nrows=4, ncols=2, figure=self.fig)
-
+        
         # Configure axes for the plots
         self.ax_pollution = self.fig.add_subplot(spec[0, 0])
-        self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[1, 0])
-        self.ax_temperature = self.fig.add_subplot(spec[0, 1])
+        self.ax_std_dev_pollution_graph = self.fig.add_subplot(spec[0, 1])
+        self.ax_temperature = self.fig.add_subplot(spec[1, 0])
         self.ax_std_dev_temperature_graph = self.fig.add_subplot(spec[1, 1])
         self.ax_water_mass = self.fig.add_subplot(spec[2, 0])
         self.ax_std_dev_water_mass = self.fig.add_subplot(spec[2, 1])
@@ -100,6 +100,7 @@ class MatplotlibDisplay:
 
         # Open 3D visualization in a separate window
         self.open_3d_in_new_window(root)
+        self.add_config_table_with_scrollbar(root)
         root.mainloop()
 
 
