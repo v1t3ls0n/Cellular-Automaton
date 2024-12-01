@@ -8,7 +8,7 @@ import matplotlib.gridspec as gridspec
 import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
+import matplotlib.pyplot as plt
 
 class MatplotlibDisplay:
     config = config
@@ -28,12 +28,13 @@ class MatplotlibDisplay:
         self.ax_std_dev_water_mass = None
         self.ax_std_dev_pollution_graph = None
         self.ax_std_dev_temperature_graph = None
+        self.ax_cell_type_distribution = None
         self.ax_ice_coverage = None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
         self.current_elev = 20  # Default elevation
         self.current_azim = 45  # Default azimuth
 
-    def plot_3d(self):
+    def plot_3d(self,layout="row"):
         self.precompute_visualizations()
 
         """Create the plot with all relevant graphs, including the configuration window."""
@@ -65,17 +66,28 @@ class MatplotlibDisplay:
         tk.Button(control_frame, text="Hide 3D Grid",
                   command=self.minimize_3d_window).pack(side=tk.LEFT, padx=5)
 
-        # Frame for plots
+
+        # Plot frame
         plot_frame = tk.Frame(root)
         plot_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
         plot_frame.rowconfigure(0, weight=1)
         plot_frame.columnconfigure(0, weight=1)
 
-        # Main figure
+
+    # Main figure
         self.fig = plt.Figure(figsize=(18, 12), constrained_layout=True)
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
-        spec = gridspec.GridSpec(nrows=4, ncols=2, figure=self.fig)
+
+        # Dynamic layout: Update GridSpec
+        if layout == "row":
+            spec = gridspec.GridSpec(nrows=5, ncols=2, figure=self.fig)
+            self.ax_cell_type_distribution = self.fig.add_subplot(spec[4, :])  # Full new row
+        elif layout == "column":
+            spec = gridspec.GridSpec(nrows=4, ncols=3, figure=self.fig)
+            self.ax_cell_type_distribution = self.fig.add_subplot(spec[3, 2])  # New column
+        else:
+            raise ValueError("Invalid layout type. Choose 'row' or 'column'.")
 
         # Configure axes for the plots
         self.ax_pollution = self.fig.add_subplot(spec[0, 0])
@@ -86,7 +98,6 @@ class MatplotlibDisplay:
         self.ax_std_dev_water_mass = self.fig.add_subplot(spec[2, 1])
         self.ax_population = self.fig.add_subplot(spec[3, 0])
         self.ax_forests = self.fig.add_subplot(spec[3, 1])
-
         # Render initial graphs
         self.render_pollution_graph()
         self.render_temperature_graph()
@@ -96,6 +107,8 @@ class MatplotlibDisplay:
         self.render_std_dev_pollution_graph()
         self.render_std_dev_temperature_graph()
         self.render_std_dev_water_mass_graph()
+        self.render_cell_type_distribution_graph()
+        self.render_cell_type_distribution_graph()
 
         self.main_window = root
 
@@ -596,6 +609,53 @@ class MatplotlibDisplay:
             self.ax_std_dev_water_mass.legend()
         else:
             logging.error("Data length mismatch in water mass std dev graph.")
+
+
+    def render_cell_type_distribution_graph(self):
+        """
+        Render a bar chart showing the relative distribution of cell types for the current day.
+        """
+        if not self.simulation.states:
+            logging.error("No states available for rendering cell type distribution.")
+            return
+
+        # Use the current day's state
+        current_state = self.simulation.states[self.simulation.current_day]
+        cell_type_counts = current_state.cell_type_stats  # Use calculated stats from World
+
+        # Extract data for the bar chart
+        cell_types = list(cell_type_counts.keys())
+        relative_counts = [cell_type_counts[cell_type]["average"] for cell_type in cell_types]
+
+        # Clear the previous graph
+        self.ax_cell_type_distribution.cla()
+
+        # Create the bar chart
+        bars = self.ax_cell_type_distribution.bar(
+            cell_types, relative_counts, color="skyblue", alpha=0.8
+        )
+
+        # Add labels and title
+        self.ax_cell_type_distribution.set_xlabel("Cell Type")
+        self.ax_cell_type_distribution.set_ylabel("Percentage of Total Cells (%)")
+        self.ax_cell_type_distribution.set_title(f"Cell Type Distribution (Day {self.simulation.current_day})")
+
+        # Annotate the bars with exact values
+        for bar, count in zip(bars, relative_counts):
+            self.ax_cell_type_distribution.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 1,
+                f"{count:.2f}%",
+                ha="center",
+                fontsize=10
+            )
+
+        # Update the canvas
+        self.canvas.draw_idle()
+
+
+
+
 
     def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:

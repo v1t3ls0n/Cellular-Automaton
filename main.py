@@ -149,6 +149,7 @@ if __name__ == "__main__":
     simulation = Simulation(grid_size=grid_size, initial_ratios=initial_ratios, days=days)
     logging.info("Starting simulation...")
     simulation.precompute()
+    simulation.render_cell_type_distribution()
     logging.info("Simulation complete. Displaying results...")
     display = MatplotlibDisplay(simulation)
     display.plot_3d()

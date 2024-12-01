@@ -473,21 +473,25 @@ class World:
     def _recalculate_global_attributes(self):
         """
         Recalculate global attributes like average temperature, pollution, water mass,
-        and counts of cities, forests, and rain cells. Also calculates and saves the 
-        standard deviation of pollution, temperature, and water mass.
+        and counts of cities, forests, rain cells, and other cell types. 
+        Also calculates averages and standard deviations for temperature, pollution, water mass, 
+        and each cell type.
         """
         total_temperature = 0
         total_pollution = 0
         total_water_mass = 0
-        total_cities = 0
-        total_forests = 0
         total_cells = 0
-        total_rain = 0
 
-        temperature_values = []  # Store temperature values for standard deviation
-        pollution_values = []  # Store pollution values for standard deviation
-        water_mass_values = []  # Store water mass values for standard deviation
+        # Initialize counts and metrics for all cell types
+        cell_type_counts = {cell_type: 0 for cell_type in range(10)}  # Assuming 10 cell types (0-9)
+        cell_type_water_mass = {cell_type: [] for cell_type in range(10)}  # To calculate water mass stats
+        cell_type_temperature = {cell_type: [] for cell_type in range(10)}  # To calculate temperature stats
 
+        temperature_values = []  # Store temperature values for global std dev
+        pollution_values = []  # Store pollution values for global std dev
+        water_mass_values = []  # Store water mass values for global std dev
+
+        # Iterate over the grid
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
                 for k in range(self.grid_size[2]):
@@ -498,54 +502,75 @@ class World:
                     total_temperature += cell.temperature
                     total_pollution += cell.pollution_level
                     total_water_mass += cell.water_mass
+
                     temperature_values.append(cell.temperature)
                     pollution_values.append(cell.pollution_level)
                     water_mass_values.append(cell.water_mass)
 
-                    if cell.cell_type == 5:  # City
-                        total_cities += 1
-                    elif cell.cell_type == 4:  # Forest
-                        total_forests += 1
-                    elif cell.cell_type == 7:  # Rain
-                        total_rain += 1
+                    # Update per-cell-type statistics
+                    cell_type_counts[cell.cell_type] += 1
+                    cell_type_water_mass[cell.cell_type].append(cell.water_mass)
+                    cell_type_temperature[cell.cell_type].append(cell.temperature)
 
                     total_cells += 1
 
-        # Calculate averages and save in self
+        # Global averages
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
         self.avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
         self.avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
-        self.total_cities = total_cities
-        self.total_forests = total_forests
-        self.total_rain = total_rain
 
-        # Calculate standard deviation for temperature and save in self
+        # Global standard deviations
         if total_cells > 0:
-            temperature_variance = sum(
-                (temp - self.avg_temperature) ** 2 for temp in temperature_values) / total_cells
-            self.std_dev_temperature = math.sqrt(temperature_variance)
+            self.std_dev_temperature = math.sqrt(
+                sum((temp - self.avg_temperature) ** 2 for temp in temperature_values) / total_cells
+            )
+            self.std_dev_pollution = math.sqrt(
+                sum((poll - self.avg_pollution) ** 2 for poll in pollution_values) / total_cells
+            )
+            self.std_dev_water_mass = math.sqrt(
+                sum((mass - self.avg_water_mass) ** 2 for mass in water_mass_values) / total_cells
+            )
         else:
             self.std_dev_temperature = 0
-
-        # Calculate standard deviation for pollution and save in self
-        if total_cells > 0:
-            pollution_variance = sum(
-                (poll - self.avg_pollution) ** 2 for poll in pollution_values) / total_cells
-            self.std_dev_pollution = math.sqrt(pollution_variance)
-        else:
             self.std_dev_pollution = 0
-
-        # Calculate standard deviation for water mass and save in self
-        if total_cells > 0:
-            water_mass_variance = sum(
-                (mass - self.avg_water_mass) ** 2 for mass in water_mass_values) / total_cells
-            self.std_dev_water_mass = math.sqrt(water_mass_variance)
-        else:
             self.std_dev_water_mass = 0
 
-        # Log or print for debugging (optional)
+        # Per-cell-type statistics
+        self.cell_type_stats = {}
+        for cell_type in cell_type_counts:
+            count = cell_type_counts[cell_type]
+            if count > 0:
+                avg_temp = sum(cell_type_temperature[cell_type]) / count
+                avg_water = sum(cell_type_water_mass[cell_type]) / count
+
+                temp_variance = sum((t - avg_temp) ** 2 for t in cell_type_temperature[cell_type]) / count
+                water_variance = sum((w - avg_water) ** 2 for w in cell_type_water_mass[cell_type]) / count
+
+                self.cell_type_stats[cell_type] = {
+                    "count": count,
+                    "avg_temperature": avg_temp,
+                    "std_dev_temperature": math.sqrt(temp_variance),
+                    "avg_water_mass": avg_water,
+                    "std_dev_water_mass": math.sqrt(water_variance),
+                }
+            else:
+                self.cell_type_stats[cell_type] = {
+                    "count": 0,
+                    "avg_temperature": 0,
+                    "std_dev_temperature": 0,
+                    "avg_water_mass": 0,
+                    "std_dev_water_mass": 0,
+                }
+
+        # Log results (optional)
         logging.info(
-            f"Avg Temperature: {self.avg_temperature}, Std Dev Temperature: {self.std_dev_temperature}, "
-            f"Avg Pollution: {self.avg_pollution}, Std Dev Pollution: {self.std_dev_pollution}, "
-            f"Avg Water Mass: {self.avg_water_mass}, Std Dev Water Mass: {self.std_dev_water_mass}"
+            f"Global - Avg Temp: {self.avg_temperature:.2f}, Std Dev Temp: {self.std_dev_temperature:.2f}, "
+            f"Avg Pollution: {self.avg_pollution:.2f}, Std Dev Pollution: {self.std_dev_pollution:.2f}, "
+            f"Avg Water Mass: {self.avg_water_mass:.2f}, Std Dev Water Mass: {self.std_dev_water_mass:.2f}"
         )
+        for cell_type, stats in self.cell_type_stats.items():
+            logging.info(
+                f"Cell Type {cell_type} - Count: {stats['count']}, "
+                f"Avg Temp: {stats['avg_temperature']:.2f}, Std Dev Temp: {stats['std_dev_temperature']:.2f}, "
+                f"Avg Water Mass: {stats['avg_water_mass']:.2f}, Std Dev Water Mass: {stats['std_dev_water_mass']:.2f}"
+            )
