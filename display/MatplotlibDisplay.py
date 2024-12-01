@@ -188,54 +188,50 @@ class MatplotlibDisplay:
         tree.column("Value", width=value_width, anchor="w")
         tree.pack(fill=tk.BOTH, side="top", expand=True)
 
-
-
     def open_3d_in_new_window(self, root=None):
-        """Open a resizable 3D graph window with a Matplotlib legend integrated into the same figure."""
+        """Open a resizable 3D graph window with a 3D plot and integrated legend."""
         three_d_window = tk.Toplevel()
         three_d_window.title("3D Visualization")
-        three_d_window.geometry("800x600")  # Default size
-        three_d_window.minsize(800, 600)  # Minimum size
+        three_d_window.geometry("1280x600")  # Default size
+        three_d_window.minsize(1000, 600)  # Minimum size
 
         # Configure flexible resizing
-        three_d_window.columnconfigure(0, weight=1)  # Single column for grid and legend
-        three_d_window.rowconfigure(0, weight=0)  # Fixed height for control buttons
-        three_d_window.rowconfigure(1, weight=1)  # Flexible height for the plot
+        three_d_window.columnconfigure(0, weight=1)
+        three_d_window.rowconfigure(0, weight=0)  # Control buttons
+        three_d_window.rowconfigure(1, weight=1)  # Plot area
 
-        self.three_d_window = three_d_window
-
-        # Add a control frame for the button at the top
+        # Control buttons frame
         control_frame = tk.Frame(three_d_window)
         control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
 
-        # Add button to bring the main window to the front
+        # Add a button to bring the main window to the front
         tk.Button(
             control_frame,
             text="Bring Main Window to Front",
             command=lambda: root.lift(),  # Bring the main window to the front
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
-        # Create a Matplotlib figure with GridSpec
-        fig = plt.Figure(figsize=(8, 6))
-        gs = fig.add_gridspec(1, 2, width_ratios=[4, 1], wspace=0.3)  # Adjust `wspace` for padding
+        # Create a Matplotlib figure with GridSpec for 3D plot and legend
+        fig = plt.Figure(figsize=(10, 6))
+        gs = fig.add_gridspec(1, 2, width_ratios=[4, 1], wspace=0.4)
 
-        # Add the 3D plot
+        # 3D plot
         ax_3d = fig.add_subplot(gs[0, 0], projection="3d")
-        ax_color_map = fig.add_subplot(gs[0, 1])  # Color map legend
-        ax_color_map.axis("off")  # Hide axes for the legend
+        ax_3d.set_title(f"Day {self.current_day}", pad=20)
+        ax_3d.set_xlabel("X Axis")
+        ax_3d.set_ylabel("Y Axis")
+        ax_3d.set_zlabel("Z Axis")
 
         # Fetch data for the current day
         points, colors, sizes = self.precomputed_data[self.current_day]
         xs, ys, zs = zip(*points) if points else ([], [], [])
         ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
 
-        # Configure the 3D plot
-        ax_3d.set_title(f"Day {self.current_day}", pad=20)  # Add padding above the title
-        ax_3d.set_xlabel("X Axis")
-        ax_3d.set_ylabel("Y Axis")
-        ax_3d.set_zlabel("Z Axis")
+        # Legend area
+        ax_color_map = fig.add_subplot(gs[0, 1])
+        ax_color_map.axis("off")  # Hide axes for the legend
 
-        # Add legend elements
+        # Legend elements
         legend_elements = [
             plt.Line2D([0], [0], marker="o", color="w", label="0 : Ocean", markersize=10,
                     markerfacecolor=self.config["base_colors"][0]),
@@ -256,13 +252,12 @@ class MatplotlibDisplay:
             plt.Line2D([0], [0], marker="o", color="w", label="8 : Vacuum", markersize=10,
                     markerfacecolor=self.config["base_colors"][8]),
         ]
+        if self.config.get('tint'):
+            legend_elements.append(
+                plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution (Tint)',
+                            markersize=10, markerfacecolor='red')
+            )
 
-        if self.config['tint']:
-            tinted_red = plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution (Tint)',
-                                    markersize=10, markerfacecolor='red')
-            legend_elements.append(tinted_red)
-
-        # Add the legend
         ax_color_map.legend(
             handles=legend_elements,
             loc="center",
@@ -270,57 +265,28 @@ class MatplotlibDisplay:
             frameon=False
         )
 
-        # Add the figure to the Tkinter window
+        # Add figure to the window
         canvas = FigureCanvasTkAgg(fig, master=three_d_window)
         canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
         canvas.draw()
 
-        # Handle keyboard events for navigation
-        def handle_key_press(event):
-            """Handle key presses for navigating between days in the separate window."""
-            if event.key == "right":  # Move to the next day
-                if self.current_day < len(self.simulation.states) - 1:
-                    self.current_day += 1
-                    update_plot()
-            elif event.key == "left":  # Move to the previous day
-                if self.current_day > 0:
-                    self.current_day -= 1
-                    update_plot()
-
-        def update_plot():
-            """Update the 3D plot and refresh the window."""
-            ax_3d.cla()
-            ax_3d.set_title(f"Day {self.current_day}", pad=20)
-            ax_3d.set_xlabel("X Axis")
-            ax_3d.set_ylabel("Y Axis")
-            ax_3d.set_zlabel("Z Axis")
-            points, colors, sizes = self.precomputed_data[self.current_day]
-            xs, ys, zs = zip(*points) if points else ([], [], [])
-            ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
-            canvas.draw_idle()
-
-        # Bind the keyboard event handler
-        fig.canvas.mpl_connect("key_press_event", handle_key_press)
-
-        # Handle dynamic resizing
+        # Handle resizing and avoid excessive lag
         def on_resize(event):
-            """Dynamically resize the plot and ensure the layout remains consistent."""
-            window_width = max(three_d_window.winfo_width(), 100)  # Ensure minimum width
-            window_height = max(three_d_window.winfo_height(), 100)  # Ensure minimum height
+            """Dynamically resize the plot and ensure smooth resizing."""
+            window_width = max(three_d_window.winfo_width(), 1000)  # Minimum width
+            window_height = max(three_d_window.winfo_height(), 600)  # Minimum height
 
-            # Calculate dynamic sizes, limited to minimum window dimensions
-            plot_width = min(window_width * 0.6 / 100, 6)
-            plot_height = min(window_height * 0.8 / 100, 6)
-            legend_width = min(window_width * 0.2 / 100, 2)
+            # Apply scaling limits
+            plot_width = min(window_width * 0.75 / 100, 8)
+            plot_height = min(window_height * 0.9 / 100, 6)
 
-            # Apply the sizes
+            # Update figure size
             fig.set_size_inches(plot_width, plot_height)
             canvas.draw_idle()
 
         # Bind resize event
         three_d_window.bind("<Configure>", on_resize)
-
-
+        self.ax_3d = ax_3d
 
 
 
