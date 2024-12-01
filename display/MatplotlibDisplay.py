@@ -34,8 +34,8 @@ class MatplotlibDisplay:
         # Initialize main Tkinter window
         self.main_window = tk.Toplevel()
         self.main_window.title("Environmental Simulation Application Main Window")
-        # self.main_window.state("zoomed")  # Start in full-screen mode
-        self.main_window.geometry("1000x1080")  # Default size
+        self.main_window.state("zoomed")  # Start in full-screen mode
+        # self.main_window.geometry("1000x1080")  # Default size
         # self.main_window.minsize(800, 600)  # Minimum size
 
         # Configure grid layout for the main window
@@ -79,8 +79,8 @@ class MatplotlibDisplay:
         scrollable_frame.bind("<Configure>", _on_configure)
 
         # Create a Matplotlib figure and attach it to the scrollable frame
-        fig = plt.Figure(figsize=(18, 12), constrained_layout=False)  # Smaller figure size
-        gs = fig.add_gridspec(5, 2, width_ratios=[1, 1], hspace=0.4, wspace=0.4)  # Reduced spacing
+        fig = plt.Figure(figsize=(18, 24), constrained_layout=False)  # Smaller figure size
+        gs = fig.add_gridspec(5, 2, width_ratios=[1, 1], hspace=0.2, wspace=0.4)  # Reduced spacing
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
@@ -111,7 +111,7 @@ class MatplotlibDisplay:
         self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color="darkgoldenrod")
 
         # Use tight_layout to optimize spacing
-        self.fig.tight_layout(pad=0.3, h_pad=0.1, w_pad=0.1)  # Tighter padding
+        self.fig.tight_layout(pad=0.3, h_pad=0.4, w_pad=0.1)  # Tighter padding
 
         # Add 3D visualization and config table
         self.open_3d_in_new_window(self.main_window)
