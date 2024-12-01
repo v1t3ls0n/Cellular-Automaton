@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 import logging
-from core.conf import config, key_labels, format_config_value
+from core.conf import config, key_labels, format_config_value, particle_mapping,rgba_to_hex
 import matplotlib.gridspec as gridspec
 import tkinter as tk
 from tkinter import ttk
@@ -92,14 +93,21 @@ class MatplotlibDisplay:
 
         scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
-        # Create a Matplotlib figure
-        fig = plt.Figure(figsize=(15, 20))  # Adjust figure size
-        gs = fig.add_gridspec(5, 2, width_ratios=[
-                              1, 1], hspace=0.4, wspace=0.4)
+
+
+
+        # Create a Matplotlib figure with adjusted figsize to match the window
+        fig = plt.Figure(figsize=(18, 24))  # Adjust size to make the graphs fill the window
+        gs = fig.add_gridspec(7, 2, width_ratios=[1, 1], hspace=0.5, wspace=0.3)  # Equal width for both columns, balanced spacing
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
+
+
+
+
+
 
         # Create subplots
         self.axes = {
@@ -107,30 +115,36 @@ class MatplotlibDisplay:
             "std_dev_pollution": self.fig.add_subplot(gs[0, 1]),
             "temperature": self.fig.add_subplot(gs[1, 0]),
             "std_dev_temperature": self.fig.add_subplot(gs[1, 1]),
-            "water_mass": self.fig.add_subplot(gs[3, 0]),
-            "std_dev_water_mass": self.fig.add_subplot(gs[3, 1]),
-            "population": self.fig.add_subplot(gs[2, 0]),
-            "forests": self.fig.add_subplot(gs[2, 1]),
+            "water_mass": self.fig.add_subplot(gs[2, 0]),
+            "std_dev_water_mass": self.fig.add_subplot(gs[2, 1]),
+            "population": self.fig.add_subplot(gs[3, 0]),
+            "forests": self.fig.add_subplot(gs[3, 1]),
             "cell_distribution_std_dev": self.fig.add_subplot(gs[4, 0]),
+            "std_forests": self.fig.add_subplot(gs[4, 1]),  # Standardized Forests graph
+            "std_population": self.fig.add_subplot(gs[5, 0]),  # Standardized Population graph
+            "std_temperature": self.fig.add_subplot(gs[5, 1]),  # Standardized Temperature graph
+            "std_pollution": self.fig.add_subplot(gs[6, 0]),  # Standardized Pollution graph
         }
 
         # Render graphs
         base_colors = self.config["base_colors"]
 
-        # Render graphs using dynamic colors from base_colors
-        self.render_pollution_graph(self.axes["pollution"], color=base_colors[0])  # Ocean (deep blue)
-        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color=base_colors[2])  # Cloud (light gray)
-        self.render_temperature_graph(self.axes["temperature"], color=base_colors[3])  # Ice (light cyan)
-        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color=base_colors[7])  # Rain (grayish blue)
-        self.render_water_mass_graph(self.axes["water_mass"], color=base_colors[1])  # Desert (sandy gold)
-        self.render_std_dev_water_mass_graph(self.axes["std_dev_water_mass"], color=base_colors[4])  # Forest (lush green)
-        self.render_population_graph(self.axes["population"], color=base_colors[5])  # City (dark purple)
-        self.render_forests_graph(self.axes["forests"], color=base_colors[6])  # Air (transparent white)
-        self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color=base_colors[8])  # Vacuum (fully transparent/black)
+        # Render standardized graphs in the top rows
+        self.render_standardized_pollution_graph(self.axes["std_pollution"], color=base_colors[0])  # Standardized Pollution
+        self.render_std_dev_pollution_graph(self.axes["std_dev_pollution"], color=base_colors[2])  # Pollution Standard Deviation
+        self.render_standardized_temperature_graph(self.axes["std_temperature"], color="red")  # Standardized Temperature
+        self.render_std_dev_temperature_graph(self.axes["std_dev_temperature"], color=base_colors[7])  # Temperature Standard Deviation
+        self.render_standardized_forests_graph(self.axes["std_forests"], color="green")  # Standardized Forests
+        self.render_std_dev_water_mass_graph(self.axes["std_dev_water_mass"], color=base_colors[4])  # Water Mass Standard Deviation
 
-
-        # Optimize layout to reduce gray areas
-        # self.fig.tight_layout(pad=0.5, h_pad=0.1, w_pad=0.1)
+        # Render original data graphs in the bottom rows
+        self.render_pollution_graph(self.axes["pollution"], color=base_colors[0])  # Pollution
+        self.render_temperature_graph(self.axes["temperature"], color=base_colors[3])  # Temperature
+        self.render_water_mass_graph(self.axes["water_mass"], color=base_colors[1])  # Water Mass
+        self.render_population_graph(self.axes["population"], color=base_colors[5])  # Population
+        self.render_forests_graph(self.axes["forests"], color=base_colors[6])  # Forests
+        self.render_std_dev_cell_distribution_graph(self.axes["cell_distribution_std_dev"], color=base_colors[8])  # Cell Distribution Standard Deviation
+        self.render_standardized_population_graph(self.axes["std_population"], color="purple")  # Standardized Population
 
         # Add 3D visualization and config table
         self.open_3d_in_new_window(self.main_window)
@@ -176,40 +190,36 @@ class MatplotlibDisplay:
         # Fetch data for the current day
         points, colors, sizes = self.precomputed_data[self.current_day]
         xs, ys, zs = zip(*points) if points else ([], [], [])
-        ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
+        ax_3d.scatter(xs, ys, zs, c=colors, marker='s', s=sizes)  # 's' for square
 
         # Legend area
         ax_color_map = fig.add_subplot(gs[0, 1])
         ax_color_map.axis("off")  # Hide axes for the legend
 
-        # Legend elements
+        # Legend elements dynamically generated based on cell types and colors
         legend_elements = [
-            plt.Line2D([0], [0], marker="o", color="w", label="0 : Ocean", markersize=10,
-                       markerfacecolor=self.config["base_colors"][0]),
-            plt.Line2D([0], [0], marker="o", color="w", label="1 : Desert", markersize=10,
-                       markerfacecolor=self.config["base_colors"][1]),
-            plt.Line2D([0], [0], marker="o", color="w", label="2 : Cloud", markersize=10,
-                       markerfacecolor=self.config["base_colors"][2]),
-            plt.Line2D([0], [0], marker="o", color="w", label="3 : Ice", markersize=10,
-                       markerfacecolor=self.config["base_colors"][3]),
-            plt.Line2D([0], [0], marker="o", color="w", label="4 : Forest", markersize=10,
-                       markerfacecolor=self.config["base_colors"][4]),
-            plt.Line2D([0], [0], marker="o", color="w", label="5 : City", markersize=10,
-                       markerfacecolor=self.config["base_colors"][5]),
-            plt.Line2D([0], [0], marker="o", color="w", label="6 : Air", markersize=10,
-                       markerfacecolor=self.config["base_colors"][6]),
-            plt.Line2D([0], [0], marker="o", color="w", label="7 : Rain", markersize=10,
-                       markerfacecolor=self.config["base_colors"][7]),
-            plt.Line2D([0], [0], marker="o", color="w", label="8 : Vacuum", markersize=10,
-                       markerfacecolor=self.config["base_colors"][8]),
+            plt.Line2D(
+                [0], 
+                [0], 
+                marker="o", 
+                color="w", 
+                label=f"{cell_type} : {particle_mapping.get(cell_type, 'Unknown')}", 
+                markersize=10,
+                markerfacecolor=rgba_to_hex(color) if isinstance(color, tuple) else color
+            )
+            for cell_type, color in self.config["base_colors"].items()
         ]
-        if self.config.get('tint'):
+
+        # Add Pollution and Temperature tints if enabled
+        if self.config.get("tint"):
             legend_elements.append(
-                plt.Line2D([0], [0], marker='o', color='w', label='9: Pollution (Tint)',
-                           markersize=10, markerfacecolor='red')
+                plt.Line2D([0], [0], marker='o', color='w', label='Pollution Tint', markersize=10, markerfacecolor='black')
+            )
+            legend_elements.append(
+                plt.Line2D([0], [0], marker='o', color='w', label='Temperature Tint', markersize=10, markerfacecolor='red')
             )
 
-        # Add a single legend to the color map axis
+        # Add the legend to the plot
         ax_color_map.legend(
             handles=legend_elements,
             loc="center",
@@ -247,7 +257,8 @@ class MatplotlibDisplay:
             ax_3d.set_zlabel("Z Axis")
             points, colors, sizes = self.precomputed_data[self.current_day]
             xs, ys, zs = zip(*points) if points else ([], [], [])
-            ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
+            ax_3d.scatter(xs, ys, zs, c=colors, marker='s', s=sizes)  # 's' for square
+
             canvas.draw_idle()
 
         # Bind the keyboard event handler
@@ -353,40 +364,26 @@ class MatplotlibDisplay:
                 ("9: Pollution Levels (Tinted Color)", "red"))
 
             # Function to convert RGBA to Hex
-        def rgba_to_hex(rgba):
-            r, g, b, a = rgba  # Extract RGBA components
-            return f"#{int(r * 255):02X}{int(g * 255):02X}{int(b * 255):02X}"
+    
+    
 
-            # Add each legend item with padding
-            for text, color in legend_items:
-                # Convert RGBA color to Hex if necessary
-                hex_color = rgba_to_hex(color) if isinstance(
-                    color, tuple) else color
 
-                item_frame = tk.Frame(legend_frame, bg="white")
-                item_frame.pack(fill=tk.X, padx=(20, 20), pady=(
-                    10, 10))  # Add padding around each item
 
-                # Create a circular color indicator using Canvas
-                canvas = tk.Canvas(item_frame, width=24, height=24,
-                                   bg="white", highlightthickness=0)
-                canvas.pack(side=tk.LEFT, padx=(10, 10))
-                canvas.create_oval(2, 2, 22, 22, fill=hex_color,
-                                   outline="black")  # Draw a circle
 
-                # Add the text description
-                text_label = tk.Label(
-                    item_frame,
-                    text=text,
-                    font=("Arial", 10),
-                    bg="white",
-                    anchor="w"
-                )
-                # Add space between text and circle
-                text_label.pack(side=tk.LEFT, padx=(10, 10))
+    def add_square(self, ax, x, y, z, size, color):
+        """Add a square to the 3D plot."""
+        half_size = size / 2.0
+        square = [
+            (x - half_size, y - half_size, z),
+            (x + half_size, y - half_size, z),
+            (x + half_size, y + half_size, z),
+            (x - half_size, y + half_size, z),
+        ]
+        poly = Poly3DCollection([square], color=color)
+        ax.add_collection3d(poly)
+
 
     def precompute_visualizations(self):
-        # # Render initial graphs
         """Precompute 3D scatter data for all precomputed states."""
         logging.info("Precomputing 3D visualizations...")
         for state in self.simulation.states:
@@ -396,28 +393,24 @@ class MatplotlibDisplay:
             for x in range(state.grid.shape[0]):
                 for y in range(state.grid.shape[1]):
                     for z in range(state.grid.shape[2]):
-
                         cell = state.grid[x][y][z]
-                        if cell.get_color() is not None:
-                            # Interpolate multiple points for "densification"
-                            # Fine-tune interpolation
-                            for dx in np.linspace(-0.1, 0.1, 2):
-                                for dy in np.linspace(-0.1, 0.1, 2):
-                                    for dz in np.linspace(-0.1, 0.1, 2):
-                                        points.append(
-                                            (x + dx, y + dy, z + dz))
-                                        colors.append(
-                                            to_rgba(cell.get_color()))
-                                        # Larger size for denser appearance
-                                        sizes.append(80)
+                        rgba_color = to_rgba(cell.get_color())
 
+                        # Skip vacuum cells (fully transparent)
+                        if rgba_color and rgba_color[3] != 0.0:
+                            # Ensure full opacity for all non-vacuum cells
+                            rgba_color = (rgba_color[0], rgba_color[1], rgba_color[2], 1.0)
+
+                            # Add the cell to the visualization data
                             points.append((x, y, z))
-                            colors.append(to_rgba(cell.get_color()))
-                            # Larger size for denser appearance
-                            sizes.append(100)
+                            colors.append(rgba_color)
+                            sizes.append(100.0)  # Set a consistent size for squares
 
+            # Store the computed data for this state
             self.precomputed_data.append((points, colors, sizes))
+
         logging.info("3D Precomputation complete.")
+
 
     def render_day(self, day):
         """Render the cached 3D visualization for a specific day."""
@@ -434,8 +427,11 @@ class MatplotlibDisplay:
         self.ax_3d.grid(True)
 
         points, colors, sizes = self.precomputed_data[day]
-        xs, ys, zs = zip(*points) if points else ([], [], [])
-        self.ax_3d.scatter(xs, ys, zs, c=colors, s=sizes)
+        for (x, y, z), color, size in zip(points, colors, sizes):
+            self.add_square(self.ax_3d, x, y, z, size=size, color=color)
+
+        self.fig.canvas.draw_idle()
+
 
         # Restore the saved viewing angles
         self.ax_3d.view_init(elev=self.current_elev,
@@ -488,7 +484,7 @@ class MatplotlibDisplay:
             ylabel="Number of Cities",
             days=self.days,
             data=self.simulation.city_population_over_time,
-            color=color,
+            color="purple",
             label="Cities"
         )
 
@@ -502,7 +498,7 @@ class MatplotlibDisplay:
             ylabel="Number of Forests",
             days=self.days,
             data=self.simulation.forest_count_over_time,
-            color=color,
+            color="green",
             label="Forests"
         )
 
@@ -517,7 +513,7 @@ class MatplotlibDisplay:
             days=self.days,
             data=self.simulation.temperature_over_time,
             std_dev=self.simulation.std_dev_temperature_over_time,
-            color=color,
+            color="red",
             label="Average Temperature",
             fill_label="Temperature Std Dev Range"
         )
@@ -594,8 +590,7 @@ class MatplotlibDisplay:
             fill_label="Water Mass Std Dev Range"
         )
 
-
-    def render_std_dev_cell_distribution_graph(self, ax, color):
+    def render_std_dev_cell_distribution_graph(self, ax, color="blue"):
         """Render the standard deviation of cell type distribution graph over time."""
         self.render_generic_graph(
             ax=ax,
@@ -604,9 +599,97 @@ class MatplotlibDisplay:
             ylabel="Std Dev of Cell Counts",
             days=self.days,
             data=self.simulation.std_dev_cell_distribution_over_time,
-            color=color,
+            color="blue",
             label="Cell Type Distribution Std Dev"
         )
+
+
+
+
+    def render_standardized_forests_graph(self, ax, color):
+        """Render the standardized forest count graph over time."""
+        standardized_data = self.standardize_data(self.simulation.forest_count_over_time)
+        self.render_generic_graph(
+            ax=ax,
+            title="Standardized Forest Count Over Time",
+            xlabel="Day",
+            ylabel="Standardized Number of Forests",
+            days=self.days,
+            data=standardized_data,
+            color="green",
+            label="Standardized Forests"
+        )
+
+
+    def render_standardized_population_graph(self, ax, color):
+        """Render the standardized city population graph over time."""
+        standardized_data = self.standardize_data(self.simulation.city_population_over_time)
+        self.render_generic_graph(
+            ax=ax,
+            title="Standardized City Population Over Time",
+            xlabel="Day",
+            ylabel="Standardized Number of Cities",
+            days=self.days,
+            data=standardized_data,
+            color="purple",
+            label="Standardized Cities"
+        )
+
+
+    def render_standardized_temperature_graph(self, ax, color):
+        """Render the standardized temperature graph over time."""
+        standardized_data = self.standardize_data(self.simulation.temperature_over_time)
+        self.render_generic_graph(
+            ax=ax,
+            title="Standardized Temperature Over Time",
+            xlabel="Day",
+            ylabel="Standardized Temperature",
+            days=self.days,
+            data=standardized_data,
+            color="red",
+            label="Standardized Temperature"
+        )
+
+
+    def render_standardized_pollution_graph(self, ax, color):
+        """Render the standardized pollution graph over time."""
+        standardized_data = self.standardize_data(self.simulation.pollution_over_time)
+        self.render_generic_graph(
+            ax=ax,
+            title="Standardized Pollution Over Time",
+            xlabel="Day",
+            ylabel="Standardized Pollution",
+            days=self.days,
+            data=standardized_data,
+            color=color,
+            label="Standardized Pollution"
+        )
+
+
+    def standardize_data(self, data):
+        """
+        Standardize data to have a mean of 0 and standard deviation of 1.
+
+        Args:
+            data (list): List of data points.
+
+        Returns:
+            list: Standardized data points.
+        """
+        mean = np.mean(data)
+        std_dev = np.std(data)
+        if std_dev == 0:
+            return [0] * len(data)  # Avoid division by zero; return zeros if std_dev is zero
+        return [(x - mean) / std_dev for x in data]
+
+
+
+
+
+
+
+
+
 
     def next_day(self):
         if self.current_day < len(self.simulation.states) - 1:
@@ -658,3 +741,48 @@ class MatplotlibDisplay:
             self.three_d_window.iconify()
         else:
             self.open_3d_in_new_window()
+
+
+    def apply_tint(self, base_color, tint_factor, tint_type):
+        """
+        Apply a tint to the base color based on a tint factor and type.
+
+        Args:
+            base_color (tuple): The RGBA base color.
+            tint_factor (float): Tint intensity in the range [0.0, 1.0].
+            tint_type (str): Type of tint ("red" for temperature, "black" for pollution).
+
+        Returns:
+            tuple: The tinted RGBA color.
+        """
+        r, g, b, a = base_color
+        if tint_type == "red":
+            r = min(1.0, r + tint_factor)  # Increase red
+            g = max(0.0, g * (1.0 - tint_factor))  # Reduce green
+            b = max(0.0, b * (1.0 - tint_factor))  # Reduce blue
+        elif tint_type == "black":
+            r = max(0.0, r * (1.0 - tint_factor))  # Reduce red
+            g = max(0.0, g * (1.0 - tint_factor))  # Reduce green
+            b = max(0.0, b * (1.0 - tint_factor))  # Reduce blue
+        return (r, g, b, a)
+
+
+    def get_color(self):
+        """
+        Get the color of the cell with optional tinting for pollution and temperature.
+
+        Returns:
+            tuple: RGBA color.
+        """
+        base_color = config["base_colors"].get(self.cell_type, (1.0, 1.0, 1.0, 0.0))
+        if config.get("tint"):
+            pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 1.0))
+            temperature_intensity = max(0.0, min(self.temperature / 50.0, 1.0))
+
+            if pollution_intensity > temperature_intensity:
+                return self.apply_tint(base_color, pollution_intensity, "black")
+            elif temperature_intensity > pollution_intensity:
+                return self.apply_tint(base_color, temperature_intensity, "red")
+
+        return base_color
+

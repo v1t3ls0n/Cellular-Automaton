@@ -282,11 +282,11 @@ class World:
 
     def update_cells_on_grid(self):
         """
-        Update all cells in the grid based on their next states and resolve collisions.
+        Update all cells in the grid based on their next states, resolving collisions.
         """
         x, y, z = self.grid_size
 
-        # Phase 1: Compute water transfers
+        # Phase 1: Compute transfers
         transfer_map = self.accumulate_water_transfers()
 
         # Phase 2: Apply transfers
@@ -294,7 +294,7 @@ class World:
 
         updates = {}
 
-        # Phase 3: Compute next states for all cells
+        # First pass: Compute next states
         for i in range(x):
             for j in range(y):
                 for k in range(z):
@@ -305,12 +305,13 @@ class World:
                                               1] if k - 1 >= 0 else None
                             # Ground types
                             if below and below.cell_type in {1, 4, 5}:
-                                below.water_mass += cell.water_mass  # Absorb rain
+                                below.water_mass += cell.water_mass  # Absorb rain into ground
                                 cell.cell_type = 6  # Turn into air
                             elif below and below.cell_type == 6:  # Air
                                 below.water_mass += cell.water_mass
                                 cell.water_mass = 0
-                            else:  # Rain continues falling
+                            else:
+                                # Otherwise, rain continues falling
                                 cell.position = (i, j, k - 1)
                         neighbors = [
                             self.grid[nx, ny, nz]
@@ -319,13 +320,12 @@ class World:
                         ]
                         updates[(i, j, k)] = cell.compute_next_state(neighbors)
 
-        # Phase 4: Resolve collisions
+        # Second pass: Resolve collisions
         position_map = {}
         for (i, j, k), updated_cell in updates.items():
             if updated_cell.cell_type in {0,1,3,4,5,8}:
                 position_map[i,j,k] = updated_cell
                 continue
-
             next_position = updated_cell.get_next_position()
             if next_position not in position_map:
                 position_map[next_position] = updated_cell
@@ -334,7 +334,7 @@ class World:
                     position_map[next_position], updated_cell
                 )
 
-        # Phase 5: Populate the new grid
+        # Populate the new grid
         new_grid = np.empty_like(self.grid)
         for (i, j, k), cell in position_map.items():
             new_grid[i, j, k] = cell

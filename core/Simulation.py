@@ -46,18 +46,42 @@ class Simulation:
         self.std_dev_temperature_over_time.append(state.std_dev_temperature)
         self.std_dev_water_mass_over_time.append(state.std_dev_water_mass)
 
+        # Update cell type counts and standard deviations
         for cell_type, stats in state.cell_type_stats.items():
             self.cell_type_std_dev_over_time[cell_type].append(stats["std_dev_temperature"])
             self.cell_type_counts_over_time[cell_type].append(stats["count"])
 
+        # Calculate standard deviation of cell counts
         cell_counts = [stats["count"] for stats in state.cell_type_stats.values()]
         if len(cell_counts) > 0:
             std_dev_distribution = np.std(cell_counts)
             self.std_dev_cell_distribution_over_time.append(std_dev_distribution)
+
+            # Calculate standardized values for cell counts
+            mean_count = np.mean(cell_counts)
+            std_dev_count = std_dev_distribution  # Already calculated
+            standardized_counts = [(count - mean_count) / std_dev_count if std_dev_count > 0 else 0 for count in cell_counts]
+
+            # Log standardized values for debugging or further processing
+            logging.info(f"Day {state.day_number}: Standardized Cell Counts = {standardized_counts}")
         else:
             self.std_dev_cell_distribution_over_time.append(0)
+
+        # Log aggregate metrics
         logging.info(f"Day {state.day_number}: Total forests = {state.total_forests}")
         logging.info(f"Aggregated forest count: {self.forest_count_over_time}")
+
+        # Calculate and log standardized values for pollution, temperature, and water mass
+        for param, values in {
+            "pollution": self.pollution_over_time,
+            "temperature": self.temperature_over_time,
+            "water_mass": self.water_mass_over_time,
+        }.items():
+            if len(values) > 1:  # Ensure enough data points for calculations
+                mean_value = np.mean(values)
+                std_dev_value = np.std(values)
+                standardized_values = [(value - mean_value) / std_dev_value if std_dev_value > 0 else 0 for value in values]
+                logging.info(f"Day {state.day_number}: Standardized {param.capitalize()} Values = {standardized_values}")
 
             
     def precompute(self):
@@ -115,28 +139,3 @@ class Simulation:
                 "water_mass": self.std_dev_water_mass_over_time,
             }
         }
-
-    def calculate_statistics(self):
-        """
-        Calculate mean and standard deviation for each parameter over the entire simulation.
-
-        Returns:
-            dict: Mean and standard deviation for each parameter.
-        """
-        data = self.get_averages_and_std_dev_over_time()["averages"]
-        stats = {}
-        for param, values in data.items():
-            if param == "cell_type_counts":
-                stats[param] = {
-                    cell_type: {
-                        "mean": np.mean(counts),
-                        "std_dev": np.std(counts)
-                    }
-                    for cell_type, counts in values.items()
-                }
-            else:
-                stats[param] = {
-                    "mean": np.mean(values),
-                    "std_dev": np.std(values)
-                }
-        return stats

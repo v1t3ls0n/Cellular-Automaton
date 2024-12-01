@@ -85,9 +85,54 @@ class Particle:
             tuple: RGBA color of the particle.
         """
         if self.config["tint"]:  # If tinting based on pollution is enabled
-            return self.get_color_red_tinted_by_pollution()
+            return self.get_color_tinted_by_attributes()
         else:  # Default to the base color of the particle type
             return self.get_base_color()
+    
+    
+    def get_color_tinted_by_attributes(self):
+        """
+        Applies a black tint based on the pollution level or a red tint based on the temperature
+        to the base color of the particle.
+
+        Returns:
+            tuple: RGBA color with the respective tint applied.
+        """
+        base_color = self.get_base_color()
+
+        if base_color is None or len(base_color) != 4:
+            logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
+            return (1.0, 1.0, 1.0, 1.0)  # Default to white color
+
+        # Scale pollution and temperature intensity to a range of [0.0, 1.0]
+        pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 1.0))
+        temperature_intensity = max(0.0, min(self.temperature / 50.0, 1.0))
+
+        # Apply black tint based on pollution
+        black_tinted_color = [
+            max(0.0, base_color[0] * (1.0 - pollution_intensity)),  # Reduce red
+            max(0.0, base_color[1] * (1.0 - pollution_intensity)),  # Reduce green
+            max(0.0, base_color[2] * (1.0 - pollution_intensity)),  # Reduce blue
+        ]
+
+        # Apply red tint based on temperature
+        red_tinted_color = [
+            min(1.0, base_color[0] + temperature_intensity),        # Increase red
+            max(0.0, base_color[1] * (1.0 - temperature_intensity)),  # Reduce green
+            max(0.0, base_color[2] * (1.0 - temperature_intensity)),  # Reduce blue
+        ]
+
+        # Decide which tint to apply based on attribute dominance
+        if pollution_intensity > temperature_intensity:
+            tinted_color = black_tinted_color
+        else:
+            tinted_color = red_tinted_color
+
+        # Preserve the alpha (transparency) channel
+        alpha = max(0.0, min(base_color[3], 1.0))
+
+        return (*tinted_color, alpha)
+
 
     def get_base_color(self):
         """
@@ -101,7 +146,7 @@ class Particle:
             logging.error(f"Base color for cell_type {
                           self.cell_type} is not defined.")
         # Default to white color if the cell type is undefined
-        return base_color or (1.0, 1.0, 1.0, 1.0)
+        return base_color if base_color[3] != 0.0 else (1.0, 1.0, 1.0, 1.0)
 
     def get_color_red_tinted_by_pollution(self):
         """
@@ -287,6 +332,8 @@ class Particle:
         """
         absorption_rate = self.config["forest_pollution_absorption_rate"]
         cooling_effect = self.config["forest_cooling_effect"]
+        forest_pollution_extinction_point = self.config["forest_pollution_extinction_point"]
+        forest_temperature_extinction_point = self.config["forest_temperature_extinction_point"]
         pollution_level_tipping_point = self.config["pollution_level_tipping_point"]
         pollution_damage_threshold = self.config["pollution_damage_threshold"]
         forest_baseline_temperature = self.config["baseline_temperature"][self.cell_type]
@@ -303,8 +350,10 @@ class Particle:
         if self.is_surrounded_by_sea_cells(neighbors_above + neighbors_aligned):
             self.convert_to_ocean()
         elif (
-            (self.temperature >= abs(self.config["temperature_extinction_point"]) or self.pollution_level >= 100)  and (self.is_surrounded_by_land_cells(neighbors_below))
             
+            # (self.temperature >= abs(self.config["city_temperature_extinction_point"]) or self.pollution_level >= 100)  and (self.is_surrounded_by_land_cells(neighbors_below+neighbors_aligned))
+            self.temperature >= forest_temperature_extinction_point  or self.pollution_level >= forest_pollution_extinction_point 
+    
         ):  # Forest destruction
             self.convert_to_desert()
         elif (
@@ -358,7 +407,7 @@ class Particle:
             self.convert_to_ocean()
         elif (
             self.pollution_level > 100
-            or abs(self.temperature) >= self.config["temperature_extinction_point"]
+            or abs(self.temperature) >= self.config["city_temperature_extinction_point"]
         ):  # Excessive pollution or temperature
             self.convert_to_desert()
 
