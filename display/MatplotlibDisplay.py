@@ -25,10 +25,13 @@ class MatplotlibDisplay:
         self.ax_population = None
         self.ax_forests = None
         self.ax_water_mass = None
+        self.ax_cell_type_distribution = None
+
         self.ax_std_dev_water_mass = None
         self.ax_std_dev_pollution_graph = None
         self.ax_std_dev_temperature_graph = None
-        self.ax_cell_type_distribution = None
+        self.ax_std_dev_cell_distribution_graph = None
+
         self.ax_ice_coverage = None
         self.precomputed_data = []  # Cache for precomputed 3D scatter data
         self.current_elev = 20  # Default elevation
@@ -98,6 +101,10 @@ class MatplotlibDisplay:
         self.ax_std_dev_water_mass = self.fig.add_subplot(spec[2, 1])
         self.ax_population = self.fig.add_subplot(spec[3, 0])
         self.ax_forests = self.fig.add_subplot(spec[3, 1])
+        self.ax_cell_type_distributionn = self.fig.add_subplot(spec[4, 0])
+        self.ax_std_dev_cell_distribution_graph =  self.fig.add_subplot(spec[4,1])
+
+
         # Render initial graphs
         self.render_pollution_graph()
         self.render_temperature_graph()
@@ -108,7 +115,7 @@ class MatplotlibDisplay:
         self.render_std_dev_temperature_graph()
         self.render_std_dev_water_mass_graph()
         self.render_cell_type_distribution_graph()
-        self.render_cell_type_distribution_graph()
+        self.render_std_dev_cell_distribution_graph()
 
         self.main_window = root
 
@@ -654,6 +661,26 @@ class MatplotlibDisplay:
         self.canvas.draw_idle()
 
 
+    def render_std_dev_cell_distribution_graph(self):
+        """
+        Render the standard deviation of cell type distribution over time.
+        """
+        self.ax_std_dev_cell_distribution.cla()
+        self.ax_std_dev_cell_distribution.set_title("Std Dev of Cell Type Distribution Over Time")
+        self.ax_std_dev_cell_distribution.set_xlabel("Day")
+        self.ax_std_dev_cell_distribution.set_ylabel("Std Dev of Cell Counts")
+
+        # Retrieve data
+        days = range(len(self.simulation.std_dev_cell_distribution_over_time))
+        std_dev_distribution = self.simulation.std_dev_cell_distribution_over_time
+
+        if len(days) == len(std_dev_distribution):
+            self.ax_std_dev_cell_distribution.plot(
+                days, std_dev_distribution, color="brown", label="Std Dev Cell Distribution"
+            )
+            self.ax_std_dev_cell_distribution.legend()
+        else:
+            logging.error("Data length mismatch in cell distribution std dev graph.")
 
 
 

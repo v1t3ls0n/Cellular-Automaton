@@ -54,10 +54,11 @@ class Simulation:
         self.std_dev_pollution_over_time.append(state.std_dev_pollution)
         self.std_dev_temperature_over_time.append(state.std_dev_temperature)
         self.std_dev_water_mass_over_time.append(state.std_dev_water_mass)
-
-        # Update counts for each cell type
-        for cell_type, stats in state.cell_type_stats.items():
-            self.cell_type_counts_over_time[cell_type].append(stats["count"])
+       
+        cell_counts = list(state.cell_type_stats.values())
+        counts_only = [stats['average'] for stats in cell_counts] 
+        std_dev = np.std(counts_only) 
+        self.std_dev_cell_distribution_over_time.append(std_dev)
 
     def precompute(self):
         """
