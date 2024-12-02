@@ -7,7 +7,7 @@
 
 config = {
     # Default simulation parameters
-    "default_days": 50,  # Duration of the simulation in days
+    "default_days": 365,  # Duration of the simulation in days
     "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)
     # Ratios for land cell types in the initial grid
     "initial_ratios": {
