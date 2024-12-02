@@ -322,7 +322,7 @@ class World:
         # Phase 4: Resolve collisions
         position_map = {}
         for (i, j, k), updated_cell in updates.items():
-            if updated_cell.cell_type in {0,1,3,4,5,8}:
+            if updated_cell.cell_type in {0,1,3,4,5}:
                 position_map[i,j,k] = updated_cell
                 continue
 
