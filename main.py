@@ -131,7 +131,7 @@ if __name__ == "__main__":
         validate_config(config)
         print("Configuration is valid.")
             # Extract essential parameters for simulation
-        grid_size = parse_grid_size(config["grid_size"])
+        grid_size = config["grid_size"]
         days = config["days"]
         initial_ratios = config["initial_ratios"]
 
@@ -144,8 +144,8 @@ if __name__ == "__main__":
         logging.info("Starting simulation...")
         simulation.precompute()
         logging.info("Simulation complete. Displaying results...")
-        display = MatplotlibDisplay(simulation)
-        display.plot_3d()
+        # display = MatplotlibDisplay(simulation)
+        # display.plot_3d()
 
     except (KeyError, TypeError) as e:
         print(f"Configuration error: {e}")

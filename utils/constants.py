@@ -15,7 +15,6 @@ PARTICLE_MAPPING = {
 # Labels for configuration keys to provide context in the UI or logs
 KEY_LABELS = {
     'days': 'Default Simulation Duration (Days)',
-    'tint': 'Visualization Tint',
     'grid_size': 'Default Grid Size (X, Y, Z)',
     'initial_ratios': 'Initial Ratios (Proportions)',
     'baseline_temperature': 'Baseline Temperature (°C)',
@@ -32,7 +31,7 @@ KEY_LABELS = {
     'freezing_point': 'Freezing Point (°C)',
     'melting_point': 'Melting Point (°C)',
     'evaporation_point': 'Evaporation Point (°C)',
-    'water_transfer_threshold': 'Water Transfer Threshold',
+    "water_transfer_threshold": 'Water Transfer Threshold',
     'water_transfer_rate': 'Water Transfer Rate',
     'ocean_conversion_threshold': 'Ocean Conversion Threshold',
     'pollution_damage_threshold': 'Pollution Damage Threshold',
