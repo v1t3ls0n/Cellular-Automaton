@@ -349,7 +349,7 @@ class Particle:
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
         city_pollution_upper_limit = self.config["city_pollution_upper_limit"]
         city_pollution_extinction_point = self.config["city_pollution_extinction_point"]
-        forests_neighbors_ratio =  sum(n for n in neighbors if n.cell_type == 4) / len(neighbors)
+        forests_neighbors_ratio =  len([n for n in neighbors if n.cell_type == 4]) / len(neighbors)
 
         forest_pollution_absorption_rate = self.config["forest_pollution_absorption_rate"]
         forest_cooling_effect = self.config["forest_cooling_effect"]
@@ -377,7 +377,7 @@ class Particle:
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
-        elif (self.pollution_level > city_pollution_extinction_point or self.temperature > abs(city_pollution_extinction_point)):  # Excessive pollution or temperature
+        elif (self.pollution_level > city_pollution_extinction_point or self.temperature > abs(city_pollution_extinction_point)) and self.is_surrounded_by_land_cells(neighbors_aligned):  # Excessive pollution or temperature
             self.convert_to_desert()
 
     def _update_air(self, neighbors):
