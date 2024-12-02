@@ -345,15 +345,19 @@ class Particle:
         """
         pollution_increase_rate = self.config["city_pollution_increase_rate"]
         warming_effect = self.config["city_warming_effect"]
-
         baseline_pollution_level = self.config["baseline_pollution_level"][self.cell_type]
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
-        city_temperature_upper_limit = self.config["city_temperature_upper_limit"]
         city_pollution_upper_limit = self.config["city_pollution_upper_limit"]
+        city_pollution_extinction_point = self.config["city_pollution_extinction_point"]
+        forests_neighbors_ratio =  sum(n for n in neighbors if n.cell_type == 4) / len(neighbors)
 
+        forest_pollution_absorption_rate = self.config["forest_pollution_absorption_rate"]
+        forest_cooling_effect = self.config["forest_cooling_effect"]
+        self.temperature = self.temperature - (self.temperature*forest_cooling_effect*forests_neighbors_ratio)
+        self.pollution_level = self.pollution_level - (self.pollution_level*forest_pollution_absorption_rate*forests_neighbors_ratio)
         # Update temperature and pollution level
         self.temperature = min(
-            city_temperature_upper_limit,
+            city_pollution_extinction_point,
             max(baseline_temperature, self.temperature +
                 warming_effect * self.temperature),
         )
@@ -364,6 +368,7 @@ class Particle:
                 self.pollution_level + pollution_increase_rate * self.pollution_level,
             ),
         )
+
         self.temperature += self.pollution_level * warming_effect
 
         # Check for conversions based on conditions
@@ -372,10 +377,7 @@ class Particle:
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
-        elif (
-            self.pollution_level > 100
-            or abs(self.temperature) >= self.config["city_temperature_extinction_point"]
-        ):  # Excessive pollution or temperature
+        elif (self.pollution_level > city_pollution_extinction_point or self.temperature > abs(city_pollution_extinction_point)):  # Excessive pollution or temperature
             self.convert_to_desert()
 
     def _update_air(self, neighbors):

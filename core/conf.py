@@ -70,10 +70,11 @@ config = {
     # City-specific settings
     "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
     "city_warming_effect": 0.1,  # Warming effect of cities on their environment
-    "city_temperature_upper_limit": 200,  # Maximum temperature cities can reach
+    "city_temperature_upper_limit": 100,  # Maximum temperature cities can reach
     "city_pollution_upper_limit": 500,  # Maximum pollution level cities can reach
     # Maximum temperature before extinction effects
-    "city_temperature_extinction_point": 70,
+    "city_temperature_extinction_point": 80,
+    "city_pollution_extinction_point": 100,
 
 
 
