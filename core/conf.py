@@ -26,7 +26,7 @@ config = {
         5,    # Cloud: Cool temperature
         -15,  # Ice: Freezing temperature
         20,   # Forest: Moderate temperature
-        35,   # City: Hot temperature due to urban heat
+        25,   # City: Hot temperature due to urban heat
         10,   # Air: Cool temperature
         12,   # Rain: Mild temperature
         -20   # Vacuum: Near absolute zero temperature
@@ -82,7 +82,7 @@ config = {
     "evaporation_point": 25,            # Temperature at which water evaporates
 
     # Thresholds and rates for water transfer and pollution effects
-    "water_transfer_threshold": 0.01,  # Minimum difference in water mass for transfer
+    "water_transfer_threshold": 0.1,  # Minimum difference in water mass for transfer
     "water_transfer_rate": 1.0,  # Maximum water transfer per interaction
     # Water mass required to convert a cell to ocean
     "ocean_conversion_threshold": 1.0,
@@ -101,7 +101,7 @@ config = {
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
-    "evaporation_rate": 0.1,  # Rate at which water evaporates
+    "evaporation_rate": 0.05,  # Rate at which water evaporates
 
     # Base colors for visual representation of cell types
     "base_colors": {
