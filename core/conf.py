@@ -60,15 +60,15 @@ config = {
 
     # Forest-specific settings
     # Rate at which forests absorb pollution
-    "forest_pollution_absorption_rate": 0.2,
-    "forest_cooling_effect": 0.2,  # Cooling effect of forests on their environment
+    "forest_pollution_absorption_rate": 0.3,
+    "forest_cooling_effect": 0.3,  # Cooling effect of forests on their environment
     # Cooling effect of forests on their environment
     "forest_pollution_extinction_point": 200,
     # Cooling effect of forests on their environment
     "forest_temperature_extinction_point": 200,
 
     # City-specific settings
-    "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
+    "city_pollution_generation_rate": 0.1,  # Rate of pollution increase in cities
     "city_warming_effect": 0.1,  # Warming effect of cities on their environment
     # Maximum temperature before extinction effects
     "city_temperature_extinction_point": 150,
@@ -85,10 +85,10 @@ config = {
     "water_transfer_threshold": 0.01,  # Minimum difference in water mass for transfer
     "water_transfer_rate": 1.0,  # Maximum water transfer per interaction
     # Water mass required to convert a cell to ocean
-    "ocean_conversion_threshold": 0.1,
+    "ocean_conversion_threshold": 1.0,
     "pollution_damage_threshold": 10.0,  # Pollution level causing damage to ecosystems
     # Point at which pollution accelerates damage
-    "pollution_level_tipping_point": 80,
+    "pollution_level_tipping_point": 100,
 
     # Rates for natural changes in temperature
     # Rate of temperature equalization to baseline
@@ -130,7 +130,7 @@ key_labels = {
     "forest_cooling_effect": "Forest Cooling Effect",
     "forest_pollution_extinction_point": "Forest Pollution Extinction Point",
     "forest_temperature_extinction_point": "Forest Temperature Extinction Point",
-    "city_pollution_increase_rate": "City Pollution Increase Rate",
+    "city_pollution_generation_rate": "City Pollution Increase Rate",
     "city_warming_effect": "City Warming Effect",
     "city_temperature_extinction_point": "City Temperature Extinction Point (°C)",
     "city_pollution_extinction_point":"City Pollution Extinction Point (°C)",

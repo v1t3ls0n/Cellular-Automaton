@@ -77,7 +77,7 @@ class Particle:
 
         return (new_x, new_y, new_z)
 
-    def get_color(self, tint = False):
+    def get_color(self, tint=False):
         """
         Determines the visual representation (RGBA color) of the particle based on its type and pollution level.
 
@@ -88,8 +88,7 @@ class Particle:
             return self.get_color_tinted_by_attributes()
         else:  # Default to the base color of the particle type
             return self.get_base_color()
-    
-    
+
     def get_color_tinted_by_attributes(self):
         """
         Applies a black tint based on the pollution level or a red tint based on the temperature
@@ -100,7 +99,8 @@ class Particle:
         """
         base_color = self.get_base_color()
         if base_color is None or len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
+            logging.error(f"Invalid color definition for cell_type {
+                          self.cell_type}: {base_color}")
             return (1.0, 1.0, 1.0, 1.0)  # Default to white color
 
         # Scale pollution and temperature intensity to a range of [0.0, 1.0]
@@ -109,16 +109,22 @@ class Particle:
 
         # Apply black tint based on pollution
         black_tinted_color = [
-            max(0.0, base_color[0] * (1.0 - pollution_intensity)),  # Reduce red
-            max(0.0, base_color[1] * (1.0 - pollution_intensity)),  # Reduce green
-            max(0.0, base_color[2] * (1.0 - pollution_intensity)),  # Reduce blue
+            # Reduce red
+            max(0.0, base_color[0] * (1.0 - pollution_intensity)),
+            # Reduce green
+            max(0.0, base_color[1] * (1.0 - pollution_intensity)),
+            # Reduce blue
+            max(0.0, base_color[2] * (1.0 - pollution_intensity)),
         ]
 
         # Apply red tint based on temperature
         red_tinted_color = [
-            min(1.0, base_color[0] + temperature_intensity),        # Increase red
-            max(0.0, base_color[1] * (1.0 - temperature_intensity)),  # Reduce green
-            max(0.0, base_color[2] * (1.0 - temperature_intensity)),  # Reduce blue
+            # Increase red
+            min(1.0, base_color[0] + temperature_intensity),
+            # Reduce green
+            max(0.0, base_color[1] * (1.0 - temperature_intensity)),
+            # Reduce blue
+            max(0.0, base_color[2] * (1.0 - temperature_intensity)),
         ]
 
         # Decide which tint to apply based on attribute dominance
@@ -131,7 +137,6 @@ class Particle:
         alpha = max(0.0, min(base_color[3], 1.0))
 
         return (*tinted_color, alpha)
-
 
     def get_base_color(self):
         """
@@ -146,8 +151,6 @@ class Particle:
                           self.cell_type} is not defined.")
         # Default to white color if the cell type is undefined
         return base_color if base_color[3] != 0.0 else (1.0, 1.0, 1.0, 0.0)
-
-
 
     ####################################################################################################################
     ###################################### CELL UPDATES: ###############################################################
@@ -171,16 +174,12 @@ class Particle:
         """
         new_cell = self.clone()
         new_cell._apply_natural_decay()  # Apply natural decay processes
-        
 
         new_cell._apply_natural_decay()
-
         new_cell.equilibrate_temperature(neighbors)
-        if self.cell_type in {6,2}:
-            # transfer pollution to air or cloud cells
+        if new_cell.cell_type == 6:
             new_cell.equilibrate_pollution_level(neighbors)
-        
-        
+
         # Execute specific behavior based on the particle's type
         if self.cell_type == 0:  # Ocean
             new_cell._update_ocean(neighbors)
@@ -221,7 +220,8 @@ class Particle:
                 self.exchange_water_mass(
                     neighbors)  # Share water with neighboring cells
                 self.convert_to_air()
-                self.direction = self.calculate_dynamic_wind_direction(neighbors)
+                self.direction = self.calculate_dynamic_wind_direction(
+                    neighbors)
 
         # Freeze into ice
         elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and not self.is_surrounded_by_land_cells(neighbors_aligned) and (self.is_surrounded_by_sea_cells(neighbors_below+neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_above)):
@@ -242,7 +242,8 @@ class Particle:
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         pollution_damage_threshold = self.config["pollution_damage_threshold"]
         forest_baseline_temperature = self.config["baseline_temperature"][4]
-        ocean_conversion_threshold =  self.config["ocean_conversion_threshold"]  # Water mass required to convert a cell to ocean
+        # Water mass required to convert a cell to ocean
+        ocean_conversion_threshold = self.config["ocean_conversion_threshold"]
 
         if self.water_mass > ocean_conversion_threshold and (self.is_surrounded_by_sea_cells(neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_below)):
             self.convert_to_ocean()
@@ -288,7 +289,8 @@ class Particle:
         # Melting conditions
         if self.temperature > self.config["melting_point"] - 5:
             self.water_mass -= melting_rate
-            if self.water_mass <= 0 and (self.is_surrounded_by_sea_cells(neighbors_aligned) or self.is_below_sea_level(neighbors_above) or self.is_surrounded_by_sea_cells(neighbors_below)):  # Convert to ocean when melted
+            # Convert to ocean when melted
+            if self.water_mass <= 0 and (self.is_surrounded_by_sea_cells(neighbors_aligned) or self.is_below_sea_level(neighbors_above) or self.is_surrounded_by_sea_cells(neighbors_below)):
                 self.convert_to_ocean()
         elif self.is_surrounded_by_land_cells(neighbors_aligned) or self.is_surrounded_by_land_cells(neighbors_above):
             self.convert_to_desert()
@@ -315,24 +317,22 @@ class Particle:
 
         if self.pollution_level > pollution_level_tipping_point:
             absorption_rate *= 0.5  # Reduced absorption under high pollution
-            cooling_effect *= 0.5 # Reduced cooling effect under high pollution
-        
-        self.temperature = self.temperature + city_warming_effect * city_neighbors_count
-        self.pollution_level = max(0, self.pollution_level - absorption_rate * self.pollution_level)
-        self.temperature -= self.temperature * cooling_effect
+            cooling_effect *= 0.5  # Reduced cooling effect under high pollution
 
+        self.temperature = self.temperature + city_warming_effect * (city_neighbors_count//len(neighbors))
+        self.pollution_level = max( 0, self.pollution_level - absorption_rate * self.pollution_level)
+        self.temperature -= self.temperature * cooling_effect
 
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above + neighbors_aligned):
             self.convert_to_ocean()
-        elif (self.temperature >= forest_temperature_extinction_point  or self.pollution_level >= forest_pollution_extinction_point)  and self.is_surrounded_by_land_cells(neighbors_aligned):  # Forest destruction
+        elif (self.temperature >= forest_temperature_extinction_point or self.pollution_level >= forest_pollution_extinction_point) and self.is_surrounded_by_land_cells(neighbors_aligned):  # Forest destruction
             self.convert_to_desert()
         elif (
-            self.pollution_level <= pollution_damage_threshold
-            and forest_baseline_temperature - 10 <= self.temperature <= forest_baseline_temperature + 10
+            self.pollution_level < pollution_damage_threshold
+            and forest_baseline_temperature - 5 < self.temperature < forest_baseline_temperature + 5
         ):  # Convert to a city
             self.convert_to_city()
-
 
 
     def _update_city(self, neighbors):
@@ -343,17 +343,13 @@ class Particle:
         Args:
             neighbors (list): List of neighboring particles.
         """
-        pollution_increase_rate = self.config["city_pollution_increase_rate"]
+        pollution_increase_rate = self.config["city_pollution_generation_rate"]
         warming_effect = self.config["city_warming_effect"]
         baseline_pollution_level = self.config["baseline_pollution_level"][self.cell_type]
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
         city_pollution_extinction_point = self.config["city_pollution_extinction_point"]
-        forest_pollution_absorption_rate = self.config["forest_pollution_absorption_rate"]
-        forest_cooling_effect = self.config["forest_cooling_effect"]
 
-        forests_neighbors_count =  len([n for n in neighbors if n.cell_type == 4])
-        self.temperature = self.temperature - forest_cooling_effect * forests_neighbors_count
-        self.pollution_level = self.pollution_level - forest_pollution_absorption_rate * forests_neighbors_count
+
         # Update temperature and pollution level
         self.temperature = min(
             city_pollution_extinction_point,
@@ -368,16 +364,20 @@ class Particle:
             ),
         )
 
-        self.temperature += self.pollution_level * warming_effect
-
         # Check for conversions based on conditions
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
-        elif (self.pollution_level > city_pollution_extinction_point or self.temperature > abs(city_pollution_extinction_point)) and self.is_surrounded_by_land_cells(neighbors_aligned):  # Excessive pollution or temperature
+        elif (self.pollution_level >= city_pollution_extinction_point or self.temperature >= abs(city_pollution_extinction_point)):  # Excessive pollution or temperature
             self.convert_to_desert()
+        else:
+            forest_pollution_absorption_rate = self.config["forest_pollution_absorption_rate"]
+            forest_cooling_effect = self.config["forest_cooling_effect"]
+            forests_neighbors_ratio = len([n for n in neighbors if n.cell_type == 4])  // len(neighbors)
+            self.temperature -= forest_cooling_effect * forests_neighbors_ratio
+            self.pollution_level -= forest_pollution_absorption_rate * forests_neighbors_ratio
 
     def _update_air(self, neighbors):
         """
@@ -448,8 +448,8 @@ class Particle:
             # Convert to air (dry up) if surrounded by land cells
             elif self.is_surrounded_by_land_cells(neighbors):
                 self.convert_to_air()
-                self.direction = self.calculate_dynamic_wind_direction(neighbors)
-
+                self.direction = self.calculate_dynamic_wind_direction(
+                    neighbors)
 
     ####################################################################################################################
     ###################################### CELL CONVERSIONS ###########################################################
@@ -468,7 +468,7 @@ class Particle:
         self.water_mass = 1.0  # Oceans are full of water by default
         self.temperature = self.config["baseline_temperature"][self.cell_type]
         self.stabilize_elevation()  # Stabilize motion
-    
+
     def convert_to_desert(self):
         """
         Converts the current cell to a desert cell.
@@ -512,7 +512,6 @@ class Particle:
         # Set to freezing temperature
         self.temperature = self.config["freezing_point"]
         self.stabilize()  # Stabilize motion
-
 
     def convert_to_forest(self):
         """
@@ -573,7 +572,7 @@ class Particle:
         self.water_mass = 0  # No water in vacuum
         self.pollution_level = 0  # No pollution in vacuum
         self.direction = (0, 0, 0)  # No movement
-  
+
     def convert_to_rain(self):
         """
         Converts the current cell to a rain cell.
@@ -662,7 +661,7 @@ class Particle:
         if total_weight > 0:
             self.pollution_level = (
                 weighted_pollution_sum / total_weight + self.pollution_level) / 2
-   
+
     def exchange_water_mass(self, neighbors):
         """
         Exchange water mass with neighboring cells of type Cloud or Air.
@@ -674,7 +673,8 @@ class Particle:
         for neighbor in neighbors:
             if neighbor.cell_type in {2, 6}:  # Cloud or Air
                 diff = abs(neighbor.water_mass - self.water_mass)
-                weight = self.config["cell_type_weights"].get(neighbor.cell_type, 1.0)
+                weight = self.config["cell_type_weights"].get(
+                    neighbor.cell_type, 1.0)
                 water_transfer = (
                     diff * 0.05 * weight
                     if diff < self.config["water_transfer_threshold"]
