@@ -7,14 +7,14 @@
 
 config = {
     # Default simulation parameters
-    "default_days": 365,  # Duration of the simulation in days
+    "default_days":365,  # Duration of the simulation in days
     "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)
     # Ratios for land cell types in the initial grid
     "initial_ratios": {
-        "forest": 0.08,  # Proportion of forest cells
-        "city": 0.9,    # Proportion of city cells
-        "desert": 0.01,  # Proportion of desert cells
-        "vacuum": 0.01,  # Proportion of vacuum cells
+        "forest": 0.2,  # Proportion of forest cells
+        "city": 0.6,    # Proportion of city cells
+        "desert": 0.1,  # Proportion of desert cells
+        "vacuum": 0.1,  # Proportion of vacuum cells
     },
     # Cell type configurations:
     # 0: Ocean | 1: Desert | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
@@ -83,8 +83,8 @@ config = {
     },
 
    # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.1,  # Rate at which forests absorb pollution
-    "forest_cooling_effect": 0.1,  # Cooling effect of forests on their environment
+    "forest_pollution_absorption_rate": 0.5,  # Rate at which forests absorb pollution
+    "forest_cooling_effect": 0.5,  # Cooling effect of forests on their environment
     # Cooling effect of forests on their environment
     "forest_pollution_extinction_point": 100,
     # Cooling effect of forests on their environment
@@ -168,8 +168,7 @@ key_labels = {
     "natural_temperature_decay_rate": "Natural Temperature Decay Rate",
     "cloud_saturation_threshold": "Cloud Saturation Threshold",
     "melting_rate": "Melting Rate",
-    "evaporation_rate": "Evaporation Rate",
-    "base_colors": "Base Colors for Cell Types",
+    "evaporation_rate": "Evaporation Rate"
 }
 
 # Function to format config values for display or logging
