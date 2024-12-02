@@ -279,14 +279,14 @@ class World:
                                                    persistence=persistence, lacunarity=lacunarity) + 1) * (self.grid_size[2] // 5))
 
         return elevation_map
-
+    
     def update_cells_on_grid(self):
         """
-        Update all cells in the grid based on their next states, resolving collisions.
+        Update all cells in the grid based on their next states and resolve collisions.
         """
         x, y, z = self.grid_size
 
-        # Phase 1: Compute transfers
+        # Phase 1: Compute water transfers
         transfer_map = self.accumulate_water_transfers()
 
         # Phase 2: Apply transfers
@@ -294,23 +294,23 @@ class World:
 
         updates = {}
 
-        # First pass: Compute next states
+        # Phase 3: Compute next states for all cells
         for i in range(x):
             for j in range(y):
                 for k in range(z):
                     cell = self.grid[i, j, k]
                     if cell is not None and cell.cell_type != 8:  # Skip vacuum
-                        below = self.grid[i, j, k -
+                        if cell.cell_type == 7:  # Rain
+                            below = self.grid[i, j, k -
                                               1] if k - 1 >= 0 else None
                             # Ground types
-                        if below and below.cell_type in {1, 4, 5}:
-                                below.water_mass += cell.water_mass  # Absorb rain into ground
+                            if below and below.cell_type in {1, 4, 5}:
+                                below.water_mass += cell.water_mass  # Absorb rain
                                 cell.cell_type = 6  # Turn into air
-                        elif below and below.cell_type == 6:  # Air
+                            elif below and below.cell_type == 6:  # Air
                                 below.water_mass += cell.water_mass
                                 cell.water_mass = 0
-                        else:
-                                # Otherwise, rain continues falling
+                            else:  # Rain continues falling
                                 cell.position = (i, j, k - 1)
                         neighbors = [
                             self.grid[nx, ny, nz]
@@ -319,12 +319,13 @@ class World:
                         ]
                         updates[(i, j, k)] = cell.compute_next_state(neighbors)
 
-        # Second pass: Resolve collisions
+        # Phase 4: Resolve collisions
         position_map = {}
         for (i, j, k), updated_cell in updates.items():
             if updated_cell.cell_type in {0,1,3,4,5,8}:
                 position_map[i,j,k] = updated_cell
                 continue
+
             next_position = updated_cell.get_next_position()
             if next_position not in position_map:
                 position_map[next_position] = updated_cell
@@ -333,7 +334,7 @@ class World:
                     position_map[next_position], updated_cell
                 )
 
-        # Populate the new grid
+        # Phase 5: Populate the new grid
         new_grid = np.empty_like(self.grid)
         for (i, j, k), cell in position_map.items():
             new_grid[i, j, k] = cell
@@ -355,6 +356,7 @@ class World:
 
         self.grid = new_grid
         self._recalculate_global_attributes()
+
 
     def resolve_collision(self, cell1, cell2):
         """
@@ -392,9 +394,11 @@ class World:
         if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
                 return cell1 
 
-        # Default behavior based on cell type weights 
+        # Default behavior based on cell type weights
         return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
+    
 
+    
     def get_neighbor_positions(self, i, j, k):
         """
         Get the positions of neighboring cells for the given cell position (i, j, k).

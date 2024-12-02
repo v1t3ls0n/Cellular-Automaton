@@ -34,13 +34,13 @@ config = {
 
     # Pollution levels for different cell types
     "baseline_pollution_level": [
-        3,   # Ocean: Some pollution from industrial waste and microplastics
+        0,   # Ocean: Some pollution from industrial waste and microplastics
         0,  # Desert: Dust and localized human activity
-        1,   # Cloud: Minimal pollution
+        0,   # Cloud: Minimal pollution
         0,   # Ice: Pristine areas with negligible pollution
-        2,   # Forest: Absorbs pollution, very low levels
-        5,  # City: High pollution due to vehicles and factories
-        5,   # Air: Variable pollution based on proximity to cities
+        0,   # Forest: Absorbs pollution, very low levels
+        0,  # City: High pollution due to vehicles and factories
+        0,   # Air: Variable pollution based on proximity to cities
         0,   # Rain: Cleanses the atmosphere
         0,   # Vacuum: No pollution in empty space
     ],
@@ -60,19 +60,19 @@ config = {
 
     # Forest-specific settings
     # Rate at which forests absorb pollution
-    "forest_pollution_absorption_rate": 0.3,
-    "forest_cooling_effect": 0.3,  # Cooling effect of forests on their environment
+    "forest_pollution_absorption_rate": 0.4,
+    "forest_cooling_effect": 0.4,  # Cooling effect of forests on their environment
     # Cooling effect of forests on their environment
-    "forest_pollution_extinction_point": 200,
+    "forest_pollution_extinction_point": 100,
     # Cooling effect of forests on their environment
-    "forest_temperature_extinction_point": 200,
+    "forest_temperature_extinction_point": 80,
 
     # City-specific settings
     "city_pollution_generation_rate": 0.1,  # Rate of pollution increase in cities
     "city_warming_effect": 0.1,  # Warming effect of cities on their environment
     # Maximum temperature before extinction effects
-    "city_temperature_extinction_point": 150,
-    "city_pollution_extinction_point": 100,
+    "city_temperature_extinction_point": 100,
+    "city_pollution_extinction_point": 60,
 
 
 

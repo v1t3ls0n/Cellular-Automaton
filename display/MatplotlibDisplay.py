@@ -95,10 +95,9 @@ class MatplotlibDisplay:
         scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
         # Create a Matplotlib figure
-        fig = plt.Figure(figsize=(20, 25))  # Adjust figure size
+        fig = plt.Figure(figsize=(16, 16))  # Adjust figure size
         # 7 rows for standardized and non-standardized graphs
-        gs = fig.add_gridspec(7, 2, width_ratios=[
-                              1, 1], hspace=0.4, wspace=0.4)
+        gs = fig.add_gridspec(7, 2, width_ratios=[1, 1], hspace=0.5, wspace=0.5)
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
