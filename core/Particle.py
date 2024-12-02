@@ -250,10 +250,9 @@ class Particle:
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean()
         elif (
-            self.is_surrounded_by_land_cells(neighbors_aligned) and not self.is_below_ground_level(
-                neighbors_above) and not self.is_surrounded_by_land_cells(neighbors_below)
+            self.is_surrounded_by_land_cells(neighbors_aligned) 
             and self.pollution_level <= pollution_damage_threshold
-            and forest_baseline_temperature - 1 <= self.temperature <= forest_baseline_temperature + 1
+            and forest_baseline_temperature - 10 <= self.temperature <= forest_baseline_temperature + 10
         ):  # Suitable for forest conversion
             self.convert_to_forest()
 
