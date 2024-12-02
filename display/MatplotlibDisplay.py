@@ -187,13 +187,18 @@ class MatplotlibDisplay:
         # Add buttons to toggle tinted and untinted modes
         tk.Button(
             control_frame,
-            text="Show Tinted",
+            text="Toggle Tinted/Untinted Grid Visualization",
             command=lambda: self.toggle_tint(True),
         ).pack(side=tk.LEFT, padx=5, pady=5)
         tk.Button(
             control_frame,
-            text="Show Untinted",
-            command=lambda: self.toggle_tint(False),
+            text="Show Graphs",
+            command=lambda: self.bring_main_window_to_front(),
+        ).pack(side=tk.LEFT, padx=5, pady=5)
+        tk.Button(
+            control_frame,
+            text="Show Config Table",
+            command=lambda: self.bring_config_to_front(),
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
         # Navigation buttons
