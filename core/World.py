@@ -1,16 +1,15 @@
 import numpy as np
 import logging
-from core.conf import config
 from .Particle import Particle
 import math
-
+from core.conf import get_config
 
 class World:
     """
     Represents the simulation world, including the grid of particles and associated behaviors.
     """
 
-    config = config
+    config = get_config()
 
     def __init__(self, grid_size=None, initial_ratios=None, day_number=0):
         """
@@ -21,10 +20,11 @@ class World:
             initial_ratios (dict): Initial ratios for cell types. Defaults to config's initial ratios.
             day_number (int): The current day in the simulation.
         """
-        self.grid_size = grid_size or config["default_grid_size"]
+        self.config = get_config()
+        self.grid_size = grid_size or self.config["default_grid_size"]
         self.grid = np.empty(self.grid_size, dtype=object)
 
-        initial_ratios = initial_ratios or config["initial_ratios"]
+        initial_ratios = initial_ratios or self.config["initial_ratios"]
         self.initial_cities_ratio = initial_ratios["city"]
         self.initial_forests_ratio = initial_ratios["forest"]
         self.initial_deserts_ratio = initial_ratios["desert"]
@@ -106,8 +106,8 @@ class World:
         plane_surfaces_map = {}  # Tracks the type of surface for each plane
 
         # Use baseline values for temperature and pollution from config
-        baseline_temperature = config["baseline_temperature"]
-        baseline_pollution_level = config["baseline_pollution_level"]
+        baseline_temperature = self.config["baseline_temperature"]
+        baseline_pollution_level = self.config["baseline_pollution_level"]
 
         for i in range(x):
             for j in range(y):
@@ -567,7 +567,7 @@ class World:
         )
         for cell_type, stats in self.cell_type_stats.items():
             logging.info(
-                f"Cell Type {cell_type} - Count: {stats['count']}, "
-                f"Avg Temp: {stats['avg_temperature']:.2f}, Std Dev Temp: {stats['std_dev_temperature']:.2f}, "
-                f"Avg Water Mass: {stats['avg_water_mass']:.2f}, Std Dev Water Mass: {stats['std_dev_water_mass']:.2f}"
+                f"Cell Type {cell_type} - Count: {stats["count"]}, "
+                f"Avg Temp: {stats["avg_temperature"]:.2f}, Std Dev Temp: {stats["std_dev_temperature"]:.2f}, "
+                f"Avg Water Mass: {stats["avg_water_mass"]:.2f}, Std Dev Water Mass: {stats["std_dev_water_mass"]:.2f}"
             )

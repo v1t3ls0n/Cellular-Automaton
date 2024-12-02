@@ -4,7 +4,9 @@ from matplotlib.colors import to_rgba
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 import logging
-from core.conf import config, key_labels, format_config_value, particle_mapping, rgba_to_hex
+from core.conf import get_config
+from utils.constants import KEY_LABELS, PARTICLE_MAPPING
+from utils.helpers import format_config_value,  rgba_to_hex
 import matplotlib.gridspec as gridspec
 import tkinter as tk
 from tkinter import ttk
@@ -13,7 +15,7 @@ import matplotlib.pyplot as plt
 
 
 class MatplotlibDisplay:
-    config = config
+    config = get_config()
 
     def __init__(self, simulation):
         self.simulation = simulation
@@ -227,7 +229,7 @@ class MatplotlibDisplay:
 
         # Add legend
         legend_elements = [
-            plt.Line2D([0], [0], marker="o", color="w", label=f"{cell_type}: {particle_mapping[cell_type]}",
+            plt.Line2D([0], [0], marker="o", color="w", label=f"{cell_type}: {PARTICLE_MAPPING[cell_type]}",
                     markersize=10, markerfacecolor=rgba_to_hex(color))
             for cell_type, color in self.config["base_colors"].items()
         ]
@@ -328,13 +330,13 @@ class MatplotlibDisplay:
 
         # Populate the treeview with formatted data
         for key, value in self.config.items():
-            if key in key_labels:
+            if key in KEY_LABELS:
                 formatted_value = format_config_value(key, value)
                 tree.insert("", "end", values=(
-                    key_labels[key], formatted_value))
+                    KEY_LABELS[key], formatted_value))
                 # Calculate maximum width for the Parameter column
                 parameter_width = max(
-                    parameter_width, len(key_labels[key]) * 10)
+                    parameter_width, len(KEY_LABELS[key]) * 10)
 
                 # Calculate maximum width for the Value column
                 value_width = max(value_width, len(formatted_value) * 7)

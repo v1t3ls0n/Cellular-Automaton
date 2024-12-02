@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from core.conf import config
+from core.conf import get_config
 
 
 class Particle:
@@ -10,7 +10,7 @@ class Particle:
 
     This class provides methods for updating particle state, calculating movement, and visualizing the particle.
     """
-    config = config  # Configuration dictionary shared across all particles
+    config =  get_config() # Configuration dictionary shared across all particles
 
     def __init__(self, cell_type, temperature, water_mass, pollution_level, direction, position, grid_size):
         """

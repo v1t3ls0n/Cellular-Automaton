@@ -1,214 +1,122 @@
-# config.py
+# conf.py
+import logging
+from collections import defaultdict
+from utils.constants import PRESET_CONFIGS
+# Global configuration dictionary
+CONFIG = defaultdict()
+
+
 
 # Configuration settings for the simulation
 # This file contains all the parameters and settings used to define the behavior and appearance
 # of the cellular automata simulation.
+def get_config():
+    global CONFIG
+    return CONFIG.copy()
 
+def update_config(preset_name=None, custom_config=None):
+    '''
+    Update the global CONFIG with a preset or custom configuration.
 
-config = {
-    # Default simulation parameters
-    "default_days":365,  # Duration of the simulation in days
-    "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)
-    # Ratios for land cell types in the initial grid
-    "initial_ratios": {
-        "forest": 0.2,  # Proportion of forest cells
-        "city": 0.6,    # Proportion of city cells
-        "desert": 0.1,  # Proportion of desert cells
-        "vacuum": 0.1,  # Proportion of vacuum cells
-    },
-    # Cell type configurations:
-    # 0: Ocean | 1: Desert | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
-    "baseline_temperature": [
-        15,   # Ocean: Warm temperature
-        30,   # Desert: Hot temperature
-        5,    # Cloud: Cool temperature
-        -15,  # Ice: Freezing temperature
-        20,   # Forest: Moderate temperature
-        35,   # City: Hot temperature due to urban heat
-        10,   # Air: Cool temperature
-        12,   # Rain: Mild temperature
-        -20   # Vacuum: Near absolute zero temperature
-    ],
+    Args:
+        preset_name (str, optional): The name of the preset configuration to load.
+        custom_config (dict, optional): A custom configuration dictionary.
 
-    # Pollution levels for different cell types
-    "baseline_pollution_level": [
-        3,   # Ocean: Some pollution from industrial waste and microplastics
-        10,  # Desert: Dust and localized human activity
-        1,   # Cloud: Minimal pollution
-        0,   # Ice: Pristine areas with negligible pollution
-        2,   # Forest: Absorbs pollution, very low levels
-        20,  # City: High pollution due to vehicles and factories
-        50,   # Air: Variable pollution based on proximity to cities
-        0,   # Rain: Cleanses the atmosphere
-        0,   # Vacuum: No pollution in empty space
-    ],
-
-    # Weight of interaction between different cell types
-    "cell_type_weights": {
-        0: 1.0,  # Ocean
-        1: 1.2,  # Desert
-        2: 0.7,  # Cloud
-        3: 0.8,  # Ice
-        4: 1.5,  # Forest
-        5: 2.0,  # City
-        6: 0.5,  # Air
-        7: 1.0,  # Rain
-        8: 0.0,  # Vacuum (no interaction)
-    },
-
-    # Pollution levels for different cell types
-    "baseline_pollution_level": [
-        3,   # Ocean: Some pollution from industrial waste and microplastics
-        10,  # Desert: Dust and localized human activity
-        1,   # Cloud: Minimal pollution
-        0,   # Ice: Pristine areas with negligible pollution
-        2,   # Forest: Absorbs pollution, very low levels
-        20,  # City: High pollution due to vehicles and factories
-        50,   # Air: Variable pollution based on proximity to cities
-        0,   # Rain: Cleanses the atmosphere
-        0,   # Vacuum: No pollution in empty space
-    ],
-
-    # Weight of interaction between different cell types
-    "cell_type_weights": {
-        0: 1.0,  # Ocean
-        1: 1.2,  # Desert
-        2: 0.7,  # Cloud
-        3: 0.8,  # Ice
-        4: 1.5,  # Forest
-        5: 2.0,  # City
-        6: 0.5,  # Air
-        7: 1.0,  # Rain
-        8: 0.0,  # Vacuum (no interaction)
-    },
-
-   # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.5,  # Rate at which forests absorb pollution
-    "forest_cooling_effect": 0.5,  # Cooling effect of forests on their environment
-    # Cooling effect of forests on their environment
-    "forest_pollution_extinction_point": 100,
-    # Cooling effect of forests on their environment
-    "forest_temperature_extinction_point": 80,
-
-    # City-specific settings
-    "city_pollution_generation_rate": 0.5,  # Rate of pollution increase in cities
-    "city_warming_effect": 0.5,  # Warming effect of cities on their environment
-    "city_temperature_extinction_point": 100, # Maximum temperature before extinction effects
-    "city_pollution_extinction_point": 100, # Maximum pollution before extinction effects
-
-
-
-    # Temperature thresholds for specific behaviors
-    "freezing_point": -15,              # Temperature at which water freezes
-    "melting_point": 20,                # Temperature at which ice melts
-    "evaporation_point": 35,            # Temperature at which water evaporates
-  
-
- 
-     # Thresholds and rates for water transfer and pollution effects
-    "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
-    "water_transfer_rate": 0.1,  # Maximum water transfer per interaction
-    "ocean_conversion_threshold": 1.0,  # Water mass required to convert a cell to ocean
-    "pollution_damage_threshold": 30.0,  # Pollution level causing damage to ecosystems
-    "pollution_level_tipping_point": 50,  # Point at which pollution accelerates damage
-    "natural_pollution_decay_rate": 0.3,  # Rate of pollution decay over time
-    "natural_temperature_decay_rate": 0.3,  # Rate of temperature equalization to baseline
-
-
-
-    
-    # Cloud-specific settings
-    "cloud_saturation_threshold": 3.0,  # Minimum water mass for clouds to precipitate as rain
-
-
-    # Rates for environmental changes
-    "melting_rate": 0.15,  # Rate at which ice melts
-    "evaporation_rate": 0.05,  # Rate at which water evaporates
-
-    # Base colors for visual representation of cell types
-    "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.3),  # Air (transparent white)
-        2: (0.7, 0.7, 0.7, 1.0),  # Cloud (light gray)
-        0: (0.0, 0.3, 1.0, 1.0),  # Ocean (deep blue)
-        3: (0.6, 0.8, 1.0, 1.0),  # Ice (light cyan)
-        7: (0.5, 0.5, 1.0, 1.0),  # Rain (grayish blue)
-        1: (1.0, 0.8, 0.5, 1.0),  # Desert (sandy gold)
-        4: (0.0, 0.6, 0.0, 1.0),  # Forest (lush green)
-        5: (0.4, 0.0, 0.4, 1.0),  # City (dark purple)
-        8: (1.0, 1.0, 1.0, 0.0),  # Vacuum (fully transparent/black)
-    },
-}
-
-# Labels for configuration keys to provide context in the UI or logs
-key_labels = {
-    "default_days": "Default Simulation Duration (Days)",
-    "tint": "Visualization Tint",
-    "default_grid_size": "Default Grid Size (X, Y, Z)",
-    "initial_ratios": "Initial Ratios (Proportions)",
-    "baseline_temperature": "Baseline Temperature (°C)",
-    "baseline_pollution_level": "Baseline Pollution Levels",
-    "cell_type_weights": "Cell Type Weights",
-    "forest_pollution_absorption_rate": "Forest Pollution Absorption Rate",
-    "forest_cooling_effect": "Forest Cooling Effect",
-    "forest_pollution_extinction_point": "Forest Pollution Extinction Point",
-    "forest_temperature_extinction_point": "Forest Temperature Extinction Point",
-    "city_pollution_generation_rate": "City Pollution Increase Rate",
-    "city_warming_effect": "City Warming Effect",
-    "city_temperature_extinction_point": "City Temperature Extinction Point (°C)",
-    "city_pollution_extinction_point":"City Pollution Extinction Point (°C)",
-    "freezing_point": "Freezing Point (°C)",
-    "melting_point": "Melting Point (°C)",
-    "evaporation_point": "Evaporation Point (°C)",
-    "water_transfer_threshold": "Water Transfer Threshold",
-    "water_transfer_rate": "Water Transfer Rate",
-    "ocean_conversion_threshold": "Ocean Conversion Threshold",
-    "pollution_damage_threshold": "Pollution Damage Threshold",
-    "pollution_level_tipping_point": "Pollution Tipping Point",
-    "natural_pollution_decay_rate": "Natural Pollution Decay Rate",
-    "natural_temperature_decay_rate": "Natural Temperature Decay Rate",
-    "cloud_saturation_threshold": "Cloud Saturation Threshold",
-    "melting_rate": "Melting Rate",
-    "evaporation_rate": "Evaporation Rate"
-}
-
-# Function to format config values for display or logging
-
-
-def format_config_value(key, value):
-    if key == "baseline_temperature":
-        return "  |  ".join(
-            [f"{particle_mapping[i]}: {temp}°C" for i,
-                temp in enumerate(value)]
-        )
-    elif key == "initial_ratios":
-        return "  |  ".join([f"{k.capitalize()}: {v}" for k, v in value.items()])
-    elif key == "cell_type_weights":
-        return "  |  ".join(
-            [f"{particle_mapping[k]}: {v}" for k, v in value.items()]
-        )
-    elif key == "baseline_pollution_level":
-        return "  |  ".join(
-            [f"{particle_mapping[i]}: {level}" for i,
-                level in enumerate(value)]
-        )
+    Raises:
+        ValueError: If neither preset_name nor custom_config is provided.
+    '''
+    global CONFIG
+    if preset_name:
+        if preset_name in PRESET_CONFIGS:            
+            CONFIG = PRESET_CONFIGS[preset_name]
+            logging.info(f'Loaded preset configuration: {preset_name}')
+        else:
+            raise ValueError(f'Preset {preset_name} does not exist.')
+    elif custom_config:
+        CONFIG = custom_config
+        logging.info('Loaded custom configuration.')
     else:
-        return str(value)
+        raise ValueError('Either preset_name or custom_config must be provided.')
+    return CONFIG.copy()
+    
+def validate_config(config):
+    """
+    Validate that all required keys and nested keys exist in the configuration.
+
+    Args:
+        config (dict): The configuration dictionary to validate.
+
+    Raises:
+        KeyError: If any required key or sub-key is missing.
+    """
+    required_keys = {
+        "days": int,
+        "grid_size": tuple,
+        "initial_ratios": {
+            "forest": float,
+            "city": float,
+            "desert": float,
+            "vacuum": float,
+        },
+        "baseline_temperature": list,
+        "baseline_pollution_level": list,
+        "cell_type_weights": dict,
+        "forest_pollution_absorption_rate": float,
+        "forest_cooling_effect": float,
+        "forest_pollution_extinction_point": float,
+        "forest_temperature_extinction_point":float,
+        "city_pollution_generation_rate": float,
+        "city_warming_effect": float,
+        "city_temperature_extinction_point": float,
+        "city_pollution_extinction_point": float,
+        "freezing_point": float,
+        "melting_point": float,
+        "evaporation_point": float,
+        "water_transfer_threshold": float,
+        "water_transfer_rate": float,
+        "ocean_conversion_threshold": float,
+        "pollution_damage_threshold": float,
+        "pollution_level_tipping_point": float,
+        "natural_pollution_decay_rate": float,
+        "natural_temperature_decay_rate": float,
+        "cloud_saturation_threshold": float,
+        "melting_rate": float,
+        "evaporation_rate": float,
+        "base_colors": {
+            0: tuple,  # Ocean
+            1: tuple,  # Desert
+            2: tuple,  # Cloud
+            3: tuple,  # Ice
+            4: tuple,  # Forest
+            5: tuple,  # City
+            6: tuple,  # Air
+            7: tuple,  # Rain
+            8: tuple,  # Vacuum
+        },
+    }
+
+    def check_keys(sub_config, required_sub_keys, path=""):
+
+        for key, expected_type in required_sub_keys.items():
+            full_key = f"{path}.{key}" if path else key
+            if key not in sub_config:
+                raise KeyError(f"Missing required configuration key: {full_key}")
+            if isinstance(expected_type, dict):
+                if not isinstance(sub_config[key], dict):
+                    raise TypeError(
+                        f"Key {full_key} must be a dictionary, but got {type(sub_config[key])}."
+                    )
+                check_keys(sub_config[key], expected_type, full_key)
+            else:
+                if not isinstance(sub_config[key], expected_type):
+                    if isinstance(expected_type, tuple) and isinstance(sub_config[key], expected_type):
+                        continue  # Allow multiple types
+                    raise TypeError(
+                        f"Key {full_key} must be of type {expected_type}, "
+                        f"but got {type(sub_config[key]).__name__}."
+                    )
+
+    check_keys(config, required_keys)
 
 
-def rgba_to_hex(rgba):
-    r, g, b, a = rgba  # Extract RGBA components
-    return f"#{int(r * 255):02X}{int(g * 255):02X}{int(b * 255):02X}"
 
-
-# Mapping of particle types to descriptive names
-particle_mapping = {
-    0: "Ocean",
-    1: "Desert",
-    2: "Cloud",
-    3: "Ice",
-    4: "Forest",
-    5: "City",
-    6: "Air",
-    7: "Rain",
-    8: "Vacuum",
-}
