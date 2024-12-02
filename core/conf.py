@@ -35,11 +35,11 @@ config = {
     # Pollution levels for different cell types
     "baseline_pollution_level": [
         3,   # Ocean: Some pollution from industrial waste and microplastics
-        10,  # Desert: Dust and localized human activity
+        0,  # Desert: Dust and localized human activity
         1,   # Cloud: Minimal pollution
         0,   # Ice: Pristine areas with negligible pollution
         2,   # Forest: Absorbs pollution, very low levels
-        20,  # City: High pollution due to vehicles and factories
+        5,  # City: High pollution due to vehicles and factories
         5,   # Air: Variable pollution based on proximity to cities
         0,   # Rain: Cleanses the atmosphere
         0,   # Vacuum: No pollution in empty space
@@ -70,10 +70,8 @@ config = {
     # City-specific settings
     "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
     "city_warming_effect": 0.1,  # Warming effect of cities on their environment
-    "city_temperature_upper_limit": 100,  # Maximum temperature cities can reach
-    "city_pollution_upper_limit": 500,  # Maximum pollution level cities can reach
     # Maximum temperature before extinction effects
-    "city_temperature_extinction_point": 80,
+    "city_temperature_extinction_point": 150,
     "city_pollution_extinction_point": 100,
 
 
@@ -84,26 +82,26 @@ config = {
     "evaporation_point": 25,            # Temperature at which water evaporates
 
     # Thresholds and rates for water transfer and pollution effects
-    "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
+    "water_transfer_threshold": 0.01,  # Minimum difference in water mass for transfer
     "water_transfer_rate": 1.0,  # Maximum water transfer per interaction
     # Water mass required to convert a cell to ocean
     "ocean_conversion_threshold": 0.1,
-    "pollution_damage_threshold": 5.0,  # Pollution level causing damage to ecosystems
+    "pollution_damage_threshold": 10.0,  # Pollution level causing damage to ecosystems
     # Point at which pollution accelerates damage
     "pollution_level_tipping_point": 80,
 
     # Rates for natural changes in temperature
     # Rate of temperature equalization to baseline
-    "natural_temperature_decay_rate": 0.1,
+    "natural_temperature_decay_rate": 0.2,
     # Rate of pollution decay over time
-    "natural_pollution_decay_rate": 0.1,  
+    "natural_pollution_decay_rate": 0.2,  
     # Cloud-specific settings
     # Minimum water mass for clouds to precipitate as rain
     "cloud_saturation_threshold": 1.2,
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
-    "evaporation_rate": 0.2,  # Rate at which water evaporates
+    "evaporation_rate": 0.1,  # Rate at which water evaporates
 
     # Base colors for visual representation of cell types
     "base_colors": {
@@ -134,9 +132,8 @@ key_labels = {
     "forest_temperature_extinction_point": "Forest Temperature Extinction Point",
     "city_pollution_increase_rate": "City Pollution Increase Rate",
     "city_warming_effect": "City Warming Effect",
-    "city_temperature_upper_limit": "City Temperature Upper Limit (°C)",
-    "city_pollution_upper_limit": "City Pollution Upper Limit",
-    "temperature_extinction_point": "Temperature Extinction Point (°C)",
+    "city_temperature_extinction_point": "City Temperature Extinction Point (°C)",
+    "city_pollution_extinction_point":"City Pollution Extinction Point (°C)",
     "freezing_point": "Freezing Point (°C)",
     "melting_point": "Melting Point (°C)",
     "evaporation_point": "Evaporation Point (°C)",

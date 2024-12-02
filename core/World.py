@@ -300,17 +300,16 @@ class World:
                 for k in range(z):
                     cell = self.grid[i, j, k]
                     if cell is not None and cell.cell_type != 8:  # Skip vacuum
-                        if cell.cell_type == 7:  # Rain
-                            below = self.grid[i, j, k -
+                        below = self.grid[i, j, k -
                                               1] if k - 1 >= 0 else None
                             # Ground types
-                            if below and below.cell_type in {1, 4, 5}:
+                        if below and below.cell_type in {1, 4, 5}:
                                 below.water_mass += cell.water_mass  # Absorb rain into ground
                                 cell.cell_type = 6  # Turn into air
-                            elif below and below.cell_type == 6:  # Air
+                        elif below and below.cell_type == 6:  # Air
                                 below.water_mass += cell.water_mass
                                 cell.water_mass = 0
-                            else:
+                        else:
                                 # Otherwise, rain continues falling
                                 cell.position = (i, j, k - 1)
                         neighbors = [

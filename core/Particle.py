@@ -99,7 +99,6 @@ class Particle:
             tuple: RGBA color with the respective tint applied.
         """
         base_color = self.get_base_color()
-
         if base_color is None or len(base_color) != 4:
             logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
             return (1.0, 1.0, 1.0, 1.0)  # Default to white color
@@ -301,39 +300,35 @@ class Particle:
         cooling_effect = self.config["forest_cooling_effect"]
         forest_pollution_extinction_point = self.config["forest_pollution_extinction_point"]
         forest_temperature_extinction_point = self.config["forest_temperature_extinction_point"]
-        pollution_level_tipping_point = self.config["pollution_level_tipping_point"]
-        pollution_damage_threshold = self.config["pollution_damage_threshold"]
         forest_baseline_temperature = self.config["baseline_temperature"][self.cell_type]
-
+        pollution_damage_threshold = self.config["pollution_damage_threshold"]
+        pollution_level_tipping_point = self.config["pollution_level_tipping_point"]
+        city_warming_effect = self.config["city_warming_effect "]
+        
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
-        neighbors_below = self.get_aligned_neighbors(neighbors)
 
         if self.pollution_level > pollution_level_tipping_point:
             absorption_rate *= 0.5  # Reduced absorption under high pollution
-            cooling_effect *= 0.5
+            cooling_effect *= 0.5 # Reduced cooling effect under high pollution
+        
+        self.temperature = self.temperature + city_warming_effect * len([n for n in neighbors if n.cell_type == 5])
+        self.pollution_level = max(0, self.pollution_level - absorption_rate * self.pollution_level)
+        self.temperature -= self.temperature * cooling_effect
+
 
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above + neighbors_aligned):
             self.convert_to_ocean()
-        elif (
-            
-            # (self.temperature >= abs(self.config["city_temperature_extinction_point"]) or self.pollution_level >= 100)  and (self.is_surrounded_by_land_cells(neighbors_below+neighbors_aligned))
-            self.temperature >= forest_temperature_extinction_point  or self.pollution_level >= forest_pollution_extinction_point 
-    
-        ):  # Forest destruction
+        elif (self.temperature >= forest_temperature_extinction_point  or self.pollution_level >= forest_pollution_extinction_point)  and self.is_surrounded_by_land_cells(neighbors_aligned):  # Forest destruction
             self.convert_to_desert()
         elif (
-            self.pollution_level == 0
-            and forest_baseline_temperature - 5 <= self.temperature <= forest_baseline_temperature + 5
+            self.pollution_level <= pollution_damage_threshold
+            and forest_baseline_temperature - 10 <= self.temperature <= forest_baseline_temperature + 10
         ):  # Convert to a city
             self.convert_to_city()
-        else:
-            # Reduce pollution and cool down
-            self.pollution_level = max(
-                0, self.pollution_level - absorption_rate * self.pollution_level
-            )
-            self.temperature -= self.temperature * cooling_effect
+
+
 
     def _update_city(self, neighbors):
         """
@@ -347,14 +342,13 @@ class Particle:
         warming_effect = self.config["city_warming_effect"]
         baseline_pollution_level = self.config["baseline_pollution_level"][self.cell_type]
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
-        city_pollution_upper_limit = self.config["city_pollution_upper_limit"]
         city_pollution_extinction_point = self.config["city_pollution_extinction_point"]
-        forests_neighbors_ratio =  len([n for n in neighbors if n.cell_type == 4]) / len(neighbors)
-
         forest_pollution_absorption_rate = self.config["forest_pollution_absorption_rate"]
         forest_cooling_effect = self.config["forest_cooling_effect"]
-        self.temperature = self.temperature - (self.temperature*forest_cooling_effect*forests_neighbors_ratio)
-        self.pollution_level = self.pollution_level - (self.pollution_level*forest_pollution_absorption_rate*forests_neighbors_ratio)
+
+        forests_neighbors_count =  len([n for n in neighbors if n.cell_type == 4])
+        self.temperature = self.temperature - forest_cooling_effect * forests_neighbors_count
+        self.pollution_level = self.pollution_level - forest_pollution_absorption_rate * forests_neighbors_count
         # Update temperature and pollution level
         self.temperature = min(
             city_pollution_extinction_point,
@@ -362,7 +356,7 @@ class Particle:
                 warming_effect * self.temperature),
         )
         self.pollution_level = min(
-            city_pollution_upper_limit,
+            city_pollution_extinction_point,
             max(
                 baseline_pollution_level,
                 self.pollution_level + pollution_increase_rate * self.pollution_level,
