@@ -177,8 +177,6 @@ class Particle:
 
         new_cell._apply_natural_decay()
         new_cell.equilibrate_temperature(neighbors)
-        if new_cell.cell_type == 6:
-            new_cell.equilibrate_pollution_level(neighbors)
 
         # Execute specific behavior based on the particle's type
         if self.cell_type == 0:  # Ocean
@@ -397,6 +395,8 @@ class Particle:
             [n for n in neighbors if n.cell_type == 7])  # Rain particles above
         rain_below = self.get_below_neighbors(
             [n for n in neighbors if n.cell_type == 7])  # Rain particles below
+        
+        self.equilibrate_pollution_level(neighbors)
 
         # Exchange water mass with neighbors (e.g., clouds or other air particles)
         self.exchange_water_mass(neighbors)
