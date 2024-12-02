@@ -21,7 +21,7 @@ class World:
             day_number (int): The current day in the simulation.
         """
         self.config = get_config()
-        self.grid_size = grid_size or self.config["default_grid_size"]
+        self.grid_size = grid_size or self.config["grid_size"]
         self.grid = np.empty(self.grid_size, dtype=object)
 
         initial_ratios = initial_ratios or self.config["initial_ratios"]

@@ -141,9 +141,9 @@ if __name__ == "__main__":
 
         # Initialize and run simulation
         simulation = Simulation(grid_size=grid_size, initial_ratios=initial_ratios, days=days)
-        logging.info("Starting simulation...")
-        simulation.precompute()
-        logging.info("Simulation complete. Displaying results...")
+        # logging.info("Starting simulation...")
+        # simulation.precompute()
+        # logging.info("Simulation complete. Displaying results...")
         # display = MatplotlibDisplay(simulation)
         # display.plot_3d()
 
