@@ -60,12 +60,12 @@ config = {
 
     # Forest-specific settings
     # Rate at which forests absorb pollution
-    "forest_pollution_absorption_rate": 0.1,
-    "forest_cooling_effect": 0.1,  # Cooling effect of forests on their environment
+    "forest_pollution_absorption_rate": 0.2,
+    "forest_cooling_effect": 0.2,  # Cooling effect of forests on their environment
     # Cooling effect of forests on their environment
-    "forest_pollution_extinction_point": 100,
+    "forest_pollution_extinction_point": 200,
     # Cooling effect of forests on their environment
-    "forest_temperature_extinction_point": 100,
+    "forest_temperature_extinction_point": 200,
 
     # City-specific settings
     "city_pollution_increase_rate": 0.1,  # Rate of pollution increase in cities
@@ -85,12 +85,12 @@ config = {
 
     # Thresholds and rates for water transfer and pollution effects
     "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
-    "water_transfer_rate": 0.4,  # Maximum water transfer per interaction
+    "water_transfer_rate": 1.0,  # Maximum water transfer per interaction
     # Water mass required to convert a cell to ocean
-    "ocean_conversion_threshold": 1.0,
+    "ocean_conversion_threshold": 0.1,
     "pollution_damage_threshold": 5.0,  # Pollution level causing damage to ecosystems
     # Point at which pollution accelerates damage
-    "pollution_level_tipping_point": 50,
+    "pollution_level_tipping_point": 80,
 
     # Rates for natural changes in temperature
     # Rate of temperature equalization to baseline
@@ -99,11 +99,11 @@ config = {
     "natural_pollution_decay_rate": 0.1,  
     # Cloud-specific settings
     # Minimum water mass for clouds to precipitate as rain
-    "cloud_saturation_threshold": 1.5,
+    "cloud_saturation_threshold": 1.2,
 
     # Rates for environmental changes
     "melting_rate": 0.15,  # Rate at which ice melts
-    "evaporation_rate": 0.05,  # Rate at which water evaporates
+    "evaporation_rate": 0.2,  # Rate at which water evaporates
 
     # Base colors for visual representation of cell types
     "base_colors": {
