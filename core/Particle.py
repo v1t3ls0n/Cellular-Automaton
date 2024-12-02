@@ -174,10 +174,11 @@ class Particle:
         
 
         new_cell._apply_natural_decay()
-        # Adjust temperature based on neighbors
+
         new_cell.equilibrate_temperature(neighbors)
-        # Adjust pollution level based on neighbors
-        new_cell.equilibrate_pollution_level(neighbors)
+        if self.cell_type in {6,2}:
+            # transfer pollution to air or cloud cells
+            new_cell.equilibrate_pollution_level(neighbors)
         
         
         # Execute specific behavior based on the particle's type
