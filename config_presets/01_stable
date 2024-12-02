@@ -7,14 +7,14 @@
 
 config = {
     # Default simulation parameters
-    "default_days": 50,  # Duration of the simulation in days
+    "default_days": 365,  # Duration of the simulation in days
     "default_grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z)
     # Ratios for land cell types in the initial grid
     "initial_ratios": {
-        "forest": 0.08,  # Proportion of forest cells
-        "city": 0.9,    # Proportion of city cells
-        "desert": 0.01,  # Proportion of desert cells
-        "vacuum": 0.01,  # Proportion of vacuum cells
+        "forest": 0.6,  # Proportion of forest cells
+        "city": 0.2,    # Proportion of city cells
+        "desert": 0.1,  # Proportion of desert cells
+        "vacuum": 0.1,  # Proportion of vacuum cells
     },
     # Cell type configurations:
     # 0: Ocean | 1: Desert | 2: Cloud | 3: Ice | 4: Forest | 5: City | 6: Air | 7: Rain | 8: Vacuum
@@ -83,16 +83,16 @@ config = {
     },
 
    # Forest-specific settings
-    "forest_pollution_absorption_rate": 0.1,  # Rate at which forests absorb pollution
-    "forest_cooling_effect": 0.1,  # Cooling effect of forests on their environment
+    "forest_pollution_absorption_rate": 0.2,  # Rate at which forests absorb pollution
+    "forest_cooling_effect": 0.2,  # Cooling effect of forests on their environment
     # Cooling effect of forests on their environment
     "forest_pollution_extinction_point": 100,
     # Cooling effect of forests on their environment
     "forest_temperature_extinction_point": 80,
 
     # City-specific settings
-    "city_pollution_generation_rate": 0.5,  # Rate of pollution increase in cities
-    "city_warming_effect": 0.5,  # Warming effect of cities on their environment
+    "city_pollution_generation_rate": 0.1,  # Rate of pollution increase in cities
+    "city_warming_effect": 0.1,  # Warming effect of cities on their environment
     "city_temperature_extinction_point": 100, # Maximum temperature before extinction effects
     "city_pollution_extinction_point": 100, # Maximum pollution before extinction effects
 
@@ -109,14 +109,13 @@ config = {
     "water_transfer_threshold": 0.05,  # Minimum difference in water mass for transfer
     "water_transfer_rate": 0.1,  # Maximum water transfer per interaction
     "ocean_conversion_threshold": 1.0,  # Water mass required to convert a cell to ocean
-    "pollution_damage_threshold": 30.0,  # Pollution level causing damage to ecosystems
+    "pollution_damage_threshold": 5.0,  # Pollution level causing damage to ecosystems
     "pollution_level_tipping_point": 50,  # Point at which pollution accelerates damage
-    "natural_pollution_decay_rate": 0.3,  # Rate of pollution decay over time
-    "natural_temperature_decay_rate": 0.3,  # Rate of temperature equalization to baseline
+    "natural_pollution_decay_rate": 0.1,  # Rate of pollution decay over time
 
 
-
-    
+    # Rates for natural changes in temperature
+    "natural_temperature_decay_rate": 0.1,  # Rate of temperature equalization to baseline
     # Cloud-specific settings
     "cloud_saturation_threshold": 3.0,  # Minimum water mass for clouds to precipitate as rain
 
