@@ -303,8 +303,8 @@ class Particle:
         forest_baseline_temperature = self.config["baseline_temperature"][self.cell_type]
         pollution_damage_threshold = self.config["pollution_damage_threshold"]
         pollution_level_tipping_point = self.config["pollution_level_tipping_point"]
-        city_warming_effect = self.config["city_warming_effect "]
-        
+        city_warming_effect = self.config["city_warming_effect"]
+        city_neighbors_count = len([n for n in neighbors if n.cell_type == 5])
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
 
@@ -312,7 +312,7 @@ class Particle:
             absorption_rate *= 0.5  # Reduced absorption under high pollution
             cooling_effect *= 0.5 # Reduced cooling effect under high pollution
         
-        self.temperature = self.temperature + city_warming_effect * len([n for n in neighbors if n.cell_type == 5])
+        self.temperature = self.temperature + city_warming_effect * city_neighbors_count
         self.pollution_level = max(0, self.pollution_level - absorption_rate * self.pollution_level)
         self.temperature -= self.temperature * cooling_effect
 
