@@ -187,17 +187,17 @@ class MatplotlibDisplay:
         # Add buttons to toggle tinted and untinted modes
         tk.Button(
             control_frame,
-            text="Toggle Tinted/Untinted Grid Visualization",
-            command=lambda: self.toggle_tint(True),
+            text="Toggle Tinted/Untinted Visualization",
+            command=lambda: self.toggle_tint(True if self.tint else False),
         ).pack(side=tk.LEFT, padx=5, pady=5)
         tk.Button(
             control_frame,
-            text="Show Graphs",
+            text="Bring Statistics Graphs (Main Window) To Front"
             command=lambda: self.bring_main_window_to_front(),
         ).pack(side=tk.LEFT, padx=5, pady=5)
         tk.Button(
             control_frame,
-            text="Show Config Table",
+            text="Bring Custom Parameters Table Window To Front",
             command=lambda: self.bring_config_to_front(),
         ).pack(side=tk.LEFT, padx=5, pady=5)
 
@@ -279,10 +279,17 @@ class MatplotlibDisplay:
         # Add a "Bring Main Window to Front" button
         tk.Button(
             button_frame,
-            text="Bring Main Window to Front",
+            text="Bring Graph Metrics To Front",
             command=lambda: root.lift(),  # Brings the main window to the front
         ).pack(side=tk.LEFT, padx=5, pady=5)
-
+        
+                
+        tk.Button(
+            button_frame,
+            text="Bring 3D Visualization Window To Front",
+            command=lambda: self.bring_3d_to_front(),  # Brings the main window to the front
+        ).pack(side=tk.LEFT, padx=5, pady=5)
+        
         # Create a frame to hold the table and scrollbars
         frame = tk.Frame(self.config_window)
         frame.pack(fill=tk.BOTH, expand=True)
