@@ -171,11 +171,15 @@ class Particle:
         """
         new_cell = self.clone()
         new_cell._apply_natural_decay()  # Apply natural decay processes
+        
+
+        new_cell._apply_natural_decay()
         # Adjust temperature based on neighbors
         new_cell.equilibrate_temperature(neighbors)
         # Adjust pollution level based on neighbors
         new_cell.equilibrate_pollution_level(neighbors)
-
+        
+        
         # Execute specific behavior based on the particle's type
         if self.cell_type == 0:  # Ocean
             new_cell._update_ocean(neighbors)
