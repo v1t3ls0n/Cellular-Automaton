@@ -179,27 +179,32 @@ class MatplotlibDisplay:
         three_d_window.columnconfigure(0, weight=1)
         three_d_window.rowconfigure(0, weight=0)  # Control buttons
         three_d_window.rowconfigure(1, weight=1)  # Plot area
-
+        self.three_d_window = three_d_window
         # Control buttons frame
         control_frame = tk.Frame(three_d_window)
         control_frame.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
 
         # Add buttons to toggle tinted and untinted modes
+
+            # Add buttons to toggle tinted and untinted modes
         tk.Button(
             control_frame,
-            text="Toggle Tinted/Untinted Visualization",
-            command=lambda: self.toggle_tint(True if self.tint else False),
+            text="Show Tinted",
+            command=lambda: self.toggle_tint(True),
         ).pack(side=tk.LEFT, padx=5, pady=5)
         tk.Button(
             control_frame,
-            text="Bring Statistics Graphs (Main Window) To Front"
+            text="Show Untinted",
+            command=lambda: self.toggle_tint(False),
+        ).pack(side=tk.LEFT, padx=5, pady=5)
+
+
+        tk.Button(
+            control_frame,
+            text="Show Statistics Graphs (Main Window)",
             command=lambda: self.bring_main_window_to_front(),
         ).pack(side=tk.LEFT, padx=5, pady=5)
-        tk.Button(
-            control_frame,
-            text="Bring Custom Parameters Table Window To Front",
-            command=lambda: self.bring_config_to_front(),
-        ).pack(side=tk.LEFT, padx=5, pady=5)
+
 
         # Navigation buttons
         tk.Button(control_frame, text="Previous Day", command=self.previous_day).pack(side=tk.LEFT, padx=5, pady=5)
