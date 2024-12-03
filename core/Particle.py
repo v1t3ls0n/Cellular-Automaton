@@ -868,5 +868,5 @@ class Particle:
         """
         return [n for n in neighbors if n.position[2] == self.position[2]]
 
-    def is_vacuum_cell(self, neighbors):
+    def is_vacuum_cell(self):
         return self.cell_type == 8
