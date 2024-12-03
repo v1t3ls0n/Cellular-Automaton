@@ -194,7 +194,7 @@ DEFAULT_PRESET = {
 "cell_type_collision_weights": {
     0: 1.2,  # Ocean: High conversion likelihood due to fluid dynamics but less energy dissipation.
     1: 0.7,  # Desert: Moderate conversion due to sand and dust, which partially absorbs impacts.
-    2: 0.4,  # Cloud: Very low conversion as clouds are gaseous and diffuse energy quickly.
+    2: 0.7,  # Cloud: Very low conversion as clouds are gaseous and diffuse energy quickly.
     3: 0.9,  # Ice: High conversion as ice can transfer energy efficiently while fracturing.
     4: 1.4,  # Forest: High due to vegetation density, which buffers and redirects energy.
     5: 1.8,  # City: Very high as dense urban structures lead to strong interactions and energy dissipation.
@@ -204,7 +204,7 @@ DEFAULT_PRESET = {
     },
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.3),
+        6: (1.0, 1.0, 1.0, 0.5),
         2: (0.7, 0.7, 0.7, 1.0),
         0: (0.0, 0.3, 1.0, 1.0),
         3: (0.6, 0.8, 1.0, 1.0),
