@@ -101,53 +101,52 @@ class Particle:
         """
         base_color = self.get_base_color()
         if base_color is None or len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {
-                          self.cell_type}: {base_color}")
-            return (1.0, 1.0, 1.0, 0.0)  # Default to Transperant
-        elif self.cell_type == 8:
-            return base_color  # Vacuum don't have any properties that can effect tint
+            logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
+            return (1.0, 1.0, 1.0, 0.0)  # Default to transparent
 
+        # Handle vacuum specifically (no tint effects)
+        if self.cell_type == 8:
+            return base_color  # Vacuum has no properties that affect tint
+
+        # Get baseline pollution level and temperature
         baseline_pollution_lvl = self.config["baseline_pollution_level"][self.cell_type]
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
-        relative_pollution_ratio = 0 if baseline_pollution_lvl == 0 else max(
-            (baseline_pollution_lvl/self.pollution_level) , 1.0)
-        relative_temp_ratio = 1.0 if baseline_temperature == 0 else max(
-            (baseline_temperature/
-             self.temperature) , 1.0)
-        # Scale pollution and temperature intensity to a range of [0.0, 1.0]
-        pollution_intensity = max(0.0, min(relative_pollution_ratio, 1.0))
-        temperature_intensity = max(0.0,  min(relative_temp_ratio, 1.0))
 
-        # Apply black tint based on pollution
+        # Calculate pollution and temperature intensity
+        pollution_intensity = 0.0
+        if baseline_pollution_lvl > 0:
+            pollution_intensity = min(self.pollution_level / baseline_pollution_lvl, 1.0)
+
+        temperature_intensity = 0.0
+        if baseline_temperature != 0:
+            temperature_difference = abs(self.temperature - baseline_temperature)
+            temperature_intensity = min(temperature_difference / abs(baseline_temperature), 1.0)
+
+        # Apply black tint based on pollution intensity
         black_tinted_color = [
-            # Reduce red
-            max(0.0, base_color[0] * (1.0 - pollution_intensity)),
-            # Reduce green
-            max(0.0, base_color[1] * (1.0 - pollution_intensity)),
-            # Reduce blue
-            max(0.0, base_color[2] * (1.0 - pollution_intensity)),
+            base_color[0] * (1.0 - pollution_intensity),  # Reduce red
+            base_color[1] * (1.0 - pollution_intensity),  # Reduce green
+            base_color[2] * (1.0 - pollution_intensity),  # Reduce blue
         ]
 
-        # Apply red tint based on temperature
+        # Apply red tint based on temperature intensity
         red_tinted_color = [
-            # Increase red
-            min(1.0, base_color[0] + temperature_intensity),
-            # Reduce green
-            max(0.0, base_color[1] * (1.0 - temperature_intensity)),
-            # Reduce blue
-            max(0.0, base_color[2] * (1.0 - temperature_intensity)),
+            min(1.0, base_color[0] + temperature_intensity),  # Increase red
+            base_color[1] * (1.0 - temperature_intensity),    # Reduce green
+            base_color[2] * (1.0 - temperature_intensity),    # Reduce blue
         ]
 
-        # Decide which tint to apply based on attribute dominance
-        if pollution_intensity > temperature_intensity:
+        # Determine which effect dominates and combine tints
+        if pollution_intensity >= temperature_intensity:
             tinted_color = black_tinted_color
         else:
             tinted_color = red_tinted_color
 
-        # Preserve the alpha (transparency) channel
+        # Preserve the alpha (transparency) channel from the base color
         alpha = max(0.0, min(base_color[3], 1.0))
 
         return (*tinted_color, alpha)
+
 
     def get_base_color(self):
         """
