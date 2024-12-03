@@ -445,11 +445,15 @@ class Particle:
         """
         # Move rain particles downward to simulate precipitation
         # Check if the particle has reached the ground level
-        self.go_down(neighbors)
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_align = self.get_below_neighbors(neighbors)
         neighbors_above = self.get_below_neighbors(neighbors)
-        if self.is_surrounded_by_sea_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_align) or self.is_surrounded_by_sea_cells(neighbors_above):
+        
+        if self.position[2] > 0:
+            self.go_down(neighbors)
+            self.direction = (0,0, -1)
+
+        elif self.is_surrounded_by_sea_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_align) or self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean(neighbors)
             # Convert to air (dry up) if surrounded by land cells
         elif self.is_surrounded_by_land_cells(neighbors_below) or self.is_surrounded_by_land_cells(neighbors_align) or self.is_surrounded_by_land_cells(neighbors_above):
