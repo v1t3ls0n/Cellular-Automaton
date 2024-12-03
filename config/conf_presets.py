@@ -1,4 +1,5 @@
 
+# conf_presets.py
 # Mapping of particle types to descriptive names
 PARTICLE_MAPPING = {
     0: 'Ocean',
@@ -414,3 +415,4 @@ REQUIRED_KEYS = {
         8: tuple,  # Vacuum
     },
 }
+

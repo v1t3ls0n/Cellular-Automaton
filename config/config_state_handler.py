@@ -1,7 +1,7 @@
-# conf.py
+# config_state_handler.py
 import logging
 from collections import defaultdict
-from presets import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
+from config.conf_presets import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
 # Global configuration dictionary
 CONFIG = DEFAULT_PRESET
 
@@ -19,7 +19,6 @@ def get_config_preset(preset_name=None):
         
     else:
         logging.debug("preset_name is None. returning default config preset")
-
 
 def get_config():
     global CONFIG
@@ -82,6 +81,5 @@ def validate_config(config):
                     )
 
     check_keys(config, REQUIRED_KEYS)
-
 
 

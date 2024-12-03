@@ -1,7 +1,7 @@
 import os
 import logging
-from config.config import update_config, get_config, validate_config
-from config.presets import  PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
+from config.config_state_handler import update_config, get_config, validate_config
+from config.conf_presets import  PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
 
