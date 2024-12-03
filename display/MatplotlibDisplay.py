@@ -107,37 +107,29 @@ class MatplotlibDisplay:
         self.canvas.get_tk_widget().pack(fill="both",padx=4)
 
 
-        # 3-column layout
+        # fit the 3-column layout
         self.axes = {
-            # Standardized Pollution graph
+            # Standardized graphs
             "std_pollution": self.fig.add_subplot(gs[0, 0]),
-            # Standardized Temperature graph
             "std_temperature": self.fig.add_subplot(gs[0, 1]),
-            # Standardized Water Mass graph
-            "std_water_mass": self.fig.add_subplot(gs[0, 2]),
+            "std_population": self.fig.add_subplot(gs[0, 2]),
+            "std_forests": self.fig.add_subplot(gs[1, 0]),
+            "std_water_mass": self.fig.add_subplot(gs[1, 1]),
 
-            # Non-Standardized Pollution graph
-            "pollution": self.fig.add_subplot(gs[1, 0]),
-            # Non-Standardized Temperature graph
-            "temperature": self.fig.add_subplot(gs[1, 1]),
-            # Non-Standardized Water Mass graph (same row as pollution and temperature)
-            "water_mass": self.fig.add_subplot(gs[1, 2]),
+            # Leave an empty slot at the second row, third column (gs[1, 2] is unused)
 
-            # Forest Graph (same row as city population graph)
-            "forests": self.fig.add_subplot(gs[2, 0]),
-            # City Population Graph (same row as forests graph)
-            "population": self.fig.add_subplot(gs[2, 1]),
+            # Non-Standardized graphs
+            "pollution": self.fig.add_subplot(gs[2, 0]),
+            "temperature": self.fig.add_subplot(gs[2, 1]),
+            "water_mass": self.fig.add_subplot(gs[2, 2]),  # Right of temperature
+            "forests": self.fig.add_subplot(gs[3, 0]),  # Left of population
+            "population": self.fig.add_subplot(gs[3, 1]),  # Right of forests
 
-            # Pollution Standard Deviation graph
-            "std_dev_pollution": self.fig.add_subplot(gs[3, 0]),
-            # Temperature Standard Deviation graph
-            "std_dev_temperature": self.fig.add_subplot(gs[3, 1]),
-            # Water Mass Standard Deviation graph
-            "std_dev_water_mass": self.fig.add_subplot(gs[3, 2]),
-
-            # Leave the last row for future use or additional graphs if needed
+            # Standard Deviation graphs
+            "std_dev_pollution": self.fig.add_subplot(gs[4, 0]),
+            "std_dev_temperature": self.fig.add_subplot(gs[4, 1]),
+            "std_dev_water_mass": self.fig.add_subplot(gs[4, 2]),
         }
-
 
 
         # Render standardized graphs
