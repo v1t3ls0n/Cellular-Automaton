@@ -93,16 +93,15 @@ class Particle:
 
     def get_color_tinted_by_attributes(self):
         """
-        Applies a black tint based on the pollution level or a red tint based on the temperature
+        Applies a subtle black tint based on the pollution level or a red tint based on the temperature
         to the base color of the particle.
 
         Returns:
-            tuple: RGBA color with the respective tint applied.
+            tuple: RGBA color with the respective light tint applied.
         """
         base_color = self.get_base_color()
         if base_color is None or len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {
-                          self.cell_type}: {base_color}")
+            logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
             return (1.0, 1.0, 1.0, 0.0)  # Default to transparent
 
         # Handle vacuum specifically (no tint effects)
@@ -117,39 +116,41 @@ class Particle:
         pollution_intensity = 0.0
         if baseline_pollution_lvl > 0:
             pollution_intensity = min(
-                self.pollution_level / baseline_pollution_lvl, 1.0)
+                self.pollution_level / baseline_pollution_lvl, 0.5
+            )  # Cap at 0.5 for lighter tints
 
         temperature_intensity = 0.0
         if baseline_temperature != 0:
-            temperature_difference = abs(
-                self.temperature - baseline_temperature)
+            temperature_difference = abs(self.temperature - baseline_temperature)
             temperature_intensity = min(
-                temperature_difference / abs(baseline_temperature), 1.0)
+                temperature_difference / abs(baseline_temperature), 0.5
+            )  # Cap at 0.5 for lighter tints
 
         # Apply black tint based on pollution intensity
         black_tinted_color = [
-            base_color[0] * (1.0 - pollution_intensity),  # Reduce red
-            base_color[1] * (1.0 - pollution_intensity),  # Reduce green
-            base_color[2] * (1.0 - pollution_intensity),  # Reduce blue
+            base_color[0] * (1.0 - pollution_intensity * 0.5),  # Slightly reduce red
+            base_color[1] * (1.0 - pollution_intensity * 0.5),  # Slightly reduce green
+            base_color[2] * (1.0 - pollution_intensity * 0.5),  # Slightly reduce blue
         ]
 
         # Apply red tint based on temperature intensity
         red_tinted_color = [
-            min(1.0, base_color[0] + temperature_intensity),  # Increase red
-            base_color[1] * (1.0 - temperature_intensity),    # Reduce green
-            base_color[2] * (1.0 - temperature_intensity),    # Reduce blue
+            min(1.0, base_color[0] + temperature_intensity * 0.5),  # Slightly increase red
+            base_color[1] * (1.0 - temperature_intensity * 0.5),    # Slightly reduce green
+            base_color[2] * (1.0 - temperature_intensity * 0.5),    # Slightly reduce blue
         ]
 
-        # Determine which effect dominates and combine tints
-        if pollution_intensity >= temperature_intensity:
-            tinted_color = black_tinted_color
-        else:
-            tinted_color = red_tinted_color
+        # Determine which effect dominates and blend tints
+        blended_color = [
+            (black_tinted_color[i] + red_tinted_color[i]) / 2.0
+            for i in range(3)
+        ]
 
         # Preserve the alpha (transparency) channel from the base color
         alpha = max(0.0, min(base_color[3], 1.0))
 
-        return (*tinted_color, alpha)
+        return (*blended_color, alpha)
+
 
     def get_base_color(self):
         """
@@ -290,6 +291,8 @@ class Particle:
             self.is_surrounded_by_land_cells(neighbors_aligned)
             and self.pollution_level <= pollution_damage_threshold
             and forest_baseline_temperature - 10 <= self.temperature <= forest_baseline_temperature + 10
+            and (self.is_surrounded_by_desert_cells(neighbors_aligned) or self.is_surrounded_by_forests_cells(neighbors_aligned))
+            and not (self.is_surrounded_by_city_cells(neighbors_below) or self.is_surrounded_by_forests_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_above))
         ):  # Suitable for forest conversion
             self.convert_to_forest(neighbors)
 
@@ -352,6 +355,7 @@ class Particle:
         pollution_level_tipping_point = self.config["pollution_level_tipping_point"]
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
+        neighbors_below= self.get_below_neighbors(neighbors)
 
         if self.pollution_level > pollution_level_tipping_point:
             absorption_rate *= 0.5  # Reduced absorption under high pollution
@@ -369,6 +373,8 @@ class Particle:
         elif (
             self.pollution_level < pollution_damage_threshold
             and int(self.temperature) == int(forest_baseline_temperature)
+            and (self.is_surrounded_by_desert_cells(neighbors_aligned) or self.is_surrounded_by_city_cells(neighbors_aligned))
+            and not (self.is_surrounded_by_city_cells(neighbors_below) or self.is_surrounded_by_forests_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_below))
         ):  # Convert to a city
             self.convert_to_city(neighbors)
 
@@ -386,6 +392,7 @@ class Particle:
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
         city_pollution_extinction_point = self.config["city_pollution_extinction_point"]
         neighbors_above = self.get_above_neighbors(neighbors)
+        neighbors_below = self.get_below_neighbors(neighbors)
 
         # Update temperature and pollution level
         self.temperature = min(
@@ -405,10 +412,10 @@ class Particle:
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         # Surrounded by water
-        if self.is_surrounded_by_sea_cells(neighbors_above):
+        if self.is_surrounded_by_sea_cells(neighbors_above) or self.is_surrounded_by_sea_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_aligned):
             self.convert_to_ocean(neighbors)
         # Excessive pollution or temperature
-        elif (self.pollution_level >= city_pollution_extinction_point or self.temperature >= abs(city_pollution_extinction_point)) or self.is_surrounded_by_sea_cells(neighbors_above):
+        elif (self.pollution_level >= city_pollution_extinction_point or self.temperature >= abs(city_pollution_extinction_point)) or self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
             self.convert_to_desert(neighbors)
 
     def _update_air(self, neighbors):
@@ -866,6 +873,32 @@ class Particle:
         Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
         """
         return sum(n.cell_type in {1, 4, 5} for n in neighbors) == len(neighbors)
+
+    def is_surrounded_by_desert_cells(self, neighbors):
+        """
+        Check if the cell is surrounded entirely by land cells.
+
+        Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
+        """
+        return sum(n.cell_type in {1} for n in neighbors) == len(neighbors)
+    
+    def is_surrounded_by_forests_cells(self, neighbors):
+        """
+        Check if the cell is surrounded entirely by land cells.
+
+        Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
+        """
+        return sum(n.cell_type in {4} for n in neighbors) == len(neighbors)
+
+    def is_surrounded_by_city_cells(self, neighbors):
+        """
+        Check if the cell is surrounded entirely by land cells.
+
+        Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
+        """
+        return sum(n.cell_type in {5} for n in neighbors) == len(neighbors)
+
+
 
     def is_surrounded_by_cloud_cells(self, neighbors):
         """

@@ -324,7 +324,7 @@ class World:
             #     return cell1
 
             # Default behavior based on cell type weights
-            return cell1 if self.config["cell_type_conversion_weights"][cell1.cell_type] >= self.config["cell_type_conversion_weights"][cell2.cell_type] else cell2
+            return cell1 if self.config["cell_type_collision_weights"][cell1.cell_type] >= self.config["cell_type_collision_weights"][cell2.cell_type] else cell2
 
         def get_neighbor_positions(i, j, k):
             """
@@ -365,7 +365,7 @@ class World:
                 for j in range(self.grid_size[1]):
                     for k in range(self.grid_size[2]):
                         cell = self.grid[i, j, k]
-                        if cell and cell.cell_type in {2, 6}:  # Cloud or Air
+                        if cell and cell.cell_type != 8:  # Cloud or Air
                             neighbors = [
                                 self.grid[nx, ny, nz] for nx, ny, nz in get_neighbor_positions(i, j, k)
                             ]
@@ -383,8 +383,7 @@ class World:
             """
             for (i, j, k), transfer_amount in transfer_map.items():
                 cell = self.grid[i, j, k]
-                if cell and cell.cell_type in {2, 6}:  # Cloud or Air
-                    cell.water_mass += transfer_amount
+                cell.water_mass += transfer_amount
 
         x, y, z = self.grid_size
 

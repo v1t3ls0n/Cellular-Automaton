@@ -71,7 +71,7 @@ KEY_LABELS = {
     "evaporation_rate": "Evaporation Rate",
 
     # Conversion Weights
-    "cell_type_conversion_weights": "Cell Type Conversion Weights",
+    "cell_type_collision_weights": "Cell Type Collision Weights",
 
     # Base Colors
     "base_colors": "Base Colors for Cell Types",
@@ -191,17 +191,18 @@ DEFAULT_PRESET = {
     "evaporation_rate": 0.05,  # Rate at which water evaporates.
 
 
-    "cell_type_conversion_weights": {
-        0: 1.3,
-        1: 1.2,
-        2: 0.7,
-        3: 0.8,
-        4: 1.5,
-        5: 2.0,
-        6: 0.5,
-        7: 1.0,
-        8: 0.0,
+"cell_type_collision_weights": {
+    0: 1.2,  # Ocean: High conversion likelihood due to fluid dynamics but less energy dissipation.
+    1: 0.7,  # Desert: Moderate conversion due to sand and dust, which partially absorbs impacts.
+    2: 0.4,  # Cloud: Very low conversion as clouds are gaseous and diffuse energy quickly.
+    3: 0.9,  # Ice: High conversion as ice can transfer energy efficiently while fracturing.
+    4: 1.4,  # Forest: High due to vegetation density, which buffers and redirects energy.
+    5: 1.8,  # City: Very high as dense urban structures lead to strong interactions and energy dissipation.
+    6: 0.6,  # Air: Moderate as energy dissipates through air currents but may redirect particles.
+    7: 0.8,  # Rain: Moderate as water droplets can transfer some energy but dissipate quickly.
+    8: 0.0,  # Vacuum: No conversion as collisions can't occur in a vacuum.
     },
+
     "base_colors": {
         6: (1.0, 1.0, 1.0, 0.3),
         2: (0.7, 0.7, 0.7, 1.0),
@@ -232,7 +233,7 @@ REQUIRED_KEYS = {
     },
     "baseline_temperature": list,
     "baseline_pollution_level": list,
-    "cell_type_conversion_weights": {
+    "cell_type_collision_weights": {
         0: float,  # Ocean
         1: float,  # Desert
         2: float,  # Cloud
