@@ -361,18 +361,12 @@ class Particle:
         city_pollution_extinction_point = self.config["city_pollution_extinction_point"]
 
         # Update temperature and pollution level
-        self.temperature = min(
-            city_pollution_extinction_point,
-            max(baseline_temperature, self.temperature +
-                warming_effect * self.temperature),
-        )
-        self.pollution_level = min(
-            city_pollution_extinction_point,
-            max(
-                baseline_pollution_level,
-                self.pollution_level + pollution_increase_rate * self.pollution_level,
-            ),
-        )
+        self.temperature =  max(baseline_temperature, self.temperature +warming_effect * self.temperature
+        
+        self.pollution_level =
+            max(baseline_pollution_level,
+                self.pollution_level + pollution_increase_rate * self.pollution_level,)
+        
 
         # Check for conversions based on conditions
         neighbors_above = self.get_above_neighbors(neighbors)
@@ -498,7 +492,7 @@ class Particle:
         """
         self.cell_type = 2  # Set cell type to cloud
         # Condensation increases water mass
-        self.water_mass = min(1.0, self.water_mass + 0.5)
+        self.water_mass = self.water_mass + 0.5
         self.temperature -= 2  # Clouds typically cool down during formation
         self.go_up(neighbors)  # Clouds move upward
 
@@ -656,14 +650,13 @@ class Particle:
             total_temperature_exchange += temperature_exchange
 
         # Ensure pollution and temperature levels remain within valid bounds
-        self.pollution_level = max(0, self.pollution_level)
-        self.temperature = max(
-            self.config["baseline_temperature"][self.cell_type] -
-            100,  # Arbitrary lower bound
-            # Arbitrary upper bound
-            min(self.temperature,
-                self.config["baseline_temperature"][self.cell_type] + 100)
-        )
+        # self.pollution_level = max(0, self.pollution_level)
+        # self.temperature = max(
+        #     self.config["baseline_temperature"][self.cell_type] - 100,  # Arbitrary lower bound
+        #     # Arbitrary upper bound
+        #     min(self.temperature,
+        #         self.config["baseline_temperature"][self.cell_type] + 100)
+        # )
 
         # Log the changes for debugging
         logging.info(
