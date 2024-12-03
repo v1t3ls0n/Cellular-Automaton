@@ -97,41 +97,49 @@ class MatplotlibDisplay:
         scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
         # Create a Matplotlib figure
-        fig = plt.Figure(figsize=(18,32), tight_layout=True)  # Adjust figure size
+        fig = plt.Figure(figsize=(18.8,22), tight_layout=True)  # Adjust figure size
         # 7 rows for standardized and non-standardized graphs
-        gs = fig.add_gridspec(7, 2)  # 7 rows for standardized and non-standardized graphs
+        gs = fig.add_gridspec(5, 3)  # 7 rows for standardized and non-standardized graphs
         fig.subplots_adjust(hspace=0.4)  # Adjust spacing between plots
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)
         self.canvas.get_tk_widget().pack(fill="both",padx=4)
 
-        # Create subplots
+
+        # subplot positions to fit the 3-column layout
         self.axes = {
             # Standardized Pollution graph
             "std_pollution": self.fig.add_subplot(gs[0, 0]),
             # Standardized Temperature graph
             "std_temperature": self.fig.add_subplot(gs[0, 1]),
             # Standardized Population graph
-            "std_population": self.fig.add_subplot(gs[1, 0]),
+            "std_population": self.fig.add_subplot(gs[0, 2]),
             # Standardized Forests graph
-            "std_forests": self.fig.add_subplot(gs[1, 1]),
+            "std_forests": self.fig.add_subplot(gs[1, 0]),
             # Standardized Water Mass graph
-            "std_water_mass": self.fig.add_subplot(gs[2, 0]),
+            "std_water_mass": self.fig.add_subplot(gs[1, 1]),
 
-            "pollution": self.fig.add_subplot(gs[3, 0]),  # Pollution graph
-            "temperature": self.fig.add_subplot(gs[3, 1]),  # Temperature graph
-            "population": self.fig.add_subplot(gs[4, 0]),  # Population graph
-            "forests": self.fig.add_subplot(gs[4, 1]),  # Forests graph
-            "water_mass": self.fig.add_subplot(gs[5, 0]),  # Water Mass graph
+            # Leave an empty slot at the second row, third column
+            # Non-Standardized Pollution graph
+            "pollution": self.fig.add_subplot(gs[2, 0]),
+            # Non-Standardized Temperature graph
+            "temperature": self.fig.add_subplot(gs[2, 1]),
+            # Non-Standardized Population graph
+            "population": self.fig.add_subplot(gs[3, 0]),
+            # Non-Standardized Forests graph
+            "forests": self.fig.add_subplot(gs[3, 1]),
+            # Non-Standardized Water Mass graph
+            "water_mass": self.fig.add_subplot(gs[3, 2]),
 
             # Pollution Standard Deviation graph
-            "std_dev_pollution": self.fig.add_subplot(gs[5, 1]),
+            "std_dev_pollution": self.fig.add_subplot(gs[4, 0]),
             # Temperature Standard Deviation graph
-            "std_dev_temperature": self.fig.add_subplot(gs[6, 1]),
+            "std_dev_temperature": self.fig.add_subplot(gs[4, 1]),
             # Water Mass Standard Deviation graph
-            "std_dev_water_mass": self.fig.add_subplot(gs[6, 0]),
+            "std_dev_water_mass": self.fig.add_subplot(gs[4, 2]),
         }
+
 
         # Render standardized graphs
         self.render_standardized_pollution_graph(

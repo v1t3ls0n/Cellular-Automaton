@@ -80,7 +80,7 @@ KEY_LABELS = {
 DEFAULT_PRESET = {
 
     # General Simulation Parameters
-    "days": 50,  # Total number of simulation days.
+    "days": 1 * 3,  # Total number of simulation days.
     "grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z).
     "initial_ratios": {
         "forest": 0.3,  # 30% of the grid is forest.
