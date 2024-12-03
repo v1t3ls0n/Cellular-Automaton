@@ -98,6 +98,7 @@ def parse_user_input():
         print("Setting custom configuration...")
         for key, value in DEFAULT_PRESET.items():
             if key == "base_colors":
+                user_config[key] = value
                 continue
             label = KEY_LABELS.get(key, key)
             if isinstance(value, dict):
