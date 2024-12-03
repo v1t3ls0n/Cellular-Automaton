@@ -86,13 +86,14 @@ def parse_user_input():
     Prompt user for all configuration parameters or use presets.
     """
     print("\n--- Simulation Configuration ---")
-    print("1. Use Default Configuration Presets")
-    print("2. Set Custom Parameters")
+    print("1. Go With Default Configuration Preset")
+    print("2. Choose Configuration Presets")
+    print("3. Choose Custom Parameters")
 
-    choice = input("Choose an option (1 or 2): ").strip()
-    if choice == "1":
+    choice = input("Choose an option (1, 2, 3): ").strip()
+    if choice == "2":
         update_config(preset_name=choose_preset())
-    elif choice == "2":
+    elif choice == "3":
         user_config = {}
         print("Setting custom configuration...")
         for key, value in config.items():
@@ -117,6 +118,9 @@ def parse_user_input():
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
                 user_config[key] = parse_input_value(input_value, value)
         update_config(custom_config=user_config)
+    elif choice == "1":
+        print("setting Default Configuration Preset")
+        update_config(custom_config=DEFAULT_PRESET)
     else:
         print(f"Invalid choice. Using default configuration.\n")
 
@@ -129,7 +133,7 @@ if __name__ == "__main__":
         config = get_config()
         validate_config(config)
         
-        print("Configuration is valid.")
+        logging.info("Configuration is valid.")
             # Extract essential parameters for simulation
         grid_size = config["grid_size"]
         days = config["days"]
