@@ -608,73 +608,59 @@ class Particle:
         Natural decay ensures that:
         - Pollution levels gradually decrease over time based on a decay rate.
         - Temperature stabilizes toward a baseline value defined in the configuration.
-        - Pollution and temperature also influence and equalize with neighboring cells.
+        - Pollution and temperature are influenced by neighboring cells but only affect this cell.
 
         Args:
             neighbors (list of Particle): Neighboring particles around the current cell.
         """
         pollution_decay_rate = self.config["natural_pollution_decay_rate"]
         temperature_decay_rate = self.config["natural_temperature_decay_rate"]
-        pollution_diffusion_rate = self.config.get(
-            "pollution_diffusion_rate", 0.1)
-        temperature_diffusion_rate = self.config.get(
-            "temperature_diffusion_rate", 0.1)
+        pollution_diffusion_rate = self.config.get("pollution_diffusion_rate", 0.1)
+        temperature_diffusion_rate = self.config.get("temperature_diffusion_rate", 0.1)
 
-        # Pollution decay within the current cell
+        # Step 1: Apply natural decay for pollution and temperature
         self.pollution_level = max(
             0,
-            self.pollution_level -
-            (self.pollution_level * pollution_decay_rate)
+            self.pollution_level - (self.pollution_level * pollution_decay_rate)
         )
 
-        # Temperature decay toward the baseline value
         baseline_temp = self.config["baseline_temperature"][self.cell_type]
         if self.temperature > baseline_temp:
-            self.temperature -= (self.temperature -
-                                 baseline_temp) * temperature_decay_rate
+            self.temperature -= (self.temperature - baseline_temp) * temperature_decay_rate
         elif self.temperature < baseline_temp:
-            self.temperature += (baseline_temp -
-                                 self.temperature) * temperature_decay_rate
+            self.temperature += (baseline_temp - self.temperature) * temperature_decay_rate
 
-        # Diffusion with neighboring cells
-        total_pollution_exchange = 0
-        total_temperature_exchange = 0
+        # Step 2: Influence from neighboring cells
+        pollution_influence = 0
+        temperature_influence = 0
+        valid_neighbors_count = 0
+
         for neighbor in neighbors:
             # Skip invalid neighbors (e.g., boundaries or non-polluting cell types)
             if neighbor is None or neighbor.cell_type not in self.config["baseline_temperature"]:
                 continue
 
-            # Calculate pollution exchange
-            pollution_difference = self.pollution_level - neighbor.pollution_level
-            pollution_exchange = pollution_difference * pollution_diffusion_rate
-            self.pollution_level -= pollution_exchange
-            neighbor.pollution_level += pollution_exchange
-            total_pollution_exchange += pollution_exchange
+            valid_neighbors_count += 1
 
-            # Calculate temperature exchange
-            temperature_difference = self.temperature - neighbor.temperature
-            temperature_exchange = temperature_difference * temperature_diffusion_rate
-            self.temperature -= temperature_exchange
-            neighbor.temperature += temperature_exchange
-            total_temperature_exchange += temperature_exchange
+            # Calculate influence from neighbors
+            pollution_difference = neighbor.pollution_level - self.pollution_level
+            pollution_influence += pollution_difference * pollution_diffusion_rate
 
-        # Ensure pollution and temperature levels remain within valid bounds
+            temperature_difference = neighbor.temperature - self.temperature
+            temperature_influence += temperature_difference * temperature_diffusion_rate
+
+        # Step 3: Apply the averaged influence from neighbors
+        if valid_neighbors_count > 0:
+            self.pollution_level += pollution_influence / valid_neighbors_count
+            self.temperature += temperature_influence / valid_neighbors_count
+
+        # Step 4: Ensure pollution and temperature levels remain within valid bounds
         self.pollution_level = max(0, self.pollution_level)
         self.temperature = max(
-            self.config["baseline_temperature"][self.cell_type] -
-            100,  # Arbitrary lower bound
-            # Arbitrary upper bound
-            min(self.temperature,
-                self.config["baseline_temperature"][self.cell_type] + 100)
+            baseline_temp - 100,  # Arbitrary lower bound
+            min(self.temperature, baseline_temp + 100)  # Arbitrary upper bound
         )
 
-        # Log the changes for debugging
-        logging.info(
-            f"Cell at ({self.position[0]}, {
-                self.position[1]}, {self.position[2]}): "
-            f"Pollution Level Adjusted by {total_pollution_exchange:.3f}, "
-            f"Temperature Adjusted by {total_temperature_exchange:.3f}"
-        )
 
     ####################################################################################################################
     ############################################### CELL EQUILIBRATE ###################################################
