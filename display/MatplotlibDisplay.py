@@ -4,8 +4,8 @@ from matplotlib.colors import to_rgba
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 import logging
-from core.conf import get_config
-from utils.constants import KEY_LABELS, PARTICLE_MAPPING
+from config.config import get_config
+from config.config import KEY_LABELS, PARTICLE_MAPPING
 from utils.helpers import format_config_value,  rgba_to_hex
 import matplotlib.gridspec as gridspec
 import tkinter as tk

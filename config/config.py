@@ -1,7 +1,7 @@
 # conf.py
 import logging
 from collections import defaultdict
-from utils.constants import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
+from presets import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
 # Global configuration dictionary
 CONFIG = DEFAULT_PRESET
 

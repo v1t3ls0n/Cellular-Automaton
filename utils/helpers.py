@@ -1,4 +1,4 @@
-from utils.constants import PARTICLE_MAPPING
+from config_presets.const_presets import PARTICLE_MAPPING
 
 def floatify_preset_integers(presets):
     """

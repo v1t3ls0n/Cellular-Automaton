@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from core.conf import get_config
+from config.config import get_config
 import math
 
 
