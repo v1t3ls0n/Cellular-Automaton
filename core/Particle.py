@@ -443,18 +443,21 @@ class Particle:
         """
         # Move rain particles downward to simulate precipitation
         self.go_down(neighbors)
-
+        self.direction = (0,0,-1)
         # Check if the particle has reached the ground level
         x, y, z = self.position
-        if z == 0:  # Ground level
+        
+          # Ground level
             # Convert to ocean if surrounded by sea cells
-            if self.is_surrounded_by_sea_cells(neighbors):
+
+            
+        if self.is_surrounded_by_sea_cells(neighbors):
                 self.convert_to_ocean(neighbors)
             # Convert to air (dry up) if surrounded by land cells
-            elif self.is_surrounded_by_land_cells(neighbors):
+        elif self.is_surrounded_by_land_cells(neighbors):
                 self.convert_to_air(neighbors)
-                self.direction = self.calculate_dynamic_wind_direction(
-                    neighbors)
+        elif self.is_surrounded_by_air_cells(neighbors):
+            self.go_down(neighbors)
 
     ####################################################################################################################
     ###################################### CELL CONVERSIONS ###########################################################
@@ -863,6 +866,10 @@ class Particle:
         Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
         """
         return sum(n.cell_type in {2} for n in neighbors) == len(neighbors)
+    
+    def is_surrounded_by_air_cells(self, neighbors):
+        return sum(n.cell_type in {6} for n in neighbors) == len(neighbors)
+
 
     def is_below_sea_level(self, neighbors):
         """
