@@ -798,11 +798,9 @@ class Particle:
 
         Ensures that the particle doesn't move below the ground level (z = 0).
         """
-        dx, dy, dz = self.calculate_dynamic_wind_direction(neighbors)
-
-
-        if dz > 0:  # Ensure it doesn't go below the ground
-            self.direction = (dx,dy, 1)
+        if self.position[2] >= 0:  # Ensure it doesn't go below the ground
+            dx, dy, dz = self.calculate_dynamic_wind_direction(neighbors)
+            self.direction = (dx,dy, -1)
 
     def go_up(self,neighbors):
         """
@@ -810,6 +808,7 @@ class Particle:
 
         Ensures that the particle doesn't move above the grid's maximum height.
         """
+
         if self.position[2] < self.grid_size[2]:
             dx, dy, _ = self.calculate_dynamic_wind_direction(neighbors)
             self.direction = (dx, dy, 1)

@@ -382,11 +382,9 @@ class World:
 
         # Handle rain interactions
         if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
-                # return cell1 if cell1.position[2] >= cell2.position[2] else cell1
                 return cell1
 
         if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
-                # return cell2 if cell2.position[2] >= cell1.position[2] else cell1
                 return cell2
         
         if cell1.cell_type == 7 and cell2.cell_type == 7:
