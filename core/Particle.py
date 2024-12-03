@@ -109,14 +109,14 @@ class Particle:
 
         baseline_pollution_lvl = self.config["baseline_pollution_level"][self.cell_type]
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
-        relative_pollution_ratio = 1.0 if baseline_pollution_lvl == 0 else max(
+        relative_pollution_ratio = 0 if baseline_pollution_lvl == 0 else max(
             (baseline_pollution_lvl/self.pollution_level) , 1.0)
         relative_temp_ratio = 1.0 if baseline_temperature == 0 else max(
             (baseline_temperature/
              self.temperature) , 1.0)
         # Scale pollution and temperature intensity to a range of [0.0, 1.0]
-        pollution_intensity = min(0.0, max(relative_pollution_ratio, 1.0))
-        temperature_intensity = min(0.0,  max(relative_temp_ratio, 1.0))
+        pollution_intensity = max(0.0, min(relative_pollution_ratio, 1.0))
+        temperature_intensity = max(0.0,  min(relative_temp_ratio, 1.0))
 
         # Apply black tint based on pollution
         black_tinted_color = [
