@@ -105,6 +105,7 @@ DEFAULT_PRESET = {
         },
     }
 
+
 PRESET_CONFIGS = {
     "Mass Extinction and Forest Regrowth (Scenario 1)": {
         "days": 365,
@@ -357,7 +358,6 @@ PRESET_CONFIGS = {
         },
     },
 }
-
 
 REQUIRED_KEYS = {
     "days": int,
