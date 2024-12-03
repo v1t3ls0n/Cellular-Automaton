@@ -86,7 +86,7 @@ DEFAULT_PRESET = {
         "water_transfer_rate": 0.1,
         "ocean_conversion_threshold": 1.0,
         "pollution_damage_threshold": 10.0,
-        "pollution_level_tipping_point": 50.0,
+        "pollution_level_tipping_point": 100.0,
         "natural_pollution_decay_rate": 0.1,
         "natural_temperature_decay_rate": 0.1,
         "cloud_saturation_threshold": 3.0,

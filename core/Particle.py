@@ -106,8 +106,8 @@ class Particle:
 
 
         # Scale pollution and temperature intensity to a range of [0.0, 1.0]
-        pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 0.3))
-        temperature_intensity = max(0.0, min(self.temperature / 50.0, 0.3))
+        pollution_intensity = max(0.0, min(self.pollution_level / self.config["baseline_pollution_level"][self.cell_type], 0.5))
+        temperature_intensity = max(0.0, min(self.temperature / self.config["baseline_temperature"][self.cell_type], 0.5))
 
         # Apply black tint based on pollution
         black_tinted_color = [
