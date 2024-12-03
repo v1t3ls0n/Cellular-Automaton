@@ -110,9 +110,10 @@ class Particle:
         baseline_pollution_lvl = self.config["baseline_pollution_level"][self.cell_type]
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
         relative_pollution_ratio = 1.0 if baseline_pollution_lvl == 0 else max(
-            (self.pollution_level/baseline_pollution_lvl) / 10.0, 1.0)
+            (baseline_pollution_lvl/self.pollution_level) , 1.0)
         relative_temp_ratio = 1.0 if baseline_temperature == 0 else max(
-            (self.temperature/baseline_temperature) / 10.0, 1.0)
+            (baseline_temperature/
+             self.temperature) , 1.0)
         # Scale pollution and temperature intensity to a range of [0.0, 1.0]
         pollution_intensity = min(0.0, max(relative_pollution_ratio, 1.0))
         temperature_intensity = min(0.0,  max(relative_temp_ratio, 1.0))
@@ -406,7 +407,7 @@ class Particle:
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_align = self.get_below_neighbors(neighbors)
 
-        # Exchange water mass with neighbors (e.g., clouds or other air particles)
+        # Exchange water mass with neighbors (e.g., clouds or other air partic  les)
         self.absorb_water_mass(neighbors)
 
         # Convert to cloud if the water mass exceeds the saturation threshold
