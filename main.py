@@ -1,7 +1,7 @@
 import os
 import logging
 from config.config_state_handler import update_config, get_config, validate_config
-from config.conf_presets import  PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
+from config.conf_presets import  PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS, REQUIRED_KEYS
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
 
@@ -96,7 +96,7 @@ def parse_user_input():
     elif choice == "3":
         user_config = {}
         print("Setting custom configuration...")
-        for key, value in config.items():
+        for key, value in DEFAULT_PRESET.items():
             if key == "base_colors":
                 continue
             label = KEY_LABELS.get(key, key)
