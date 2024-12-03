@@ -45,24 +45,121 @@ KEY_LABELS = {
 }
 
 DEFAULT_PRESET = {
-    "days": 365,
-    "grid_size": (10, 10, 10),
-    "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 25.0, 10.0, 12.0, -20.0],
-    "baseline_pollution_level":
-    [
-        3.0,   # Ocean
-        5.0,   # Desert
-        5.0,   # Cloud
-        0.0,   # Ice
-        5.0,   # Forest
-        50.0,  # City
-        10.0,  # Air
-        1.0,   # Rain
-        0.0,   # Vacuum
+config_values = {
+    # General Simulation Parameters
+    "days": 365,  # Total number of simulation days.
+    "grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z).
+    "initial_ratios": {
+        "forest": 0.3,  # 30% of the grid is forest.
+        "city": 0.3,  # 30% of the grid is urban areas.
+        "desert": 0.2,  # 20% of the grid is desert.
+        "vacuum": 0.2,  # 20% of the grid is uninhabitable.
+    },
+
+    # Baseline Environmental Properties
+    "baseline_temperature": [
+        15.0,   # Ocean: Moderate temperature due to high heat capacity.
+        35.0,   # Desert: Hot due to direct sunlight and arid conditions.
+        5.0,    # Cloud: Cool at high altitudes.
+        -20.0,  # Ice: Below freezing point.
+        25.0,   # Forest: Moderate, buffered by vegetation.
+        30.0,   # City: Warmer due to urban heat islands.
+        10.0,   # Air: Cool and variable depending on altitude.
+        12.0,   # Rain: Mild temperature, absorbs heat.
+        -50.0,  # Vacuum: Close to absolute zero.
     ],
+
+    "baseline_pollution_level": [
+        3.0,   # Ocean: Pollution from industrial and plastic waste.
+        2.0,   # Desert: Sparse pollution due to limited human activity.
+        1.0,   # Cloud: Almost no pollution, cleanses atmosphere.
+        0.0,   # Ice: Pristine and isolated.
+        5.0,   # Forest: Low pollution absorbed by vegetation.
+        40.0,  # City: High due to factories and vehicles.
+        5.0,   # Air: Moderate, depends on proximity to cities.
+        2.0,   # Rain: Low, acts as a natural cleanser.
+        0.0,   # Vacuum: No pollution, uninhabitable space.
+    ],
+
+    # Pollution Transfer Weights
+    "cell_type_pollution_transfer_weights": {
+        0: 0.3,  # Ocean: Moderate exchange due to water currents.
+        1: 0.1,  # Desert: Minimal exchange due to sparse vegetation.
+        2: 0.8,  # Cloud: High due to atmospheric circulation.
+        3: 0.1,  # Ice: Low, isolated conditions.
+        4: 0.6,  # Forest: Moderate, acts as a pollution sink.
+        5: 0.9,  # City: High, concentrated emissions.
+        6: 0.7,  # Air: High, pollution disperses easily.
+        7: 0.5,  # Rain: Moderate, washes pollution from the air.
+        8: 0.0,  # Vacuum: No transfer, uninhabitable space.
+    },
+
+    # Temperature Transfer Weights
+    "cell_type_temperature_transfer_weights": {
+        0: 0.3,  # Ocean: Moderate due to water's heat capacity.
+        1: 0.2,  # Desert: Low due to poor heat conductivity.
+        2: 0.8,  # Cloud: High due to rapid atmospheric mixing.
+        3: 0.1,  # Ice: Very low due to insulation.
+        4: 0.5,  # Forest: Moderate due to vegetation as a buffer.
+        5: 0.7,  # City: High, urban areas retain and radiate heat.
+        6: 1.0,  # Air: Very high due to convection currents.
+        7: 0.6,  # Rain: Moderate, transfers heat efficiently.
+        8: 0.0,  # Vacuum: No transfer possible.
+    },
+
+    # Water Transfer Weights
+    "cell_type_water_transfer_weights": {
+        0: 0.8,  # Ocean: High transfer due to large water bodies.
+        1: 0.2,  # Desert: Low due to poor water retention.
+        2: 0.9,  # Cloud: Very high due to atmospheric water vapor.
+        3: 0.3,  # Ice: Low, solid state hinders transfer.
+        4: 0.6,  # Forest: Moderate due to vegetation transpiration.
+        5: 0.4,  # City: Low, impermeable surfaces limit transfer.
+        6: 1.0,  # Air: Very high due to vapor movement.
+        7: 0.9,  # Rain: Very high, direct water transfer.
+        8: 0.0,  # Vacuum: No transfer possible.
+    },
+
+    # Forest Properties
+    "forest_pollution_absorption_rate": 0.1,  # Rate of pollution absorption by forests.
+    "forest_cooling_effect": 0.1,  # Cooling effect of vegetation.
+    "forest_pollution_extinction_point": 100.0,  # Pollution level beyond which forests die.
+    "forest_temperature_extinction_point": 100.0,  # Temperature beyond which forests die.
+
+    # City Properties
+    "city_pollution_generation_rate": 0.1,  # Rate of pollution generation in urban areas.
+    "city_warming_effect": 0.1,  # Heat retention in cities.
+    "city_temperature_extinction_point": 70.0,  # Max temperature before urban collapse.
+    "city_pollution_extinction_point": 100.0,  # Pollution level before urban collapse.
+
+    # Physical Properties
+    "freezing_point": -15.0,  # Freezing temperature for water (°C).
+    "melting_point": 20.0,  # Melting temperature for ice (°C).
+    "evaporation_point": 35.0,  # Evaporation temperature for water (°C).
+
+    # Water Transfer
+    "water_transfer_threshold": 0.05,  # Minimum water mass difference for transfer.
+    "water_transfer_rate": 0.1,  # Rate of water transfer between cells.
+    "ocean_conversion_threshold": 1.0,  # Water mass needed to convert a cell to ocean.
+
+    # Pollution Dynamics
+    "pollution_damage_threshold": 10.0,  # Pollution level causing damage to ecosystems.
+    "pollution_level_tipping_point": 50.0,  # Pollution level beyond which damage accelerates.
+    "natural_pollution_decay_rate": 0.01,  # Rate at which pollution decays naturally.
+
+    # Temperature Dynamics
+    "natural_temperature_decay_rate": 0.01,  # Rate at which temperature equalizes to baseline.
+
+    # Cloud Properties
+    "cloud_saturation_threshold": 2.0,  # Minimum water mass for clouds to precipitate.
+
+    # Environmental Change Rates
+    "melting_rate": 0.15,  # Rate at which ice melts.
+    "evaporation_rate": 0.05,  # Rate at which water evaporates.
+}
+
     "cell_type_conversion_weights": {
-        0: 1.0,
+        0: 1.3,
         1: 1.2,
         2: 0.7,
         3: 0.8,
@@ -72,116 +169,20 @@ DEFAULT_PRESET = {
         7: 1.0,
         8: 0.0,
     },
-    "cell_type_pollution_transfer_weights": {
-        0: 0.1,
-        1: 0.1,
-        2: 1.0,
-        3: 0.1,
-        4: 2.0,
-        5: 2.0,
-        6: 2.0,
-        7: 0.1,
-        8: 0.0,
-    },
-    "forest_pollution_absorption_rate": 0.1,
-    "forest_cooling_effect": 0.1,
-    "forest_pollution_extinction_point": 200.0,
-    "forest_temperature_extinction_point": 500.0,
-    "city_pollution_generation_rate": 0.1,
-    "city_warming_effect": 0.1,
-    "city_temperature_extinction_point": 80.0,
-    "city_pollution_extinction_point": 500.0,
-    "freezing_point": -15.0,
-    "melting_point": 20.0,
-    "evaporation_point": 35.0,
-    "water_transfer_threshold": 0.05,
-    "water_transfer_rate": 0.1,
-    "ocean_conversion_threshold": 1.0,
-    "pollution_damage_threshold": 10.0,
-    "pollution_level_tipping_point": 100.0,
-    "natural_pollution_decay_rate": 0.01,
-    "natural_temperature_decay_rate": 0.01,
-    "cloud_saturation_threshold": 2.0,
-    "melting_rate": 0.15,
-    "evaporation_rate": 0.05,
     "base_colors": {
-            6: (1.0, 1.0, 1.0, 0.3),
-            2: (0.7, 0.7, 0.7, 1.0),
-            0: (0.0, 0.3, 1.0, 1.0),
-            3: (0.6, 0.8, 1.0, 1.0),
-            7: (0.5, 0.5, 1.0, 1.0),
-            1: (1.0, 0.8, 0.5, 1.0),
-            4: (0.0, 0.6, 0.0, 1.0),
-            5: (0.4, 0.0, 0.4, 1.0),
-            8: (1.0, 1.0, 1.0, 0.0),
+        6: (1.0, 1.0, 1.0, 0.3),
+        2: (0.7, 0.7, 0.7, 1.0),
+        0: (0.0, 0.3, 1.0, 1.0),
+        3: (0.6, 0.8, 1.0, 1.0),
+        7: (0.5, 0.5, 1.0, 1.0),
+        1: (1.0, 0.8, 0.5, 1.0),
+        4: (0.0, 0.6, 0.0, 1.0),
+        5: (0.4, 0.0, 0.4, 1.0),
+        8: (1.0, 1.0, 1.0, 0.0),
     },
 }
 PRESET_CONFIGS = {
-    "Stable and Static Ecosystem (Scenario 1)": {
-        "days": 365,
-        "grid_size": (10, 10, 10),
-        "initial_ratios": {"forest": 0.6, "city": 0.2, "desert": 0.1, "vacuum": 0.1},
-        "baseline_temperature": [15.0, 20.0, 5.0, -15.0, 20.0, 35.0, 10.0, 12.0, -20.0],
-        "baseline_pollution_level":
-            [
-            0.0,   # Ocean
-            0.0,   # Desert
-            0.0,   # Clouds
-            0.0,   # Ice
-            0.0,  # Forest
-            0.0,   # Cloud
-            0.0,   # Ice
-            0.0,   # Forest
-            20.0,  # City
-            0.0,  # Air
-            0.0,   # Rain
-            0.0,   # Vacuum
-            ],
-
-        "cell_type_conversion_weights": {
-            0: 1.0,
-            1: 1.2,
-            2: 0.7,
-            3: 0.8,
-            4: 1.5,
-            5: 2.0,
-            6: 0.5,
-            7: 1.0,
-            8: 0.0,
-        },
-        "forest_pollution_absorption_rate": 0.3,
-        "forest_cooling_effect": 0.3,
-        "forest_pollution_extinction_point": 500.0,
-        "forest_temperature_extinction_point": 500.0,
-        "city_pollution_generation_rate": 0.1,
-        "city_warming_effect": 0.1,
-        "city_temperature_extinction_point": 500.0,
-        "city_pollution_extinction_point": 500.0,
-        "freezing_point": -15.0,
-        "melting_point": 20.0,
-        "evaporation_point": 35.0,
-        "water_transfer_threshold": 0.05,
-        "water_transfer_rate": 0.1,
-        "ocean_conversion_threshold": 1.0,
-        "pollution_damage_threshold": 30.0,
-        "pollution_level_tipping_point": 100.0,
-        "natural_pollution_decay_rate": 0.2,
-        "natural_temperature_decay_rate": 0.2,
-        "cloud_saturation_threshold": 3.0,
-        "melting_rate": 0.15,
-        "evaporation_rate": 0.05,
-        "base_colors": {
-            6: (1.0, 1.0, 1.0, 0.3),
-            2: (0.7, 0.7, 0.7, 1.0),
-            0: (0.0, 0.3, 1.0, 1.0),
-            3: (0.6, 0.8, 1.0, 1.0),
-            7: (0.5, 0.5, 1.0, 1.0),
-            1: (1.0, 0.8, 0.5, 1.0),
-            4: (0.0, 0.6, 0.0, 1.0),
-            5: (0.4, 0.0, 0.4, 1.0),
-            8: (1.0, 1.0, 1.0, 0.0),
-        },
-    },
+    "Stable and Static Ecosystem (Scenario 1)":DEFAULT_PRESET
 
 }
 
@@ -207,7 +208,7 @@ REQUIRED_KEYS = {
         7: float,  # Rain
         8: float  # Vacuum
     },
-    "cell_type_pollution_transfer_weights":{
+    "cell_type_pollution_transfer_weights": {
         0: float,  # Ocean
         1: float,  # Desert
         2: float,  # Cloud
@@ -217,6 +218,19 @@ REQUIRED_KEYS = {
         6: float,  # Air
         7: float,  # Rain
         8: float  # Vacuum
+    },
+    "cell_type_temperature_transfer_weights": {
+
+        0: float,  # Ocean
+        1: float,  # Desert
+        2: float,  # Cloud
+        3: float,  # Ice
+        4: float,  # Forest
+        5: float,  # City
+        6: float,  # Air
+        7: float,  # Rain
+        8: float  # Vacuum
+
     },
     "forest_pollution_absorption_rate": float,
     "forest_cooling_effect": float,

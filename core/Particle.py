@@ -173,10 +173,13 @@ class Particle:
         """
         transfer_map = {}
         for neighbor in neighbors:
-            if neighbor.cell_type in {2, 6}:  # Cloud or Air
+            if neighbor.cell_type in self.config["cell_type_water_transfer_weights"]:
                 diff = neighbor.water_mass - self.water_mass
+                transfer_weight = self.config["cell_type_water_transfer_weights"][neighbor.cell_type]
+
                 if abs(diff) > self.config["water_transfer_threshold"]:
-                    transfer_amount = diff * 0.05  # Compute transfer amount
+                    # Compute weighted transfer amount
+                    transfer_amount = diff * transfer_weight * self.config["water_transfer_rate"]
                     transfer_map[neighbor.position] = transfer_amount
 
         return transfer_map
@@ -636,49 +639,53 @@ class Particle:
         """
         pollution_decay_rate = self.config["natural_pollution_decay_rate"]
         temperature_decay_rate = self.config["natural_temperature_decay_rate"]
-        pollution_diffusion_rate = self.config.get(
-            "pollution_diffusion_rate", 0.1)
-        temperature_diffusion_rate = self.config.get(
-            "temperature_diffusion_rate", 0.1)
+        pollution_diffusion_rate = self.config.get("pollution_diffusion_rate", 0.1)
+        temperature_diffusion_rate = self.config.get("temperature_diffusion_rate", 0.1)
+        transfer_weights = self.config.get("cell_type_pollution_transfer_weights", {})
 
         # Step 1: Apply natural decay for pollution and temperature
         self.pollution_level = max(
             0,
-            self.pollution_level -
-            (self.pollution_level * pollution_decay_rate)
+            self.pollution_level - (self.pollution_level * pollution_decay_rate)
         )
 
         baseline_temp = self.config["baseline_temperature"][self.cell_type]
         if self.temperature > baseline_temp:
-            self.temperature -= (self.temperature -
-                                 baseline_temp) * temperature_decay_rate
+            self.temperature -= (self.temperature - baseline_temp) * temperature_decay_rate
         elif self.temperature < baseline_temp:
-            self.temperature += (baseline_temp -
-                                 self.temperature) * temperature_decay_rate
+            self.temperature += (baseline_temp - self.temperature) * temperature_decay_rate
 
         # Step 2: Influence from neighboring cells
-        pollution_influence = 0
-        temperature_influence = 0
-        valid_neighbors_count = 0
+        weighted_pollution_influence = 0
+        weighted_temperature_influence = 0
+        total_pollution_weight = 0
+        total_temperature_weight = 0
 
         for neighbor in neighbors:
             # Skip invalid neighbors (e.g., boundaries or non-polluting cell types)
-            if neighbor is None or neighbor.cell_type not in self.config["baseline_temperature"]:
+            if neighbor is None or neighbor.cell_type not in transfer_weights:
                 continue
 
-            valid_neighbors_count += 1
+            # Get the pollution transfer weight for the neighbor's cell type
+            pollution_weight = transfer_weights[neighbor.cell_type]
+            total_pollution_weight += pollution_weight
 
-            # Calculate influence from neighbors
+            # Calculate weighted pollution influence
             pollution_difference = neighbor.pollution_level - self.pollution_level
-            pollution_influence += pollution_difference * pollution_diffusion_rate
+            weighted_pollution_influence += pollution_difference * pollution_diffusion_rate * pollution_weight
 
+            # Calculate temperature influence (equal influence for all valid neighbors)
             temperature_difference = neighbor.temperature - self.temperature
-            temperature_influence += temperature_difference * temperature_diffusion_rate
+            temperature_weight = 1  # Assuming equal weighting for temperature influence
+            total_temperature_weight += temperature_weight
+            weighted_temperature_influence += temperature_difference * temperature_diffusion_rate * temperature_weight
 
         # Step 3: Apply the averaged influence from neighbors
-        if valid_neighbors_count > 0:
-            self.pollution_level += pollution_influence / valid_neighbors_count
-            self.temperature += temperature_influence / valid_neighbors_count
+        if total_pollution_weight > 0:
+            self.pollution_level += weighted_pollution_influence / total_pollution_weight
+
+        if total_temperature_weight > 0:
+            self.temperature += weighted_temperature_influence / total_temperature_weight
 
         # Step 4: Ensure pollution and temperature levels remain within valid bounds
         self.pollution_level = max(0, self.pollution_level)
@@ -699,8 +706,8 @@ class Particle:
 
         for neighbor in neighbors:
             weighted_temperature_sum += neighbor.temperature * \
-                self.config["cell_type_conversion_weights"][neighbor.cell_type]
-            total_weight += self.config["cell_type_conversion_weights"][neighbor.cell_type]
+                self.config["cell_type_temperature_transfer_weights"][neighbor.cell_type]
+            total_weight += self.config["cell_type_temperature_transfer_weights"][neighbor.cell_type]
 
         # Calculate weighted average temperature
         if total_weight > 0:
@@ -729,24 +736,25 @@ class Particle:
 
     def absorb_water_mass(self, neighbors):
         """
-        Exchange water mass with neighboring cells of type Cloud or Air.
+        Exchange water mass with neighboring cells based on water transfer weights.
 
         Water mass is exchanged based on the difference between the current cell's water mass
         and the neighbor's water mass, adjusted by a weight factor and a threshold.
         """
         total_transfer = 0
         for neighbor in neighbors:
-            if neighbor.cell_type in {2, 6}:  # Cloud or Air
-                diff = abs(neighbor.water_mass - self.water_mass)
-                water_transfer = (
-                    diff * 0.05 *
-                    self.config["cell_type_conversion_weights"][neighbor.cell_type]
-                    if diff < self.config["water_transfer_threshold"]
-                    else 0
-                )
-                if water_transfer > 0:
+            if neighbor.cell_type in self.config["cell_type_water_transfer_weights"]:
+                diff = neighbor.water_mass - self.water_mass
+                transfer_weight = self.config["cell_type_water_transfer_weights"][neighbor.cell_type]
+
+                if abs(diff) > self.config["water_transfer_threshold"]:
+                    # Compute weighted water transfer
+                    water_transfer = diff * transfer_weight * self.config["water_transfer_rate"]
+
+                    # Adjust the current cell's water mass
                     self.water_mass += water_transfer
-                    total_transfer += water_transfer
+                    total_transfer += abs(water_transfer)
+
         return total_transfer
 
     ####################################################################################################################
