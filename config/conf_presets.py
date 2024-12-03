@@ -45,7 +45,7 @@ KEY_LABELS = {
 }
 
 DEFAULT_PRESET = {
-config_values = {
+
     # General Simulation Parameters
     "days": 365,  # Total number of simulation days.
     "grid_size": (10, 10, 10),  # Dimensions of the simulation grid (X, Y, Z).
