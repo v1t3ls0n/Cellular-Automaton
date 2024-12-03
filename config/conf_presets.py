@@ -48,7 +48,7 @@ DEFAULT_PRESET = {
     "days": 365,
     "grid_size": (10, 10, 10),
     "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 25.0, 10.0, 12.0, -20.0],
+    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
     "baseline_pollution_level":
     [
         3.0,   # Ocean: Some pollution from industrial waste and microplastics
