@@ -165,6 +165,22 @@ class Particle:
         # Default to white color if the cell type is undefined
         return base_color if base_color[3] != 0.0 else (1.0, 1.0, 1.0, 0.0)
 
+    def calculate_water_transfer(self, neighbors):
+        """
+        Calculate the water transfer between the current cell and its neighbors.
+
+        Returns a dictionary mapping the positions of neighboring cells to the amount of water transferred.
+        """
+        transfer_map = {}
+        for neighbor in neighbors:
+            if neighbor.cell_type in {2, 6}:  # Cloud or Air
+                diff = neighbor.water_mass - self.water_mass
+                if abs(diff) > self.config["water_transfer_threshold"]:
+                    transfer_amount = diff * 0.05  # Compute transfer amount
+                    transfer_map[neighbor.position] = transfer_amount
+
+        return transfer_map
+
     ####################################################################################################################
     ###################################### CELL UPDATES: ###############################################################
     ####################################################################################################################
@@ -598,7 +614,7 @@ class Particle:
         self.go_down(neighbors)  # Air moves upward
 
     ####################################################################################################################
-    ##################################### CELL NATURAL DECAY : #########################################################
+    ############################################### CELL EQUILIBRATE ###################################################
     ####################################################################################################################
 
     def _apply_natural_decay(self, neighbors):
@@ -615,20 +631,25 @@ class Particle:
         """
         pollution_decay_rate = self.config["natural_pollution_decay_rate"]
         temperature_decay_rate = self.config["natural_temperature_decay_rate"]
-        pollution_diffusion_rate = self.config.get("pollution_diffusion_rate", 0.1)
-        temperature_diffusion_rate = self.config.get("temperature_diffusion_rate", 0.1)
+        pollution_diffusion_rate = self.config.get(
+            "pollution_diffusion_rate", 0.1)
+        temperature_diffusion_rate = self.config.get(
+            "temperature_diffusion_rate", 0.1)
 
         # Step 1: Apply natural decay for pollution and temperature
         self.pollution_level = max(
             0,
-            self.pollution_level - (self.pollution_level * pollution_decay_rate)
+            self.pollution_level -
+            (self.pollution_level * pollution_decay_rate)
         )
 
         baseline_temp = self.config["baseline_temperature"][self.cell_type]
         if self.temperature > baseline_temp:
-            self.temperature -= (self.temperature - baseline_temp) * temperature_decay_rate
+            self.temperature -= (self.temperature -
+                                 baseline_temp) * temperature_decay_rate
         elif self.temperature < baseline_temp:
-            self.temperature += (baseline_temp - self.temperature) * temperature_decay_rate
+            self.temperature += (baseline_temp -
+                                 self.temperature) * temperature_decay_rate
 
         # Step 2: Influence from neighboring cells
         pollution_influence = 0
@@ -660,11 +681,6 @@ class Particle:
             baseline_temp - 100,  # Arbitrary lower bound
             min(self.temperature, baseline_temp + 100)  # Arbitrary upper bound
         )
-
-
-    ####################################################################################################################
-    ############################################### CELL EQUILIBRATE ###################################################
-    ####################################################################################################################
 
     def equilibrate_temperature(self, neighbors):
         """
@@ -817,26 +833,6 @@ class Particle:
         Sets the direction to (0, 0, 0) to indicate no movement.
         """
         self.direction = (0, 0, 0)
-
-    ####################################################################################################################
-    ###################################### CALC HELPER FUNCTIONS: ######################################################
-    ####################################################################################################################
-
-    def calculate_water_transfer(self, neighbors):
-        """
-        Calculate the water transfer between the current cell and its neighbors.
-
-        Returns a dictionary mapping the positions of neighboring cells to the amount of water transferred.
-        """
-        transfer_map = {}
-        for neighbor in neighbors:
-            if neighbor.cell_type in {2, 6}:  # Cloud or Air
-                diff = neighbor.water_mass - self.water_mass
-                if abs(diff) > self.config["water_transfer_threshold"]:
-                    transfer_amount = diff * 0.05  # Compute transfer amount
-                    transfer_map[neighbor.position] = transfer_amount
-
-        return transfer_map
 
     ####################################################################################################################
     ###################################### SURROUNDINGS: ###############################################################

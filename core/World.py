@@ -9,9 +9,7 @@ class World:
     """
     Represents the simulation world, including the grid of particles and associated behaviors.
     """
-
     config = get_config()
-
     def __init__(self, grid_size=None, initial_ratios=None, day_number=0):
         """
         Initialize the World class.
@@ -88,8 +86,66 @@ class World:
         Returns:
             None
         """
+
+        def _get_dynamic_air_or_cloud_type(k, z):
+            """
+            Determine the type of Air, Cloud, or Vacuum based on elevation.
+
+            Args:
+                k (int): Current elevation.
+                z (int): Maximum elevation.
+
+            Returns:
+                int: Cell type (6: Air, 2: Cloud, 8: Vacuum).
+            """
+            vacuum_ratio = self.initial_vacuum_ratio
+
+            if k >= 0.9 * z:
+                air_ratio = 0.5 - vacuum_ratio
+                cloud_ratio = 0.4
+            elif k >= 0.8 * z:
+                air_ratio = 0.6 - vacuum_ratio
+                cloud_ratio = 0.3
+            elif k >= 0.7 * z:
+                air_ratio = 0.8 - vacuum_ratio
+                cloud_ratio = 0.1
+            else:
+                return 6  # Default to Air
+
+            # Normalize probabilities
+            total_ratio = air_ratio + cloud_ratio + vacuum_ratio
+            air_ratio /= total_ratio
+            cloud_ratio /= total_ratio
+            vacuum_ratio /= total_ratio
+
+            return np.random.choice([6, 2, 8], p=[air_ratio, cloud_ratio, vacuum_ratio])
+
+        def _generate_elevation_map():
+            """
+            Generate an elevation map using Perlin noise for smooth terrain.
+
+            Returns:
+                np.ndarray: A 2D elevation map.
+            """
+            from noise import pnoise2
+
+            x, y, _ = self.grid_size
+            elevation_map = np.zeros((x, y))
+
+            scale = 10.0  # Scale for terrain features
+            octaves = 10  # Detail level
+            persistence = 0.5
+            lacunarity = 2.0
+
+            for i in range(x):
+                for j in range(y):
+                    elevation_map[i, j] = int((pnoise2(i / scale, j / scale, octaves=octaves,
+                                                       persistence=persistence, lacunarity=lacunarity) + 1) * (self.grid_size[2] // 5))
+
+            return elevation_map
+
         x, y, z = self.grid_size
-        elevation_map = self._generate_elevation_map()
+        elevation_map = _generate_elevation_map()
 
         # Normalize the initial ratios without modifying instance variables
         total_ratio = (
@@ -155,7 +211,7 @@ class World:
                                     [0, 3, 6], p=[0.75, 0.10, 0.15]  # Sea/Ice/Air
                                 )
                             elif k > elevation_map[i, j]:  # Above sea
-                                cell_type = self._get_dynamic_air_or_cloud_type(
+                                cell_type = _get_dynamic_air_or_cloud_type(
                                     k, z)
 
                         elif surface_type == 'unused_land':
@@ -172,17 +228,17 @@ class World:
                                     )
                                     plane_surfaces_map[(i, j, k)] = 'used_land'
                             elif k > elevation_map[i, j] + 1:  # Above land
-                                cell_type = self._get_dynamic_air_or_cloud_type(
+                                cell_type = _get_dynamic_air_or_cloud_type(
                                     k, z)
 
                         elif surface_type == 'used_land':
                             # Above forests/cities, only air or cloud
-                            cell_type = self._get_dynamic_air_or_cloud_type(
+                            cell_type = _get_dynamic_air_or_cloud_type(
                                 k, z)
 
                         elif surface_type == 'sky':
                             # Above sky, only air or cloud
-                            cell_type = self._get_dynamic_air_or_cloud_type(
+                            cell_type = _get_dynamic_air_or_cloud_type(
                                 k, z)
                     # Update the plane_surfaces_map based on the assigned cell type
                     if cell_type in {0, 3}:  # Sea or Ice
@@ -224,74 +280,119 @@ class World:
         logging.info(f"Grid initialized successfully with dimensions: {
                      self.grid_size}")
 
-    def _get_dynamic_air_or_cloud_type(self, k, z):
-        """
-        Determine the type of Air, Cloud, or Vacuum based on elevation.
-
-        Args:
-            k (int): Current elevation.
-            z (int): Maximum elevation.
-
-        Returns:
-            int: Cell type (6: Air, 2: Cloud, 8: Vacuum).
-        """
-        vacuum_ratio = self.initial_vacuum_ratio
-
-        if k >= 0.9 * z:
-            air_ratio = 0.5 - vacuum_ratio
-            cloud_ratio = 0.4
-        elif k >= 0.8 * z:
-            air_ratio = 0.6 - vacuum_ratio
-            cloud_ratio = 0.3
-        elif k >= 0.7 * z:
-            air_ratio = 0.8 - vacuum_ratio
-            cloud_ratio = 0.1
-        else:
-            return 6  # Default to Air
-
-        # Normalize probabilities
-        total_ratio = air_ratio + cloud_ratio + vacuum_ratio
-        air_ratio /= total_ratio
-        cloud_ratio /= total_ratio
-        vacuum_ratio /= total_ratio
-
-        return np.random.choice([6, 2, 8], p=[air_ratio, cloud_ratio, vacuum_ratio])
-
-    def _generate_elevation_map(self):
-        """
-        Generate an elevation map using Perlin noise for smooth terrain.
-
-        Returns:
-            np.ndarray: A 2D elevation map.
-        """
-        from noise import pnoise2
-
-        x, y, _ = self.grid_size
-        elevation_map = np.zeros((x, y))
-
-        scale = 10.0  # Scale for terrain features
-        octaves = 10  # Detail level
-        persistence = 0.5
-        lacunarity = 2.0
-
-        for i in range(x):
-            for j in range(y):
-                elevation_map[i, j] = int((pnoise2(i / scale, j / scale, octaves=octaves,
-                                                   persistence=persistence, lacunarity=lacunarity) + 1) * (self.grid_size[2] // 5))
-
-        return elevation_map
-
     def update_cells_on_grid(self):
         """
         Update all cells in the grid based on their next states and resolve collisions.
         """
+
+        def resolve_collision(cell1, cell2):
+            """
+            Resolve collisions between two cells with improved handling of interactions.
+
+            Args:
+                cell1 (Particle): The first cell involved in the collision.
+                cell2 (Particle): The second cell involved in the collision.
+
+            Returns:
+                Particle: The resolved cell after the collision.
+            """
+
+            # if (cell1.cell_type == 6 and cell2.cell_type == 6):
+            #     # return cell1 if (cell1.water_mass + cell1.temperature) > (cell2.water_mass+cell2.temperature) else cell2
+            #     return cell1 if cell1.water_mass >= cell2.water_mass else cell2
+
+            # # Prevent vacuum overwrite air or cloud
+            # if cell1.cell_type == 8 and cell2.cell_type in {2, 6}:
+            #     return cell2
+            # if cell2.cell_type == 8 and cell1.cell_type in {2, 6}:
+            #     return cell1
+
+            # # Handle rain interactions
+            # if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
+            #     return cell1
+
+            # if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
+            #     return cell2
+
+            # if cell1.cell_type == 7 and cell2.cell_type == 7:
+            #     return cell1 if cell1.water_mass > cell2.water_mass else cell2
+            # # Handle rain clouds interactions (Clouds replace air)
+            # if cell1.cell_type == 6 and cell2.cell_type == 2:  # Cell1 is Rain
+            #     return cell2
+
+            # if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
+            #     return cell1
+
+            # Default behavior based on cell type weights
+            return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
+
+        def get_neighbor_positions(i, j, k):
+            """
+            Get the positions of neighboring cells for the given cell position (i, j, k).
+
+            Args:
+                i (int): The x-coordinate of the cell.
+                j (int): The y-coordinate of the cell.
+                k (int): The z-coordinate of the cell.
+
+            Returns:
+                list: A list of tuples representing the positions of neighboring cells.
+            """
+            neighbors = []
+            directions = [
+                (-1, 0, 0), (1, 0, 0),  # Left and right
+                (0, -1, 0), (0, 1, 0),  # Up and down
+                (0, 0, -1), (0, 0, 1)   # Below and above
+            ]
+
+            for dx, dy, dz in directions:
+                nx, ny, nz = i + dx, j + dy, k + dz
+                if 0 <= nx < self.grid_size[0] and 0 <= ny < self.grid_size[1] and 0 <= nz < self.grid_size[2]:
+                    neighbors.append((nx, ny, nz))
+
+            return neighbors
+
+        def accumulate_water_transfers():
+            """
+            Compute all water transfers for the grid.
+
+            Returns:
+                dict: A transfer map with positions as keys and transfer amounts as values.
+            """
+
+            transfer_map = {}
+            for i in range(self.grid_size[0]):
+                for j in range(self.grid_size[1]):
+                    for k in range(self.grid_size[2]):
+                        cell = self.grid[i, j, k]
+                        if cell and cell.cell_type in {2, 6}:  # Cloud or Air
+                            neighbors = [
+                                self.grid[nx, ny, nz] for nx, ny, nz in get_neighbor_positions(i, j, k)
+                            ]
+                            cell_transfers = cell.calculate_water_transfer(
+                                neighbors)
+                            for neighbor_pos, transfer_amount in cell_transfers.items():
+                                transfer_map[neighbor_pos] = transfer_map.get(
+                                    neighbor_pos, 0) + transfer_amount
+
+            return transfer_map
+
+        def apply_water_transfers(transfer_map):
+            """
+            Apply the water transfers to the grid based on the computed transfer map.
+            """
+            for (i, j, k), transfer_amount in transfer_map.items():
+                cell = self.grid[i, j, k]
+                if cell and cell.cell_type in {2, 6}:  # Cloud or Air
+                    cell.water_mass += transfer_amount
+
         x, y, z = self.grid_size
 
         # Phase 1: Compute water transfers
-        transfer_map = self.accumulate_water_transfers()
+        transfer_map = accumulate_water_transfers()
 
         # Phase 2: Apply transfers
-        self.apply_water_transfers(transfer_map)
+        apply_water_transfers(transfer_map)
 
         updates = {}
 
@@ -315,7 +416,7 @@ class World:
                                 cell.position = (i, j, k - 1)
                         neighbors = [
                             self.grid[nx, ny, nz]
-                            for nx, ny, nz in self.get_neighbor_positions(i, j, k)
+                            for nx, ny, nz in get_neighbor_positions(i, j, k)
                             if self.grid[nx, ny, nz] is not None
                         ]
                         updates[(i, j, k)] = cell.compute_next_state(neighbors)
@@ -331,7 +432,7 @@ class World:
             if next_position not in position_map:
                 position_map[next_position] = updated_cell
             else:
-                position_map[next_position] = self.resolve_collision(
+                position_map[next_position] = resolve_collision(
                     position_map[next_position], updated_cell
                 )
 
@@ -357,107 +458,6 @@ class World:
 
         self.grid = new_grid
         self._recalculate_global_attributes()
-
-    def resolve_collision(self, cell1, cell2):
-        """
-        Resolve collisions between two cells with improved handling of interactions.
-
-        Args:
-            cell1 (Particle): The first cell involved in the collision.
-            cell2 (Particle): The second cell involved in the collision.
-
-        Returns:
-            Particle: The resolved cell after the collision.
-        """
-
-        # if (cell1.cell_type == 6 and cell2.cell_type == 6):
-        #     # return cell1 if (cell1.water_mass + cell1.temperature) > (cell2.water_mass+cell2.temperature) else cell2
-        #     return cell1 if cell1.water_mass >= cell2.water_mass else cell2
-
-        # # Prevent vacuum overwrite air or cloud
-        # if cell1.cell_type == 8 and cell2.cell_type in {2, 6}:
-        #     return cell2
-        # if cell2.cell_type == 8 and cell1.cell_type in {2, 6}:
-        #     return cell1
-
-        # # Handle rain interactions
-        # if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
-        #     return cell1
-
-        # if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
-        #     return cell2
-
-        # if cell1.cell_type == 7 and cell2.cell_type == 7:
-        #     return cell1 if cell1.water_mass > cell2.water_mass else cell2
-        # # Handle rain clouds interactions (Clouds replace air)
-        # if cell1.cell_type == 6 and cell2.cell_type == 2:  # Cell1 is Rain
-        #     return cell2
-
-        # if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
-        #     return cell1
-
-        # Default behavior based on cell type weights
-        return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
-
-    def get_neighbor_positions(self, i, j, k):
-        """
-        Get the positions of neighboring cells for the given cell position (i, j, k).
-
-        Args:
-            i (int): The x-coordinate of the cell.
-            j (int): The y-coordinate of the cell.
-            k (int): The z-coordinate of the cell.
-
-        Returns:
-            list: A list of tuples representing the positions of neighboring cells.
-        """
-        neighbors = []
-        directions = [
-            (-1, 0, 0), (1, 0, 0),  # Left and right
-            (0, -1, 0), (0, 1, 0),  # Up and down
-            (0, 0, -1), (0, 0, 1)   # Below and above
-        ]
-
-        for dx, dy, dz in directions:
-            nx, ny, nz = i + dx, j + dy, k + dz
-            if 0 <= nx < self.grid_size[0] and 0 <= ny < self.grid_size[1] and 0 <= nz < self.grid_size[2]:
-                neighbors.append((nx, ny, nz))
-
-        return neighbors
-
-    def accumulate_water_transfers(self):
-        """
-        Compute all water transfers for the grid.
-
-        Returns:
-            dict: A transfer map with positions as keys and transfer amounts as values.
-        """
-
-        transfer_map = {}
-        for i in range(self.grid_size[0]):
-            for j in range(self.grid_size[1]):
-                for k in range(self.grid_size[2]):
-                    cell = self.grid[i, j, k]
-                    if cell and cell.cell_type in {2, 6}:  # Cloud or Air
-                        neighbors = [
-                            self.grid[nx, ny, nz] for nx, ny, nz in self.get_neighbor_positions(i, j, k)
-                        ]
-                        cell_transfers = cell.calculate_water_transfer(
-                            neighbors)
-                        for neighbor_pos, transfer_amount in cell_transfers.items():
-                            transfer_map[neighbor_pos] = transfer_map.get(
-                                neighbor_pos, 0) + transfer_amount
-
-        return transfer_map
-
-    def apply_water_transfers(self, transfer_map):
-        """
-        Apply the water transfers to the grid based on the computed transfer map.
-        """
-        for (i, j, k), transfer_amount in transfer_map.items():
-            cell = self.grid[i, j, k]
-            if cell and cell.cell_type in {2, 6}:  # Cloud or Air
-                cell.water_mass += transfer_amount
 
     def _recalculate_global_attributes(self):
         """
