@@ -647,11 +647,9 @@ class MatplotlibDisplay:
 
     def render_standardized_population_graph(self, ax, color="purple"):
         """Render the population graph (Standardized)."""
-        standardized_data = self.standardize_data(
-            self.simulation.city_population_over_time)
+        standardized_data = self.standardize_data(self.simulation.city_population_over_time)
         # Assuming std deviation for population if available; if not, skip.
-        standardized_std_dev = self.standardize_data(self.simulation.std_dev_population_over_time) if hasattr(
-            self.simulation, "std_dev_population_over_time") else None
+        standardized_std_dev = self.standardize_data(self.simulation.std_dev_city_population_over_time) 
         self.render_generic_graph(
             ax=ax,
             title="City Population Graph (Standardized)",
