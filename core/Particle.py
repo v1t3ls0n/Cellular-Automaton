@@ -106,8 +106,8 @@ class Particle:
 
 
         # Scale pollution and temperature intensity to a range of [0.0, 1.0]
-        pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 1.0))
-        temperature_intensity = max(0.0, min(self.temperature / 50.0, 1.0))
+        pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 0.3))
+        temperature_intensity = max(0.0, min(self.temperature / 50.0, 0.3))
 
         # Apply black tint based on pollution
         black_tinted_color = [
@@ -277,7 +277,6 @@ class Particle:
         saturation_threshold = self.config["cloud_saturation_threshold"]
         if (self.is_surrounded_by_land_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_below)) and (self.is_surrounded_by_land_cells(neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_aligned)):
             self.go_up(neighbors)
-    
         elif self.water_mass >= saturation_threshold:  # Convert to rain if saturated
             self.convert_to_rain(neighbors)
         else:
@@ -442,22 +441,20 @@ class Particle:
             neighbors (list): List of neighboring particles.
         """
         # Move rain particles downward to simulate precipitation
-        self.go_down(neighbors)
-        self.direction = (0,0,-1)
         # Check if the particle has reached the ground level
-        x, y, z = self.position
-        
-          # Ground level
-            # Convert to ocean if surrounded by sea cells
-
-            
-        if self.is_surrounded_by_sea_cells(neighbors):
-                self.convert_to_ocean(neighbors)
+        self.go_down(neighbors)
+        neighbors_below = self.get_below_neighbors(neighbors)
+        neighbors_align = self.get_below_neighbors(neighbors)
+        neighbors_above = self.get_below_neighbors(neighbors)
+        if self.is_surrounded_by_sea_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_align) or self.is_surrounded_by_sea_cells(neighbors_above):
+            self.convert_to_ocean(neighbors)
             # Convert to air (dry up) if surrounded by land cells
-        elif self.is_surrounded_by_land_cells(neighbors):
-                self.convert_to_air(neighbors)
-        elif self.is_surrounded_by_air_cells(neighbors):
-            self.go_down(neighbors)
+        elif self.is_surrounded_by_land_cells(neighbors_below) or self.is_surrounded_by_land_cells(neighbors_align) or self.is_surrounded_by_land_cells(neighbors_above):
+            self.convert_to_air(neighbors)
+        elif self.is_surrounded_by_cloud_cells(neighbors_below):
+            self.convert_to_cloud(neighbors)
+
+
 
     ####################################################################################################################
     ###################################### CELL CONVERSIONS ###########################################################
@@ -596,6 +593,8 @@ class Particle:
         self.water_mass = 1.0  # Rain has full water mass
         self.temperature -= 1  # Rain cools during formation
         self.direction = (0, 0, -1)  # Move downward
+        self.go_down(neighbors)  # Air moves upward
+
     ####################################################################################################################
     ##################################### CELL NATURAL DECAY : #########################################################
     ####################################################################################################################
