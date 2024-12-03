@@ -45,38 +45,38 @@ KEY_LABELS = {
 }
 
 DEFAULT_PRESET = {
-        "days": 365,
-        "grid_size": (10, 10, 10),
-        "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-        "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 25.0, 10.0, 12.0, -20.0],
-        "baseline_pollution_level": 
-                [
-                3.0,   # Ocean: Some pollution from industrial waste and microplastics
-                10.0,  # Desert: Dust and localized human activity
-                1.0,   # Cloud: Minimal pollution
-                0.0,   # Ice: Pristine areas with negligible pollution
-                2.0,   # Forest: Absorbs pollution, very low levels
-                20.0,  # City: High pollution due to vehicles and factories
-                50.0,   # Air: Variable pollution based on proximity to cities
-                0.0,   # Rain: Cleanses the atmosphere
-                0.0,   # Vacuum: No pollution in empty space
-                ],
-        "cell_type_weights": {
-            0: 1.0,
-            1: 1.2,
-            2: 0.7,
-            3: 0.8,
-            4: 1.5,
-            5: 2.0,
-            6: 0.5,
-            7: 1.0,
-            8: 0.0,
-        },
-        "forest_pollution_absorption_rate": 0.1,
-        "forest_cooling_effect": 0.1,
-        "forest_pollution_extinction_point": 100.0,
-        "forest_temperature_extinction_point": 100.0,
-        "city_pollution_generation_rate": 0.1,
+    "days": 365,
+    "grid_size": (10, 10, 10),
+    "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
+    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 25.0, 10.0, 12.0, -20.0],
+    "baseline_pollution_level":
+    [
+        3.0,   # Ocean: Some pollution from industrial waste and microplastics
+        10.0,  # Desert: Dust and localized human activity
+        1.0,   # Cloud: Minimal pollution
+        0.0,   # Ice: Pristine areas with negligible pollution
+        2.0,   # Forest: Absorbs pollution, very low levels
+        20.0,  # City: High pollution due to vehicles and factories
+        50.0,   # Air: Variable pollution based on proximity to cities
+        0.0,   # Rain: Cleanses the atmosphere
+        0.0,   # Vacuum: No pollution in empty space
+    ],
+    "cell_type_weights": {
+        0: 1.0,
+        1: 1.2,
+        2: 0.7,
+        3: 0.8,
+        4: 1.5,
+        5: 2.0,
+        6: 0.5,
+        7: 1.0,
+        8: 0.0,
+    },
+    "forest_pollution_absorption_rate": 0.1,
+    "forest_cooling_effect": 0.1,
+    "forest_pollution_extinction_point": 100.0,
+    "forest_temperature_extinction_point": 100.0,
+    "city_pollution_generation_rate": 0.1,
         "city_warming_effect": 0.1,
         "city_temperature_extinction_point": 100.0,
         "city_pollution_extinction_point": 100.0,
@@ -103,8 +103,8 @@ DEFAULT_PRESET = {
             4: (0.0, 0.6, 0.0, 1.0),
             5: (0.4, 0.0, 0.4, 1.0),
             8: (1.0, 1.0, 1.0, 0.0),
-        },
-    }
+    },
+}
 
 
 PRESET_CONFIGS = {
@@ -415,4 +415,3 @@ REQUIRED_KEYS = {
         8: tuple,  # Vacuum
     },
 }
-

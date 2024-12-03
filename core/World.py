@@ -4,6 +4,7 @@ from .Particle import Particle
 import math
 from config.config_state_handler import get_config
 
+
 class World:
     """
     Represents the simulation world, including the grid of particles and associated behaviors.
@@ -279,7 +280,7 @@ class World:
                                                    persistence=persistence, lacunarity=lacunarity) + 1) * (self.grid_size[2] // 5))
 
         return elevation_map
-    
+
     def update_cells_on_grid(self):
         """
         Update all cells in the grid based on their next states and resolve collisions.
@@ -322,8 +323,8 @@ class World:
         # Phase 4: Resolve collisions
         position_map = {}
         for (i, j, k), updated_cell in updates.items():
-            if updated_cell.cell_type in {0,1,3,4,5}:
-                position_map[i,j,k] = updated_cell
+            if updated_cell.cell_type in {0, 1, 3, 4, 5}:
+                position_map[i, j, k] = updated_cell
                 continue
 
             next_position = updated_cell.get_next_position()
@@ -357,7 +358,6 @@ class World:
         self.grid = new_grid
         self._recalculate_global_attributes()
 
-
     def resolve_collision(self, cell1, cell2):
         """
         Resolve collisions between two cells with improved handling of interactions.
@@ -375,32 +375,30 @@ class World:
             return cell1 if cell1.water_mass >= cell2.water_mass else cell2
 
         # Prevent vacuum overwrite air or cloud
-        if cell1.cell_type == 8 and cell2.cell_type in {2,6}:
+        if cell1.cell_type == 8 and cell2.cell_type in {2, 6}:
             return cell2
-        if cell2.cell_type == 8 and cell1.cell_type in {2,6}:
+        if cell2.cell_type == 8 and cell1.cell_type in {2, 6}:
             return cell1
 
         # Handle rain interactions
         if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
-                return cell1
+            return cell1
 
         if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
-                return cell2
-        
+            return cell2
+
         if cell1.cell_type == 7 and cell2.cell_type == 7:
             return cell1 if cell1.water_mass > cell2.water_mass else cell2
         # Handle rain clouds interactions (Clouds replace air)
         if cell1.cell_type == 6 and cell2.cell_type == 2:  # Cell1 is Rain
-                return cell2  
+            return cell2
 
         if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
-                return cell1 
+            return cell1
 
         # Default behavior based on cell type weights
-        return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type]  else cell2
-    
+        return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
 
-    
     def get_neighbor_positions(self, i, j, k):
         """
         Get the positions of neighboring cells for the given cell position (i, j, k).
@@ -461,7 +459,6 @@ class World:
             if cell and cell.cell_type in {2, 6}:  # Cloud or Air
                 cell.water_mass += transfer_amount
 
-
     def _recalculate_global_attributes(self):
         """
         Recalculate global attributes like average temperature, pollution, water mass,
@@ -475,9 +472,12 @@ class World:
         total_cells = 0
 
         # Initialize counts and metrics for all cell types
-        cell_type_counts = {cell_type: 0 for cell_type in range(10)}  # Assuming 10 cell types (0-9)
-        cell_type_water_mass = {cell_type: [] for cell_type in range(10)}  # To calculate water mass stats
-        cell_type_temperature = {cell_type: [] for cell_type in range(10)}  # To calculate temperature stats
+        # Assuming 10 cell types (0-9)
+        cell_type_counts = {cell_type: 0 for cell_type in range(10)}
+        # To calculate water mass stats
+        cell_type_water_mass = {cell_type: [] for cell_type in range(10)}
+        # To calculate temperature stats
+        cell_type_temperature = {cell_type: [] for cell_type in range(10)}
 
         temperature_values = []  # Store temperature values for global std dev
         pollution_values = []  # Store pollution values for global std dev
@@ -503,8 +503,10 @@ class World:
 
                     # Update per-cell-type statistics
                     cell_type_counts[cell.cell_type] += 1
-                    cell_type_water_mass[cell.cell_type].append(cell.water_mass)
-                    cell_type_temperature[cell.cell_type].append(cell.temperature)
+                    cell_type_water_mass[cell.cell_type].append(
+                        cell.water_mass)
+                    cell_type_temperature[cell.cell_type].append(
+                        cell.temperature)
                     if cell.cell_type == 5:  # City
                         total_cities += 1
                     elif cell.cell_type == 4:  # Forest
@@ -521,13 +523,16 @@ class World:
         # Global standard deviations
         if total_cells > 0:
             self.std_dev_temperature = math.sqrt(
-                sum((temp - self.avg_temperature) ** 2 for temp in temperature_values) / total_cells
+                sum((temp - self.avg_temperature) **
+                    2 for temp in temperature_values) / total_cells
             )
             self.std_dev_pollution = math.sqrt(
-                sum((poll - self.avg_pollution) ** 2 for poll in pollution_values) / total_cells
+                sum((poll - self.avg_pollution) **
+                    2 for poll in pollution_values) / total_cells
             )
             self.std_dev_water_mass = math.sqrt(
-                sum((mass - self.avg_water_mass) ** 2 for mass in water_mass_values) / total_cells
+                sum((mass - self.avg_water_mass) **
+                    2 for mass in water_mass_values) / total_cells
             )
         else:
             self.std_dev_temperature = 0
@@ -542,8 +547,10 @@ class World:
                 avg_temp = sum(cell_type_temperature[cell_type]) / count
                 avg_water = sum(cell_type_water_mass[cell_type]) / count
 
-                temp_variance = sum((t - avg_temp) ** 2 for t in cell_type_temperature[cell_type]) / count
-                water_variance = sum((w - avg_water) ** 2 for w in cell_type_water_mass[cell_type]) / count
+                temp_variance = sum(
+                    (t - avg_temp) ** 2 for t in cell_type_temperature[cell_type]) / count
+                water_variance = sum(
+                    (w - avg_water) ** 2 for w in cell_type_water_mass[cell_type]) / count
 
                 self.cell_type_stats[cell_type] = {
                     "count": count,
@@ -564,13 +571,18 @@ class World:
         # Log results (optional)
 
         logging.info(
-            f"Global - Avg Temp: {self.avg_temperature:.2f}, Std Dev Temp: {self.std_dev_temperature:.2f}, "
-            f"Avg Pollution: {self.avg_pollution:.2f}, Std Dev Pollution: {self.std_dev_pollution:.2f}, "
-            f"Avg Water Mass: {self.avg_water_mass:.2f}, Std Dev Water Mass: {self.std_dev_water_mass:.2f}"
+            f"Global - Avg Temp: {self.avg_temperature:.2f}, Std Dev Temp: {
+                self.std_dev_temperature:.2f}, "
+            f"Avg Pollution: {self.avg_pollution:.2f}, Std Dev Pollution: {
+                self.std_dev_pollution:.2f}, "
+            f"Avg Water Mass: {self.avg_water_mass:.2f}, Std Dev Water Mass: {
+                self.std_dev_water_mass:.2f}"
         )
         for cell_type, stats in self.cell_type_stats.items():
             logging.info(
                 f"Cell Type {cell_type} - Count: {stats["count"]}, "
-                f"Avg Temp: {stats["avg_temperature"]:.2f}, Std Dev Temp: {stats["std_dev_temperature"]:.2f}, "
-                f"Avg Water Mass: {stats["avg_water_mass"]:.2f}, Std Dev Water Mass: {stats["std_dev_water_mass"]:.2f}"
+                f"Avg Temp: {stats["avg_temperature"]:.2f}, Std Dev Temp: {
+                    stats["std_dev_temperature"]:.2f}, "
+                f"Avg Water Mass: {stats["avg_water_mass"]:.2f}, Std Dev Water Mass: {
+                    stats["std_dev_water_mass"]:.2f}"
             )

@@ -2,6 +2,7 @@ from core.World import World  # Import the World class
 import logging
 import numpy as np
 
+
 class Simulation:
     """
     The Simulation class is responsible for managing the lifecycle of a simulation,
@@ -31,12 +32,17 @@ class Simulation:
         self.std_dev_pollution_over_time = []  # Standard deviation of pollution
         self.std_dev_temperature_over_time = []  # Standard deviation of temperature
         self.std_dev_water_mass_over_time = []  # Standard deviation of water mass
-        self.cell_type_counts_over_time = {cell_type: [] for cell_type in range(10)}  # Track counts of each cell type
-        self.cell_type_std_dev_over_time = {cell_type: [] for cell_type in range(10)}  # Track std dev per cell type
-        self.std_dev_cell_distribution_over_time = []  # Standard deviation of cell type distribution over time
+        # Track counts of each cell type
+        self.cell_type_counts_over_time = {
+            cell_type: [] for cell_type in range(10)}
+        self.cell_type_std_dev_over_time = {
+            # Track std dev per cell type
+            cell_type: [] for cell_type in range(10)}
+        # Standard deviation of cell type distribution over time
+        self.std_dev_cell_distribution_over_time = []
         self.std_dev_forest_count_over_time = []  # Standard deviation of forest count
-        self.std_dev_city_population_over_time = []  # Standard deviation of city population
-
+        # Standard deviation of city population
+        self.std_dev_city_population_over_time = []
 
     def _update_aggregates(self, state):
         """
@@ -55,12 +61,15 @@ class Simulation:
         self.std_dev_water_mass_over_time.append(state.std_dev_water_mass)
 
         for cell_type, stats in state.cell_type_stats.items():
-            self.cell_type_std_dev_over_time[cell_type].append(stats["std_dev_temperature"])
+            self.cell_type_std_dev_over_time[cell_type].append(
+                stats["std_dev_temperature"])
             self.cell_type_counts_over_time[cell_type].append(stats["count"])
 
         # Calculate standard deviation of cell counts
-        cell_counts = [stats["count"] for stats in state.cell_type_stats.values()]
-        self.std_dev_cell_distribution_over_time.append(self._calculate_standard_deviation(cell_counts))
+        cell_counts = [stats["count"]
+                       for stats in state.cell_type_stats.values()]
+        self.std_dev_cell_distribution_over_time.append(
+            self._calculate_standard_deviation(cell_counts))
 
         # Compute standard deviation for forests and cities
         self.std_dev_forest_count_over_time.append(
@@ -71,7 +80,8 @@ class Simulation:
         )
 
         # Log aggregate metrics
-        logging.info(f"Day {state.day_number}: Total forests = {state.total_forests}")
+        logging.info(f"Day {state.day_number}: Total forests = {
+                     state.total_forests}")
         logging.info(f"Aggregated forest count: {self.forest_count_over_time}")
 
         # Calculate and log standardized values for pollution, temperature, and water mass
@@ -84,13 +94,15 @@ class Simulation:
                 mean_value = np.mean(values)
                 std_dev_value = np.std(values)
                 standardized_values = [
-                    (value - mean_value) / std_dev_value if std_dev_value > 0 else 0
+                    (value - mean_value) /
+                    std_dev_value if std_dev_value > 0 else 0
                     for value in values
                 ]
                 logging.info(
-                    f"Day {state.day_number}: Standardized {param.capitalize()} Values = {standardized_values}"
+                    f"Day {state.day_number}: Standardized {param.capitalize()} Values = {
+                        standardized_values}"
                 )
-                
+
     def precompute(self):
         """
         Run the simulation for the specified number of days and precompute all states.
@@ -146,7 +158,7 @@ class Simulation:
                 "water_mass": self.std_dev_water_mass_over_time,
             }
         }
-    
+
     def _calculate_standard_deviation(self, data_list):
         """
         Calculate standard deviation for a list of data points.
