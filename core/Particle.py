@@ -90,18 +90,19 @@ class Particle:
             return self.get_base_color()
         else:  # If tinting based on pollution is enabled and cell type is not
             return self.get_color_tinted_by_attributes()
-    
+
     def get_color_tinted_by_attributes(self):
         """
         Applies a tint to the base color of the particle based on pollution and temperature,
-        with special handling for air cells to visually indicate pollution levels.
+        with specific handling for air cells to visually indicate pollution levels distinctly.
 
         Returns:
             tuple: RGBA color with light tint applied.
         """
         base_color = self.get_base_color()
         if base_color is None or len(base_color) != 4:
-            logging.error(f"Invalid base color for cell_type {self.cell_type}: {base_color}")
+            logging.error(f"Invalid base color for cell_type {
+                          self.cell_type}: {base_color}")
             return (1.0, 1.0, 1.0, 0.0)  # Default to transparent
 
         # Handle vacuum cells separately (no tint effects)
@@ -118,33 +119,38 @@ class Particle:
             if baseline_pollution_lvl > 0 else 0.0
         )
         temperature_intensity = (
-            min(abs(self.temperature - baseline_temperature) / abs(baseline_temperature), 0.3)
+            min(abs(self.temperature - baseline_temperature) /
+                abs(baseline_temperature), 0.3)
             if baseline_temperature != 0 else 0.0
         )
 
         # Special handling for air (cell_type == 6)
         if self.cell_type == 6:
-            # Use blue tint to represent pollution
-            blue_tinted_color = [
-                base_color[0] * (1.0 - pollution_intensity * 0.5),  # Slightly reduce red
-                base_color[1] * (1.0 - pollution_intensity * 0.5),  # Slightly reduce green
-                min(1.0, base_color[2] + pollution_intensity * 0.5),  # Increase blue
+            # Apply gray tint for pollution levels
+            gray_tinted_color = [
+                base_color[0] * (1.0 - pollution_intensity * 0.5),
+                base_color[1] * (1.0 - pollution_intensity * 0.5),
+                base_color[2] * (1.0 - pollution_intensity * 0.5),
             ]
 
-            # Apply red tint for temperature
-            red_tinted_color = [
-                min(1.0, base_color[0] + temperature_intensity * 0.2),  # Increase red
-                base_color[1] * (1.0 - temperature_intensity * 0.2),    # Slightly reduce green
-                blue_tinted_color[2] * (1.0 - temperature_intensity * 0.2),  # Blend with blue
+            # Apply red/blue tint for temperature variations
+            temperature_tinted_color = [
+                # Slightly increase red
+                min(1.0, base_color[0] + temperature_intensity * 0.3),
+                # Keep green constant
+                base_color[1],
+                # Slightly reduce blue
+                max(0.0, base_color[2] - temperature_intensity * 0.3),
             ]
 
-            # Blend pollution (blue) and temperature (red) effects
+            # Blend pollution and temperature effects
             blended_color = [
-                (blue_tinted_color[i] + red_tinted_color[i]) / 2.0 for i in range(3)
+                (gray_tinted_color[i] + temperature_tinted_color[i]) / 2.0 for i in range(3)
             ]
 
             # Adjust transparency based on pollution intensity
-            alpha = max(0.1, min(1.0, base_color[3] * (1.0 - pollution_intensity * 0.5)))
+            alpha = max(
+                0.2, min(1.0, base_color[3] * (1.0 - pollution_intensity * 0.5)))
 
             return (*blended_color, alpha)
 
@@ -172,7 +178,6 @@ class Particle:
         alpha = max(0.0, min(base_color[3], 1.0))
 
         return (*blended_color, alpha)
-
 
     def get_color_tinted_by_attributes2(self):
         """
@@ -345,7 +350,7 @@ class Particle:
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         # Ocean cells tend to move downward (e.g., gravity)
         self.go_down(neighbors)
-        if self.temperature > self.config["evaporation_point"] - 5:
+        if self.is_surrounded_by_sea_cells(neighbors_below) and self.temperature > self.config["evaporation_point"] - 5:
             evaporation_rate = self.config["evaporation_rate"]
             self.water_mass -= evaporation_rate  # Water evaporates
             if self.water_mass <= 0:  # Convert to air if water is fully evaporated
@@ -356,39 +361,6 @@ class Particle:
         # Freeze into ice
         elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and not self.is_surrounded_by_land_cells(neighbors_aligned) and (self.is_surrounded_by_sea_cells(neighbors_below+neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_above)):
             self.convert_to_ice()
-
-    def _update_desert(self, neighbors):
-        """
-        Updates the behavior of desert cells.
-        Deserts may convert into oceans if surrounded by water or into forests if conditions permit.
-
-        Args:
-            neighbors (list): List of neighboring particles.
-        """
-        neighbors_above = self.get_above_neighbors(neighbors)
-        neighbors_below = self.get_below_neighbors(neighbors)
-        neighbors_aligned = self.get_aligned_neighbors(neighbors)
-        pollution_damage_threshold = self.config["pollution_damage_threshold"]
-        forest_baseline_temperature = self.config["baseline_temperature"][4]
-        # Water mass required to convert a cell to ocean
-        ocean_conversion_threshold = self.config["ocean_conversion_threshold"]
-
-        if self.water_mass > ocean_conversion_threshold and (self.is_surrounded_by_sea_cells(neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_below)):
-            self.convert_to_ocean(neighbors)
-        # Surrounded by water
-        if self.is_surrounded_by_sea_cells(neighbors_above):
-            self.convert_to_ocean(neighbors)
-        elif (
-            self.is_surrounded_by_land_cells(neighbors_aligned)
-            and self.pollution_level <= pollution_damage_threshold
-            and forest_baseline_temperature - 10 <= self.temperature <= forest_baseline_temperature + 10
-            and self.is_surrounded_by_air_cells(neighbors_above)
-            and self.is_surrounded_by_desert_cells(neighbors_below)
-            and (self.is_surrounded_by_desert_cells(neighbors_aligned) or self.is_surrounded_by_forests_cells(neighbors_aligned))
-            and not (self.is_surrounded_by_city_cells(neighbors_below) or self.is_surrounded_by_forests_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_above))
-        ):  # Suitable for forest conversion
-            self.convert_to_forest(neighbors)
-
     def _update_cloud(self, neighbors):
         """
         Updates the behavior of cloud cells.
@@ -409,7 +381,6 @@ class Particle:
             self.convert_to_rain(neighbors)
         else:
             self.direction = self.calculate_dynamic_wind_direction(neighbors)
-
     def _update_ice(self, neighbors):
         """
         Updates the behavior of ice cells.
@@ -431,6 +402,35 @@ class Particle:
         elif self.is_surrounded_by_land_cells(neighbors_aligned) or self.is_surrounded_by_land_cells(neighbors_above):
             self.convert_to_desert(neighbors)
 
+    def _update_desert(self, neighbors):
+        """
+        Updates the behavior of desert cells.
+        Deserts may convert into oceans if surrounded by water or into forests if conditions permit.
+
+        Args:
+            neighbors (list): List of neighboring particles.
+        """
+        neighbors_above = self.get_above_neighbors(neighbors)
+        neighbors_below = self.get_below_neighbors(neighbors)
+        neighbors_aligned = self.get_aligned_neighbors(neighbors)
+        pollution_damage_threshold = self.config["pollution_damage_threshold"]
+        forest_baseline_temperature = self.config["baseline_temperature"][4]
+        # Water mass required to convert a cell to ocean
+        ocean_conversion_threshold = self.config["ocean_conversion_threshold"]
+        
+        if self.water_mass > ocean_conversion_threshold and (self.is_surrounded_by_sea_cells(neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_below)):
+            self.convert_to_ocean(neighbors)
+        # Surrounded by water
+        elif (
+            self.is_surrounded_by_land_cells(neighbors_aligned)
+            and self.pollution_level <= pollution_damage_threshold
+            and forest_baseline_temperature - 10 <= self.temperature <= forest_baseline_temperature + 10
+            and self.is_surrounded_by_air_cells(neighbors_above)
+            and self.is_surrounded_by_desert_cells(neighbors_below)
+            and (self.is_surrounded_by_desert_cells(neighbors_aligned) or self.is_surrounded_by_forests_cells(neighbors_aligned))
+            and not (self.is_surrounded_by_city_cells(neighbors_below) or self.is_surrounded_by_forests_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_above))
+        ):  # Suitable for forest conversion
+            self.convert_to_forest(neighbors)
     def _update_forest(self, neighbors):
         """
         Updates the behavior of forest cells.
@@ -459,7 +459,9 @@ class Particle:
         self.temperature -= self.temperature * cooling_effect
 
         # Surrounded by water
-        if self.is_surrounded_by_sea_cells(neighbors_above) or self.is_surrounded_by_sea_cells(neighbors_below):
+        if (self.is_surrounded_by_sea_cells(neighbors_above) or self.is_surrounded_by_sea_cells(neighbors_below)):
+            self.convert_to_ocean(neighbors)
+        elif self.water_mass > self.config["ocean_conversion_threshold"] and self.is_surrounded_by_sea_cells(neighbors_aligned):
             self.convert_to_ocean(neighbors)
         elif (self.temperature >= forest_temperature_extinction_point or self.pollution_level >= forest_pollution_extinction_point) and self.is_surrounded_by_land_cells(neighbors_above):  # Forest destruction
             self.convert_to_desert(neighbors)
@@ -505,7 +507,10 @@ class Particle:
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         # Surrounded by water
-        if self.is_surrounded_by_sea_cells(neighbors_above) or self.is_surrounded_by_sea_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_aligned):
+        if (self.is_surrounded_by_sea_cells(neighbors_above) or self.is_surrounded_by_sea_cells(neighbors_below)):
+            self.convert_to_ocean(neighbors)
+
+        elif self.water_mass > self.config["ocean_conversion_threshold"] and self.is_surrounded_by_sea_cells(neighbors_aligned):
             self.convert_to_ocean(neighbors)
         # Excessive pollution or temperature
         elif (self.pollution_level >= city_pollution_extinction_point or self.temperature >= abs(city_pollution_extinction_point)) or self.is_surrounded_by_sea_cells(neighbors_above+neighbors_aligned):
@@ -571,8 +576,8 @@ class Particle:
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_align = self.get_below_neighbors(neighbors)
         neighbors_above = self.get_below_neighbors(neighbors)
-
-        if self.position[2] > 0:
+        self.absorb_water_mass(neighbors)
+        if self.position[2] > 0 and not self.is_ocean_cell_below(neighbors):
             self.go_down(neighbors)
             self.direction = (0, 0, -1)
 
@@ -1057,6 +1062,10 @@ class Particle:
         Get all neighbors that are at the same elevation as the current cell.
         """
         return [n for n in neighbors if n.position[2] == self.position[2]]
+
+    def is_ocean_cell_below(self,neighbors):
+        neighbor_underneath = any(self.position[2] -1  == n.position[2] and self.position[0] == n.position[0] and self.position[1] == n.position[1] for n in neighbors if n.cell_type in {0})
+        return neighbor_underneath > 0
 
     def is_vacuum_cell(self):
         return self.cell_type == 8
