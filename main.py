@@ -149,7 +149,7 @@ if __name__ == "__main__":
         simulation.precompute()
         print("Simulation complete. Displaying results...")
         display = MatplotlibDisplay(simulation)
-        display.plot_3d()
+        display.render_graphic_user_interface()
 
     except (KeyError, TypeError) as e:
         print(f"Configuration error: {e}")

@@ -351,33 +351,44 @@ class World:
             Compute all water transfers for the grid.
 
             Returns:
-                dict: A transfer map with positions as keys and transfer amounts as values.
+                dict: A transfer map with positions as keys and scaled transfer amounts as values.
             """
-
             transfer_map = {}
+            scale_factor = 1e3  # Scale down large transfer amounts if necessary
+
             for i in range(self.grid_size[0]):
                 for j in range(self.grid_size[1]):
                     for k in range(self.grid_size[2]):
                         cell = self.grid[i, j, k]
-                        if cell and cell.cell_type != 8:  # Cloud or Air
+                        if cell and cell.cell_type != 8:  # Exclude Vacuum
                             neighbors = [
-                                self.grid[nx, ny, nz] for nx, ny, nz in get_neighbor_positions(i, j, k)
+                                self.grid[nx, ny, nz]
+                                for nx, ny, nz in get_neighbor_positions(i, j, k)
                             ]
-                            cell_transfers = cell.calculate_water_transfer(
-                                neighbors)
+                            cell_transfers = cell.calculate_water_transfer(neighbors)
                             for neighbor_pos, transfer_amount in cell_transfers.items():
-                                transfer_map[neighbor_pos] = transfer_map.get(
-                                    neighbor_pos, 0) + transfer_amount
+                                # Scale transfer amounts if they exceed the scale factor
+                                scaled_transfer = transfer_amount / scale_factor if abs(transfer_amount) > scale_factor else transfer_amount
+                                transfer_map[neighbor_pos] = transfer_map.get(neighbor_pos, 0) + scaled_transfer
 
             return transfer_map
+
 
         def apply_water_transfers(transfer_map):
             """
             Apply the water transfers to the grid based on the computed transfer map.
+            Ensures water_mass stays within reasonable limits to prevent instability.
             """
+            max_water_mass = 1.0  # Maximum allowed water mass for a cell (example value)
+            min_water_mass = 0.0  # Minimum allowed water mass for a cell
+
             for (i, j, k), transfer_amount in transfer_map.items():
                 cell = self.grid[i, j, k]
-                cell.water_mass += transfer_amount
+                if cell:  # Ensure cell exists
+                    cell.water_mass += transfer_amount
+
+                    # Clamp water_mass to stay within defined bounds
+                    cell.water_mass = max(min_water_mass, min(cell.water_mass, max_water_mass))
 
         x, y, z = self.grid_size
 
@@ -516,16 +527,15 @@ class World:
         # Global standard deviations
         if total_cells > 0:
             self.std_dev_temperature = math.sqrt(
-                sum((temp - self.avg_temperature) **
+                np.sum((temp - self.avg_temperature) **
                     2 for temp in temperature_values) / total_cells
             )
             self.std_dev_pollution = math.sqrt(
-                sum((poll - self.avg_pollution) **
+                np.sum((poll - self.avg_pollution) **
                     2 for poll in pollution_values) / total_cells
             )
             self.std_dev_water_mass = math.sqrt(
-                sum((mass - self.avg_water_mass) **
-                    2 for mass in water_mass_values) / total_cells
+                np.sum((mass - self.avg_water_mass)  ** 2 for mass in water_mass_values) / total_cells
             )
         else:
             self.std_dev_temperature = 0
@@ -537,12 +547,12 @@ class World:
         for cell_type in cell_type_counts:
             count = cell_type_counts[cell_type]
             if count > 0:
-                avg_temp = sum(cell_type_temperature[cell_type]) / count
-                avg_water = sum(cell_type_water_mass[cell_type]) / count
+                avg_temp = np.sum(cell_type_temperature[cell_type]) / count
+                avg_water = np.sum(cell_type_water_mass[cell_type]) / count
 
-                temp_variance = sum(
+                temp_variance = np.sum(
                     (t - avg_temp) ** 2 for t in cell_type_temperature[cell_type]) / count
-                water_variance = sum(
+                water_variance = np.sum(
                     (w - avg_water) ** 2 for w in cell_type_water_mass[cell_type]) / count
 
                 self.cell_type_stats[cell_type] = {

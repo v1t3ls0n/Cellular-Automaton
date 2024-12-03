@@ -30,7 +30,7 @@ class MatplotlibDisplay:
         self.days = range(len(simulation.states))
         self.tint = False  # Tint state (False for untinted, True for tinted)
 
-    def plot_3d(self):
+    def render_graphic_user_interface(self):
         """Create a scrollable and resizable window with compact graphs."""
         self.precompute_visualizations()
 
@@ -97,10 +97,10 @@ class MatplotlibDisplay:
         scrollable_canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
 
         # Create a Matplotlib figure
-        fig = plt.Figure(figsize=(18,36), tight_layout=True)  # Adjust figure size
+        fig = plt.Figure(figsize=(18,32), tight_layout=True)  # Adjust figure size
         # 7 rows for standardized and non-standardized graphs
         gs = fig.add_gridspec(7, 2)  # 7 rows for standardized and non-standardized graphs
-        fig.subplots_adjust(hspace=0.2)  # Adjust spacing between plots
+        fig.subplots_adjust(hspace=0.4)  # Adjust spacing between plots
 
         self.fig = fig
         self.canvas = FigureCanvasTkAgg(self.fig, master=scrollable_frame)

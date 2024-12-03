@@ -361,6 +361,7 @@ class Particle:
         # Freeze into ice
         elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and not self.is_surrounded_by_land_cells(neighbors_aligned) and (self.is_surrounded_by_sea_cells(neighbors_below+neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_above)):
             self.convert_to_ice()
+
     def _update_cloud(self, neighbors):
         """
         Updates the behavior of cloud cells.
@@ -381,6 +382,7 @@ class Particle:
             self.convert_to_rain(neighbors)
         else:
             self.direction = self.calculate_dynamic_wind_direction(neighbors)
+
     def _update_ice(self, neighbors):
         """
         Updates the behavior of ice cells.
@@ -417,7 +419,7 @@ class Particle:
         forest_baseline_temperature = self.config["baseline_temperature"][4]
         # Water mass required to convert a cell to ocean
         ocean_conversion_threshold = self.config["ocean_conversion_threshold"]
-        
+
         if self.water_mass > ocean_conversion_threshold and (self.is_surrounded_by_sea_cells(neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_below)):
             self.convert_to_ocean(neighbors)
         # Surrounded by water
@@ -431,6 +433,7 @@ class Particle:
             and not (self.is_surrounded_by_city_cells(neighbors_below) or self.is_surrounded_by_forests_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_above))
         ):  # Suitable for forest conversion
             self.convert_to_forest(neighbors)
+
     def _update_forest(self, neighbors):
         """
         Updates the behavior of forest cells.
@@ -588,7 +591,7 @@ class Particle:
             self.convert_to_air(neighbors)
 
     ####################################################################################################################
-    ###################################### CELL CONVERSIONS ###########################################################
+    ###################################### CELL CONVERSION METHODS #####################################################
     ####################################################################################################################
 
     def convert_to_ocean(self, neighbors):
@@ -962,58 +965,91 @@ class Particle:
         self.direction = (0, 0, 0)
 
     ####################################################################################################################
-    ###################################### SURROUNDINGS: ###############################################################
+    ###################################### SURROUNDINGS CHECK METHODS ##################################################
     ####################################################################################################################
 
     def is_surrounded_by_sea_cells(self, neighbors):
         """
-        Check if the cell is surrounded entirely by sea or ice cells.
+        Check if the cell is surrounded primarily by sea or ice cells.
 
-        Returns True if the majority of neighbors are of type Sea (0) or Ice (3).
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if the majority of neighbors are of type Sea (cell_type 0) or Ice (cell_type 3).
         """
         return sum(n.cell_type in {0, 3} for n in neighbors) > len(neighbors) / 2
 
     def is_surrounded_by_land_cells(self, neighbors):
         """
-        Check if the cell is surrounded entirely by land cells.
+        Check if the cell is entirely surrounded by land cells.
 
-        Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
         """
         return sum(n.cell_type in {1, 4, 5} for n in neighbors) == len(neighbors)
 
     def is_surrounded_by_desert_cells(self, neighbors):
         """
-        Check if the cell is surrounded entirely by land cells.
+        Check if the cell is entirely surrounded by desert cells.
 
-        Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if all neighbors are of type Desert (cell_type 1).
         """
         return sum(n.cell_type in {1} for n in neighbors) == len(neighbors)
 
     def is_surrounded_by_forests_cells(self, neighbors):
         """
-        Check if the cell is surrounded entirely by land cells.
+        Check if the cell is entirely surrounded by forest cells.
 
-        Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if all neighbors are of type Forest (cell_type 4).
         """
         return sum(n.cell_type in {4} for n in neighbors) == len(neighbors)
 
     def is_surrounded_by_city_cells(self, neighbors):
         """
-        Check if the cell is surrounded entirely by land cells.
+        Check if the cell is entirely surrounded by city cells.
 
-        Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if all neighbors are of type City (cell_type 5).
         """
         return sum(n.cell_type in {5} for n in neighbors) == len(neighbors)
 
     def is_surrounded_by_cloud_cells(self, neighbors):
         """
-        Check if the cell is surrounded entirely by land cells.
+        Check if the cell is entirely surrounded by cloud cells.
 
-        Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if all neighbors are of type Cloud (cell_type 2).
         """
         return sum(n.cell_type in {2} for n in neighbors) == len(neighbors)
 
     def is_surrounded_by_air_cells(self, neighbors):
+        """
+        Check if the cell is entirely surrounded by air cells.
+
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if all neighbors are of type Air (cell_type 6).
+        """
         return sum(n.cell_type in {6} for n in neighbors) == len(neighbors)
 
     def is_surrounded_by_cell_types(self, neighbors, cell_types):
@@ -1021,7 +1057,7 @@ class Particle:
         Check if the cell is surrounded entirely by specified cell types.
 
         Args:
-            neighbors (list): List of neighboring particles.
+            neighbors (list of Particle): List of neighboring particles to evaluate.
             cell_types (set): Set of target cell types to check against.
 
         Returns:
@@ -1033,7 +1069,12 @@ class Particle:
         """
         Check if the cell is below sea level.
 
-        Returns True if the cell's elevation is lower than all sea-level neighbors.
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if the cell's elevation is lower than all sea-level neighbors
+                (Sea (cell_type 0) or Ice (cell_type 3)).
         """
         return all(self.position[2] < n.position[2] for n in neighbors if n.cell_type in {0, 3})
 
@@ -1041,31 +1082,72 @@ class Particle:
         """
         Check if the cell is below ground level.
 
-        Returns True if the cell's elevation is lower than all ground-level neighbors.
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if the cell's elevation is lower than all ground-level neighbors
+                (Desert (1), Forest (4), or City (5)).
         """
         return all(self.position[2] < n.position[2] for n in neighbors if n.cell_type in {1, 4, 5})
 
     def get_above_neighbors(self, neighbors):
         """
         Get all neighbors that are above the current cell in elevation.
+
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            list of Particle: Neighbors located at a higher elevation than the current cell.
         """
         return [n for n in neighbors if n.position[2] > self.position[2]]
 
     def get_below_neighbors(self, neighbors):
         """
         Get all neighbors that are below the current cell in elevation.
+
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            list of Particle: Neighbors located at a lower elevation than the current cell.
         """
         return [n for n in neighbors if n.position[2] < self.position[2]]
 
     def get_aligned_neighbors(self, neighbors):
         """
         Get all neighbors that are at the same elevation as the current cell.
+
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            list of Particle: Neighbors located at the same elevation as the current cell.
         """
         return [n for n in neighbors if n.position[2] == self.position[2]]
 
-    def is_ocean_cell_below(self,neighbors):
-        neighbor_underneath = any(self.position[2] -1  == n.position[2] and self.position[0] == n.position[0] and self.position[1] == n.position[1] for n in neighbors if n.cell_type in {0})
+    def is_ocean_cell_below(self, neighbors):
+        """
+        Check if there is an ocean cell directly below the current cell.
+
+        Args:
+            neighbors (list of Particle): List of neighboring particles to evaluate.
+
+        Returns:
+            bool: True if there is an Ocean cell (cell_type 0) directly below.
+        """
+        neighbor_underneath = any(
+            self.position[2] - 1 == n.position[2] and self.position[0] == n.position[0] and self.position[1] == n.position[1]
+            for n in neighbors if n.cell_type in {0}
+        )
         return neighbor_underneath > 0
 
     def is_vacuum_cell(self):
+        """
+        Check if the current cell is a vacuum cell.
+
+        Returns:
+            bool: True if the current cell's type is Vacuum (cell_type 8).
+        """
         return self.cell_type == 8
