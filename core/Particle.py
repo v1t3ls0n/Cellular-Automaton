@@ -188,7 +188,6 @@ class Particle:
             return new_cell
 
         # Apply natural decay processes
-        new_cell._apply_natural_decay(neighbors)
         neighbors = [n for n in neighbors if not n.is_vacuum_cell()]
         new_cell._apply_natural_decay(neighbors)
         new_cell.equilibrate_temperature(neighbors)
