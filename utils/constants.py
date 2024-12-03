@@ -89,7 +89,7 @@ DEFAULT_PRESET = {
         "pollution_level_tipping_point": 100.0,
         "natural_pollution_decay_rate": 0.1,
         "natural_temperature_decay_rate": 0.1,
-        "cloud_saturation_threshold": 3.0,
+        "cloud_saturation_threshold": 2.0,
         "melting_rate": 0.15,
         "evaporation_rate": 0.05,
         "base_colors": {

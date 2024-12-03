@@ -106,11 +106,11 @@ class Particle:
 
         baseline_pollution_lvl = self.config["baseline_pollution_level"][self.cell_type] 
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
-        relative_pollution_ratio =  1.0 if baseline_pollution_lvl == 0 else max((self.pollution/baseline_pollution_lvl) / 10.0, 1.0)
+        relative_pollution_ratio =  1.0 if baseline_pollution_lvl == 0 else max((self.pollution_level/baseline_pollution_lvl) / 10.0, 1.0)
         relative_temp_ratio =  1.0 if baseline_temperature == 0 else max((self.temperature/baseline_temperature) / 10.0, 1.0)
         # Scale pollution and temperature intensity to a range of [0.0, 1.0]
         pollution_intensity = min(0.0, max(relative_pollution_ratio, 1.0))
-        temperature_intensity = min(0.0,  max(relative_temp_ratio,0.5))
+        temperature_intensity = min(0.0,  max(relative_temp_ratio,1.0))
 
         # Apply black tint based on pollution
         black_tinted_color = [
@@ -454,8 +454,6 @@ class Particle:
             # Convert to air (dry up) if surrounded by land cells
         elif self.is_surrounded_by_land_cells(neighbors_below) or self.is_surrounded_by_land_cells(neighbors_align) or self.is_surrounded_by_land_cells(neighbors_above):
             self.convert_to_air(neighbors)
-        elif self.is_surrounded_by_cloud_cells(neighbors_below):
-            self.convert_to_cloud(neighbors)
 
 
 
@@ -859,7 +857,7 @@ class Particle:
 
         Returns True if all neighbors are of type Desert (1), Forest (4), City (5), Air (6), or Vacuum (8).
         """
-        return sum(n.cell_type in {1, 4, 5, 6, 8} for n in neighbors) == len(neighbors)
+        return sum(n.cell_type in {1, 4, 5} for n in neighbors) == len(neighbors)
     
     def is_surrounded_by_cloud_cells(self, neighbors):
         """
