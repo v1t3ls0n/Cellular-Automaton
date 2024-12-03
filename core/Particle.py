@@ -101,7 +101,8 @@ class Particle:
         """
         base_color = self.get_base_color()
         if base_color is None or len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
+            logging.error(f"Invalid color definition for cell_type {
+                          self.cell_type}: {base_color}")
             return (1.0, 1.0, 1.0, 0.0)  # Default to transparent
 
         # Handle vacuum specifically (no tint effects)
@@ -115,12 +116,15 @@ class Particle:
         # Calculate pollution and temperature intensity
         pollution_intensity = 0.0
         if baseline_pollution_lvl > 0:
-            pollution_intensity = min(self.pollution_level / baseline_pollution_lvl, 1.0)
+            pollution_intensity = min(
+                self.pollution_level / baseline_pollution_lvl, 1.0)
 
         temperature_intensity = 0.0
         if baseline_temperature != 0:
-            temperature_difference = abs(self.temperature - baseline_temperature)
-            temperature_intensity = min(temperature_difference / abs(baseline_temperature), 1.0)
+            temperature_difference = abs(
+                self.temperature - baseline_temperature)
+            temperature_intensity = min(
+                temperature_difference / abs(baseline_temperature), 1.0)
 
         # Apply black tint based on pollution intensity
         black_tinted_color = [
@@ -146,7 +150,6 @@ class Particle:
         alpha = max(0.0, min(base_color[3], 1.0))
 
         return (*tinted_color, alpha)
-
 
     def get_base_color(self):
         """
@@ -361,12 +364,18 @@ class Particle:
         city_pollution_extinction_point = self.config["city_pollution_extinction_point"]
 
         # Update temperature and pollution level
-        self.temperature =  max(baseline_temperature, self.temperature +warming_effect * self.temperature
-        
-        self.pollution_level =
-            max(baseline_pollution_level,
-                self.pollution_level + pollution_increase_rate * self.pollution_level,)
-        
+        self.temperature = min(
+            city_pollution_extinction_point,
+            max(baseline_temperature, self.temperature +
+                warming_effect * self.temperature),
+        )
+        self.pollution_level = min(
+            city_pollution_extinction_point,
+            max(
+                baseline_pollution_level,
+                self.pollution_level + pollution_increase_rate * self.pollution_level,
+            ),
+        )
 
         # Check for conversions based on conditions
         neighbors_above = self.get_above_neighbors(neighbors)
@@ -492,7 +501,7 @@ class Particle:
         """
         self.cell_type = 2  # Set cell type to cloud
         # Condensation increases water mass
-        self.water_mass = self.water_mass + 0.5
+        self.water_mass = min(1.0, self.water_mass + 0.5)
         self.temperature -= 2  # Clouds typically cool down during formation
         self.go_up(neighbors)  # Clouds move upward
 
@@ -650,13 +659,14 @@ class Particle:
             total_temperature_exchange += temperature_exchange
 
         # Ensure pollution and temperature levels remain within valid bounds
-        # self.pollution_level = max(0, self.pollution_level)
-        # self.temperature = max(
-        #     self.config["baseline_temperature"][self.cell_type] - 100,  # Arbitrary lower bound
-        #     # Arbitrary upper bound
-        #     min(self.temperature,
-        #         self.config["baseline_temperature"][self.cell_type] + 100)
-        # )
+        self.pollution_level = max(0, self.pollution_level)
+        self.temperature = max(
+            self.config["baseline_temperature"][self.cell_type] -
+            100,  # Arbitrary lower bound
+            # Arbitrary upper bound
+            min(self.temperature,
+                self.config["baseline_temperature"][self.cell_type] + 100)
+        )
 
         # Log the changes for debugging
         logging.info(
