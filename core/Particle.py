@@ -54,7 +54,7 @@ class Particle:
             grid_size=self.grid_size
         )
 
-    def get_next_position(self, neighbors):
+    def get_next_position(self):
         """
         Calculates the next position of the particle based on its direction and grid size.
         If the particle moves beyond the grid boundaries in the x or y directions, it wraps around (toroidal grid).
@@ -89,7 +89,7 @@ class Particle:
         else:  # If tinting based on pollution is enabled and cell type is not 
             return self.get_color_tinted_by_attributes()
 
-    def get_color_tinted_by_attributes(self, neighbors):
+    def get_color_tinted_by_attributes(self):
         """
         Applies a black tint based on the pollution level or a red tint based on the temperature
         to the base color of the particle.
@@ -140,7 +140,7 @@ class Particle:
 
         return (*tinted_color, alpha)
 
-    def get_base_color(self, neighbors):
+    def get_base_color(self):
         """
         Retrieves the base color for the particle based on its type.
 
@@ -181,9 +181,9 @@ class Particle:
         if new_cell.is_vacuum_cell():
             return new_cell
         
-        new_cell._apply_natural_decay()  # Apply natural decay processes
+        new_cell._apply_natural_decay(neighbors)  # Apply natural decay processes
         neighbors = [n for n in neighbors if not n.is_vacuum_cell()]
-        new_cell._apply_natural_decay()
+        new_cell._apply_natural_decay(neighbors)
         new_cell.equilibrate_temperature(neighbors)
         new_cell.equilibrate_pollution_level(neighbors)
 
@@ -219,20 +219,19 @@ class Particle:
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
-        self.go_down()  # Ocean cells tend to move downward (e.g., gravity)
+        self.go_down(neighbors)  # Ocean cells tend to move downward (e.g., gravity)
         if self.temperature > self.config["evaporation_point"] - 5:
             evaporation_rate = self.config["evaporation_rate"]
             self.water_mass -= evaporation_rate  # Water evaporates
             if self.water_mass <= 0:  # Convert to air if water is fully evaporated
                 self.absorb_water_mass(
                     neighbors)  # Share water with neighboring cells
-                self.convert_to_air()
+                self.convert_to_air(neighbors)
 
         # Freeze into ice
         elif self.temperature < self.config["freezing_point"] - 1 and not self.is_surrounded_by_land_cells(neighbors_above) and not self.is_surrounded_by_land_cells(neighbors_aligned) and (self.is_surrounded_by_sea_cells(neighbors_below+neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_above)):
             self.convert_to_ice()
-        else:  # Stabilize if no changes occur
-            self.stabilize()
+
 
     def _update_desert(self, neighbors):
         """
@@ -251,16 +250,16 @@ class Particle:
         ocean_conversion_threshold = self.config["ocean_conversion_threshold"]
 
         if self.water_mass > ocean_conversion_threshold and (self.is_surrounded_by_sea_cells(neighbors_aligned) or self.is_surrounded_by_sea_cells(neighbors_below)):
-            self.convert_to_ocean()
+            self.convert_to_ocean(neighbors)
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above):
-            self.convert_to_ocean()
+            self.convert_to_ocean(neighbors)
         elif (
             self.is_surrounded_by_land_cells(neighbors_aligned) 
             and self.pollution_level <= pollution_damage_threshold
             and forest_baseline_temperature - 10 <= self.temperature <= forest_baseline_temperature + 10
         ):  # Suitable for forest conversion
-            self.convert_to_forest()
+            self.convert_to_forest(neighbors)
 
     def _update_cloud(self, neighbors):
         """
@@ -280,7 +279,7 @@ class Particle:
             self.go_up(neighbors)
     
         elif self.water_mass >= saturation_threshold:  # Convert to rain if saturated
-            self.convert_to_rain()
+            self.convert_to_rain(neighbors)
         else:
             self.direction = self.calculate_dynamic_wind_direction(neighbors)
 
@@ -303,9 +302,9 @@ class Particle:
             self.water_mass -= melting_rate
             # Convert to ocean when melted
             if self.water_mass <= 0 and (self.is_surrounded_by_sea_cells(neighbors_aligned) or self.is_below_sea_level(neighbors_above) or self.is_surrounded_by_sea_cells(neighbors_below)):
-                self.convert_to_ocean()
+                self.convert_to_ocean(neighbors)
         elif self.is_surrounded_by_land_cells(neighbors_aligned) or self.is_surrounded_by_land_cells(neighbors_above):
-            self.convert_to_desert()
+            self.convert_to_desert(neighbors)
 
 
 
@@ -336,14 +335,14 @@ class Particle:
 
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above + neighbors_aligned):
-            self.convert_to_ocean()
+            self.convert_to_ocean(neighbors)
         elif (self.temperature >= forest_temperature_extinction_point or self.pollution_level >= forest_pollution_extinction_point) and self.is_surrounded_by_land_cells(neighbors_aligned):  # Forest destruction
-            self.convert_to_desert()
+            self.convert_to_desert(neighbors)
         elif (
             self.pollution_level < pollution_damage_threshold
             and  int(self.temperature) == int(forest_baseline_temperature)
         ):  # Convert to a city
-            self.convert_to_city()
+            self.convert_to_city(neighbors)
 
 
     def _update_city(self, neighbors):
@@ -380,9 +379,9 @@ class Particle:
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above):
-            self.convert_to_ocean()
+            self.convert_to_ocean(neighbors)
         elif (self.pollution_level >= city_pollution_extinction_point or self.temperature >= abs(city_pollution_extinction_point)):  # Excessive pollution or temperature
-            self.convert_to_desert()
+            self.convert_to_desert(neighbors)
 
 
     def _update_air(self, neighbors):
@@ -412,7 +411,7 @@ class Particle:
         # Convert to cloud if the water mass exceeds the saturation threshold
         # and the particle is at or near the top of the grid.
         if self.water_mass >= self.config["cloud_saturation_threshold"] and self.is_surrounded_by_cloud_cells(neighbors_below) and self.position[2] >= self.grid_size[2] //2:
-            self.convert_to_cloud()
+            self.convert_to_cloud(neighbors)
             self.go_up(neighbors)
         # If rain is above, move downward to support convection and interaction.
         elif rain_above:
@@ -450,10 +449,10 @@ class Particle:
         if z == 0:  # Ground level
             # Convert to ocean if surrounded by sea cells
             if self.is_surrounded_by_sea_cells(neighbors):
-                self.convert_to_ocean()
+                self.convert_to_ocean(neighbors)
             # Convert to air (dry up) if surrounded by land cells
             elif self.is_surrounded_by_land_cells(neighbors):
-                self.convert_to_air()
+                self.convert_to_air(neighbors)
                 self.direction = self.calculate_dynamic_wind_direction(
                     neighbors)
 
@@ -473,7 +472,7 @@ class Particle:
         self.cell_type = 0  # Set cell type to ocean
         self.water_mass = 1.0  # Oceans are full of water by default
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-        self.stabilize_elevation()  # Stabilize motion
+        self.stabilize(neighbors)  # Stabilize motion
 
     def convert_to_desert(self, neighbors):
         """
@@ -487,7 +486,7 @@ class Particle:
         self.cell_type = 1  # Set cell type to desert
         self.water_mass = 0.0  # Deserts have no water by default
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-        self.stabilize()  # Stabilize motion
+        self.stabilize(neighbors)  # Stabilize motion
 
     def convert_to_cloud(self, neighbors):
         """
@@ -517,7 +516,7 @@ class Particle:
         self.water_mass = 1.0  # Ice retains full water mass
         # Set to freezing temperature
         self.temperature = self.config["freezing_point"]
-        self.stabilize()  # Stabilize motion
+        self.stabilize(neighbors)  # Stabilize motion
 
     def convert_to_forest(self, neighbors):
         """
@@ -531,7 +530,7 @@ class Particle:
         self.cell_type = 4  # Set cell type to forest
         self.water_mass = 0.0  # Forest cells don't retain water mass
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-        self.stabilize()  # Stabilize motion
+        self.stabilize(neighbors)  # Stabilize motion
 
     def convert_to_city(self, neighbors):
         """
@@ -548,7 +547,7 @@ class Particle:
         # Set baseline pollution
         self.pollution_level = self.config["baseline_pollution_level"][self.cell_type]
         self.temperature = self.config["baseline_temperature"][self.cell_type]
-        self.stabilize()  # Stabilize motion
+        self.stabilize(neighbors)  # Stabilize motion
 
     def convert_to_air(self, neighbors):
         """
@@ -599,31 +598,70 @@ class Particle:
     ####################################################################################################################
 
     def _apply_natural_decay(self, neighbors):
-
         """
         Apply natural decay to pollution level and temperature.
 
         Natural decay ensures that:
         - Pollution levels gradually decrease over time based on a decay rate.
         - Temperature stabilizes toward a baseline value defined in the configuration.
+        - Pollution and temperature also influence and equalize with neighboring cells.
+        
+        Args:
+            neighbors (list of Particle): Neighboring particles around the current cell.
         """
         pollution_decay_rate = self.config["natural_pollution_decay_rate"]
         temperature_decay_rate = self.config["natural_temperature_decay_rate"]
+        pollution_diffusion_rate = self.config.get("pollution_diffusion_rate", 0.1)
+        temperature_diffusion_rate = self.config.get("temperature_diffusion_rate", 0.1)
 
-        # Pollution decay
+        # Pollution decay within the current cell
         self.pollution_level = max(
-            0, self.pollution_level -
-            (self.pollution_level * pollution_decay_rate)
+            0,
+            self.pollution_level - (self.pollution_level * pollution_decay_rate)
         )
 
-        # Temperature decay towards baseline
+        # Temperature decay toward the baseline value
         baseline_temp = self.config["baseline_temperature"][self.cell_type]
         if self.temperature > baseline_temp:
-            self.temperature -= (self.temperature -
-                                 baseline_temp) * temperature_decay_rate
+            self.temperature -= (self.temperature - baseline_temp) * temperature_decay_rate
         elif self.temperature < baseline_temp:
-            self.temperature += (baseline_temp -
-                                 self.temperature) * temperature_decay_rate
+            self.temperature += (baseline_temp - self.temperature) * temperature_decay_rate
+
+        # Diffusion with neighboring cells
+        total_pollution_exchange = 0
+        total_temperature_exchange = 0
+        for neighbor in neighbors:
+            # Skip invalid neighbors (e.g., boundaries or non-polluting cell types)
+            if neighbor is None or neighbor.cell_type not in self.config["baseline_temperature"]:
+                continue
+
+            # Calculate pollution exchange
+            pollution_difference = self.pollution_level - neighbor.pollution_level
+            pollution_exchange = pollution_difference * pollution_diffusion_rate
+            self.pollution_level -= pollution_exchange
+            neighbor.pollution_level += pollution_exchange
+            total_pollution_exchange += pollution_exchange
+
+            # Calculate temperature exchange
+            temperature_difference = self.temperature - neighbor.temperature
+            temperature_exchange = temperature_difference * temperature_diffusion_rate
+            self.temperature -= temperature_exchange
+            neighbor.temperature += temperature_exchange
+            total_temperature_exchange += temperature_exchange
+
+        # Ensure pollution and temperature levels remain within valid bounds
+        self.pollution_level = max(0, self.pollution_level)
+        self.temperature = max(
+            self.config["baseline_temperature"][self.cell_type] - 100,  # Arbitrary lower bound
+            min(self.temperature, self.config["baseline_temperature"][self.cell_type] + 100)  # Arbitrary upper bound
+        )
+
+        # Log the changes for debugging
+        logging.info(
+            f"Cell at ({self.position[0]}, {self.position[1]}, {self.position[2]}): "
+            f"Pollution Level Adjusted by {total_pollution_exchange:.3f}, "
+            f"Temperature Adjusted by {total_temperature_exchange:.3f}"
+        )
 
     ####################################################################################################################
     ############################################### CELL EQUILIBRATE ###################################################
@@ -777,14 +815,6 @@ class Particle:
         """
         self.direction = (0, 0, 0)
 
-    def stabilize_elevation(self, neighbors):
-        """
-        Stabilize the elevation of the particle.
-
-        This is typically used for rain cells to stop their downward motion once they reach the ground.
-        """
-        if self.cell_type == 7:  # Rain
-            self.direction = (0, 0, 0)  # Stop movement
 
     ####################################################################################################################
     ###################################### CALC HELPER FUNCTIONS: ######################################################
