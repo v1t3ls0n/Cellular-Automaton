@@ -396,7 +396,7 @@ class World:
                 return cell1 
 
         # Default behavior based on cell type weights
-        return cell1 if cell1.weight > cell2.weight else cell2
+        return cell1 if self.config["cell_type_weights"][cell1.cell_type] > self.config["cell_type_weights"][cell2.cell_type]  else cell2
     
 
     

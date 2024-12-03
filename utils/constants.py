@@ -46,9 +46,20 @@ KEY_LABELS = {
 DEFAULT_PRESET = {
         "days": 365,
         "grid_size": (10, 10, 10),
-        "initial_ratios": {"forest": 0.08, "city": 0.9, "desert": 0.01, "vacuum": 0.01},
+        "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
         "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 25.0, 10.0, 12.0, -20.0],
-        "baseline_pollution_level": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "baseline_pollution_level": 
+                [
+                3.0,   # Ocean: Some pollution from industrial waste and microplastics
+                10.0,  # Desert: Dust and localized human activity
+                1.0,   # Cloud: Minimal pollution
+                0.0,   # Ice: Pristine areas with negligible pollution
+                2.0,   # Forest: Absorbs pollution, very low levels
+                20.0,  # City: High pollution due to vehicles and factories
+                50.0,   # Air: Variable pollution based on proximity to cities
+                0.0,   # Rain: Cleanses the atmosphere
+                0.0,   # Vacuum: No pollution in empty space
+                ],
         "cell_type_weights": {
             0: 1.0,
             1: 1.2,
@@ -348,7 +359,7 @@ PRESET_CONFIGS = {
 }
 
 
-required_keys = {
+REQUIRED_KEYS = {
     "days": int,
     "grid_size": tuple,
     "initial_ratios": {

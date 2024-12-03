@@ -1,7 +1,7 @@
 # conf.py
 import logging
 from collections import defaultdict
-from utils.constants import PRESET_CONFIGS, DEFAULT_PRESET, required_keys
+from utils.constants import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
 # Global configuration dictionary
 CONFIG = DEFAULT_PRESET
 
@@ -19,7 +19,7 @@ def get_config_preset(preset_name=None):
         
     else:
         logging.debug("preset_name is None. returning default config preset")
-        return DEFAULT_PRESET.copy()
+
 
 def get_config():
     global CONFIG
@@ -48,7 +48,6 @@ def update_config(preset_name=None, custom_config=None):
         logging.info('Loaded custom configuration.')
     else:
         raise ValueError('Either preset_name or custom_config must be provided.')
-    return CONFIG.copy()
     
 def validate_config(config):
     """
@@ -82,7 +81,7 @@ def validate_config(config):
                         f"but got {type(sub_config[key]).__name__}."
                     )
 
-    check_keys(config, required_keys)
+    check_keys(config, REQUIRED_KEYS)
 
 
 

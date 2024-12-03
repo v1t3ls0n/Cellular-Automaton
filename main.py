@@ -1,6 +1,6 @@
 import os
 import logging
-from core.conf import update_config, get_config,validate_config
+from core.conf import update_config, get_config,get_config_preset, validate_config
 from utils.constants import PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
@@ -23,8 +23,8 @@ def choose_preset():
     print("Available Configuration Presets:")
     for i, preset_name in enumerate(PRESET_CONFIGS.keys(), 1):
         print(f"{i}. {preset_name}")
-
-    while True:
+    limit_bad_input = 10
+    while limit_bad_input:
         try:
             choice = int(input("Enter the number of your chosen preset: "))
             if 1 <= choice <= len(PRESET_CONFIGS):
@@ -34,7 +34,9 @@ def choose_preset():
             else:
                 print("Invalid choice. Please choose a number from the list.")
         except ValueError:
+            limit_bad_input-=1
             print("Invalid input. Please enter a number.")
+            return DEFAULT_PRESET
 
 def parse_grid_size(input_value):
     """
@@ -79,7 +81,7 @@ def parse_input_value(input_value, default_value):
 
     return input_value
 
-def get_user_configuration():
+def parse_user_input():
     """
     Prompt user for all configuration parameters or use presets.
     """
@@ -89,7 +91,7 @@ def get_user_configuration():
 
     choice = input("Choose an option (1 or 2): ").strip()
     if choice == "1":
-        return choose_preset()
+        update_config(preset_name=choose_preset())
     elif choice == "2":
         user_config = {}
         print("Setting custom configuration...")
@@ -114,18 +116,19 @@ def get_user_configuration():
             else:
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
                 user_config[key] = parse_input_value(input_value, value)
-        
-        return user_config
+        update_config(custom_config=user_config)
     else:
         print(f"Invalid choice. Using default configuration.\n")
 
 
 # Main execution
 if __name__ == "__main__":
-    config = get_user_configuration()
-    update_config(config)
+
     try:
+        parse_user_input()
+        config = get_config()
         validate_config(config)
+        
         print("Configuration is valid.")
             # Extract essential parameters for simulation
         grid_size = config["grid_size"]
@@ -135,11 +138,11 @@ if __name__ == "__main__":
             print("Initial ratios must sum to 1. Adjusting to default ratios.")
             initial_ratios = config["initial_ratios"]
 
-        # Initialize and run simulation
+        # # Initialize and run simulation
         simulation = Simulation(grid_size=grid_size, initial_ratios=initial_ratios, days=days)
-        logging.info("Starting simulation...")
+        print("Starting simulation...")
         simulation.precompute()
-        logging.info("Simulation complete. Displaying results...")
+        print("Simulation complete. Displaying results...")
         display = MatplotlibDisplay(simulation)
         display.plot_3d()
 

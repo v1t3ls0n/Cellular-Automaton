@@ -30,7 +30,6 @@ class Particle:
         self.water_mass = water_mass
         self.pollution_level = pollution_level
         self.direction = direction
-        self.weight = self.config.get("cell_type_weights").get(cell_type)
         self.position = position  # Particle's current position in the grid
         self.grid_size = grid_size  # Grid boundaries to manage particle movement
 
@@ -225,7 +224,7 @@ class Particle:
             evaporation_rate = self.config["evaporation_rate"]
             self.water_mass -= evaporation_rate  # Water evaporates
             if self.water_mass <= 0:  # Convert to air if water is fully evaporated
-                self.equilibrate_water_mass(
+                self.absorb_water_mass(
                     neighbors)  # Share water with neighboring cells
                 self.convert_to_air()
                 self.direction = self.calculate_dynamic_wind_direction(
@@ -274,7 +273,7 @@ class Particle:
             neighbors (list): List of neighboring particles.
         """
         self.direction = self.calculate_dynamic_wind_direction(neighbors)
-        self.equilibrate_water_mass(
+        self.absorb_water_mass(
             neighbors)  # Share water with neighboring cells
         saturation_threshold = self.config["cloud_saturation_threshold"]
         if self.water_mass >= saturation_threshold:  # Convert to rain if saturated
@@ -399,7 +398,7 @@ class Particle:
         
 
         # Exchange water mass with neighbors (e.g., clouds or other air particles)
-        self.equilibrate_water_mass(neighbors)
+        self.absorb_water_mass(neighbors)
 
         # Convert to cloud if the water mass exceeds the saturation threshold
         # and the particle is at or near the top of the grid.
@@ -572,7 +571,6 @@ class Particle:
         self.water_mass = 0  # No water in vacuum
         self.pollution_level = 0  # No pollution in vacuum
         self.direction = (0, 0, 0)  # No movement
-        self.weight = config.get("cell_type_weights").get(8)
         self.temperature = math.avg([n.temperature for n in neighbors]) 
 
     def convert_to_rain(self):
@@ -635,8 +633,8 @@ class Particle:
         weighted_temperature_sum = 0
 
         for neighbor in neighbors:
-            weighted_temperature_sum += neighbor.temperature * neighbor.weight
-            total_weight += neighbor.weight
+            weighted_temperature_sum += neighbor.temperature * self.config["cell_type_weights"][neighbor.cell_type]
+            total_weight += self.config["cell_type_weights"][neighbor.cell_type]
 
         # Calculate weighted average temperature
         if total_weight > 0:
@@ -654,15 +652,15 @@ class Particle:
         weighted_pollution_sum = 0
 
         for neighbor in neighbors:
-            weighted_pollution_sum += neighbor.pollution_level * neighbor.weight
-            total_weight += neighbor.weight
+            weighted_pollution_sum += neighbor.pollution_level * self.config["cell_type_weights"][neighbor.cell_type]
+            total_weight += self.config["cell_type_weights"][neighbor.cell_type]
 
         # Calculate weighted average pollution level
         if total_weight > 0:
             self.pollution_level = (
                 weighted_pollution_sum / total_weight + self.pollution_level) / 2
 
-    def equilibrate_water_mass(self, neighbors):
+    def absorb_water_mass(self, neighbors):
         """
         Exchange water mass with neighboring cells of type Cloud or Air.
 
@@ -674,7 +672,7 @@ class Particle:
             if neighbor.cell_type in {2, 6}:  # Cloud or Air
                 diff = abs(neighbor.water_mass - self.water_mass)
                 water_transfer = (
-                    diff * 0.05 * neighbor.weight
+                    diff * 0.05 * self.config["cell_type_weights"][neighbor.cell_type]
                     if diff < self.config["water_transfer_threshold"]
                     else 0
                 )
