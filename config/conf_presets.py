@@ -15,33 +15,66 @@ PARTICLE_MAPPING = {
 
 # Labels for configuration keys to provide context in the UI or logs
 KEY_LABELS = {
-    'days': 'Default Simulation Duration (Days)',
-    'grid_size': 'Default Grid Size (X, Y, Z)',
-    'initial_ratios': 'Initial Ratios (Proportions)',
-    'baseline_temperature': 'Baseline Temperature (°C)',
-    'baseline_pollution_level': 'Baseline Pollution Levels',
-    'cell_type_weights': 'Cell Type Weights',
-    'forest_pollution_absorption_rate': 'Forest Pollution Absorption Rate',
-    'forest_cooling_effect': 'Forest Cooling Effect',
-    'forest_pollution_extinction_point': 'Forest Pollution Extinction Point',
-    'forest_temperature_extinction_point': 'Forest Temperature Extinction Point',
-    'city_pollution_generation_rate': 'City Pollution Increase Rate',
-    'city_warming_effect': 'City Warming Effect',
-    'city_temperature_extinction_point': 'City Temperature Extinction Point (°C)',
-    'city_pollution_extinction_point': 'City Pollution Extinction Point (°C)',
-    'freezing_point': 'Freezing Point (°C)',
-    'melting_point': 'Melting Point (°C)',
-    'evaporation_point': 'Evaporation Point (°C)',
-    "water_transfer_threshold": 'Water Transfer Threshold',
-    'water_transfer_rate': 'Water Transfer Rate',
-    'ocean_conversion_threshold': 'Ocean Conversion Threshold',
-    'pollution_damage_threshold': 'Pollution Damage Threshold',
-    'pollution_level_tipping_point': 'Pollution Tipping Point',
-    'natural_pollution_decay_rate': 'Natural Pollution Decay Rate',
-    'natural_temperature_decay_rate': 'Natural Temperature Decay Rate',
-    'cloud_saturation_threshold': 'Cloud Saturation Threshold',
-    'melting_rate': 'Melting Rate',
-    'evaporation_rate': 'Evaporation Rate'
+    # General Simulation Parameters
+    "days": "Default Simulation Duration (Days)",
+    "grid_size": "Default Grid Size (X, Y, Z)",
+    "initial_ratios": "Initial Ratios (Proportions)",
+
+    # Baseline Environmental Properties
+    "baseline_temperature": "Baseline Temperature (°C)",
+    "baseline_pollution_level": "Baseline Pollution Levels",
+
+    # Pollution Transfer Weights
+    "cell_type_pollution_transfer_weights": "Pollution Transfer Weights by Cell Type",
+
+    # Temperature Transfer Weights
+    "cell_type_temperature_transfer_weights": "Temperature Transfer Weights by Cell Type",
+
+    # Water Transfer Weights
+    "cell_type_water_transfer_weights": "Water Transfer Weights by Cell Type",
+
+    # Forest Properties
+    "forest_pollution_absorption_rate": "Forest Pollution Absorption Rate",
+    "forest_cooling_effect": "Forest Cooling Effect",
+    "forest_pollution_extinction_point": "Forest Pollution Extinction Point",
+    "forest_temperature_extinction_point": "Forest Temperature Extinction Point",
+
+    # City Properties
+    "city_pollution_generation_rate": "City Pollution Generation Rate",
+    "city_warming_effect": "City Warming Effect",
+    "city_temperature_extinction_point": "City Temperature Extinction Point (°C)",
+    "city_pollution_extinction_point": "City Pollution Extinction Point",
+
+    # Physical Properties
+    "freezing_point": "Freezing Point (°C)",
+    "melting_point": "Melting Point (°C)",
+    "evaporation_point": "Evaporation Point (°C)",
+
+    # Water Transfer
+    "water_transfer_threshold": "Water Transfer Threshold",
+    "water_transfer_rate": "Water Transfer Rate",
+    "ocean_conversion_threshold": "Ocean Conversion Threshold",
+
+    # Pollution Dynamics
+    "pollution_damage_threshold": "Pollution Damage Threshold",
+    "pollution_level_tipping_point": "Pollution Tipping Point",
+    "natural_pollution_decay_rate": "Natural Pollution Decay Rate",
+
+    # Temperature Dynamics
+    "natural_temperature_decay_rate": "Natural Temperature Decay Rate",
+
+    # Cloud Properties
+    "cloud_saturation_threshold": "Cloud Saturation Threshold",
+
+    # Environmental Change Rates
+    "melting_rate": "Melting Rate",
+    "evaporation_rate": "Evaporation Rate",
+
+    # Conversion Weights
+    "cell_type_conversion_weights": "Cell Type Conversion Weights",
+
+    # Base Colors
+    "base_colors": "Base Colors for Cell Types",
 }
 
 DEFAULT_PRESET = {
@@ -156,7 +189,7 @@ DEFAULT_PRESET = {
     # Environmental Change Rates
     "melting_rate": 0.15,  # Rate at which ice melts.
     "evaporation_rate": 0.05,  # Rate at which water evaporates.
-}
+
 
     "cell_type_conversion_weights": {
         0: 1.3,
@@ -181,6 +214,8 @@ DEFAULT_PRESET = {
         8: (1.0, 1.0, 1.0, 0.0),
     },
 }
+
+
 PRESET_CONFIGS = {
     "Stable and Static Ecosystem (Scenario 1)":DEFAULT_PRESET
 
