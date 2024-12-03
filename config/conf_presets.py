@@ -113,7 +113,7 @@ PRESET_CONFIGS = {
     "days": 365,
     "grid_size": (10, 10, 10),
     "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 0.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
+    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
     "baseline_pollution_level":
     [
         3.0,   # Ocean: Some pollution from industrial waste and microplastics
@@ -122,7 +122,7 @@ PRESET_CONFIGS = {
         0.0,   # Ice: Pristine areas with negligible pollution
         2.0,   # Forest: Absorbs pollution, very low levels
         20.0,  # City: High pollution due to vehicles and factories
-        30.0,   # Air: Variable pollution based on proximity to cities
+        0.0,   # Air: Variable pollution based on proximity to cities
         0.0,   # Rain: Cleanses the atmosphere
         0.0,   # Vacuum: No pollution in empty space
     ],
@@ -175,7 +175,7 @@ PRESET_CONFIGS = {
     "days": 365,
     "grid_size": (10, 10, 10),
     "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 50.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
+    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
     "baseline_pollution_level":
     [
         3.0,   # Ocean: Some pollution from industrial waste and microplastics
@@ -237,7 +237,7 @@ PRESET_CONFIGS = {
     "days": 365,
     "grid_size": (10, 10, 10),
     "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 100.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
+    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
     "baseline_pollution_level":
     [
         3.0,   # Ocean: Some pollution from industrial waste and microplastics
