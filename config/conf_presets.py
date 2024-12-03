@@ -48,20 +48,20 @@ DEFAULT_PRESET = {
     "days": 365,
     "grid_size": (10, 10, 10),
     "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
+    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 25.0, 10.0, 12.0, -20.0],
     "baseline_pollution_level":
     [
-        3.0,   # Ocean: Some pollution from industrial waste and microplastics
-        10.0,  # Desert: Dust and localized human activity
-        1.0,   # Cloud: Minimal pollution
-        0.0,   # Ice: Pristine areas with negligible pollution
-        2.0,   # Forest: Absorbs pollution, very low levels
-        20.0,  # City: High pollution due to vehicles and factories
-        50.0,   # Air: Variable pollution based on proximity to cities
-        0.0,   # Rain: Cleanses the atmosphere
-        0.0,   # Vacuum: No pollution in empty space
+        3.0,   # Ocean
+        5.0,   # Desert
+        5.0,   # Cloud
+        0.0,   # Ice
+        5.0,   # Forest
+        50.0,  # City
+        10.0,  # Air
+        1.0,   # Rain
+        0.0,   # Vacuum
     ],
-    "cell_type_weights": {
+    "cell_type_conversion_weights": {
         0: 1.0,
         1: 1.2,
         2: 0.7,
@@ -72,28 +72,39 @@ DEFAULT_PRESET = {
         7: 1.0,
         8: 0.0,
     },
+    "cell_type_pollution_transfer_weights": {
+        0: 0.1,
+        1: 0.1,
+        2: 1.0,
+        3: 0.1,
+        4: 2.0,
+        5: 2.0,
+        6: 2.0,
+        7: 0.1,
+        8: 0.0,
+    },
     "forest_pollution_absorption_rate": 0.1,
     "forest_cooling_effect": 0.1,
-    "forest_pollution_extinction_point": 100.0,
-    "forest_temperature_extinction_point": 100.0,
+    "forest_pollution_extinction_point": 200.0,
+    "forest_temperature_extinction_point": 500.0,
     "city_pollution_generation_rate": 0.1,
-        "city_warming_effect": 0.1,
-        "city_temperature_extinction_point": 100.0,
-        "city_pollution_extinction_point": 100.0,
-        "freezing_point": -15.0,
-        "melting_point": 20.0,
-        "evaporation_point": 35.0,
-        "water_transfer_threshold": 0.05,
-        "water_transfer_rate": 0.1,
-        "ocean_conversion_threshold": 1.0,
-        "pollution_damage_threshold": 10.0,
-        "pollution_level_tipping_point": 100.0,
-        "natural_pollution_decay_rate": 0.1,
-        "natural_temperature_decay_rate": 0.1,
-        "cloud_saturation_threshold": 2.0,
-        "melting_rate": 0.15,
-        "evaporation_rate": 0.05,
-        "base_colors": {
+    "city_warming_effect": 0.1,
+    "city_temperature_extinction_point": 80.0,
+    "city_pollution_extinction_point": 500.0,
+    "freezing_point": -15.0,
+    "melting_point": 20.0,
+    "evaporation_point": 35.0,
+    "water_transfer_threshold": 0.05,
+    "water_transfer_rate": 0.1,
+    "ocean_conversion_threshold": 1.0,
+    "pollution_damage_threshold": 10.0,
+    "pollution_level_tipping_point": 100.0,
+    "natural_pollution_decay_rate": 0.01,
+    "natural_temperature_decay_rate": 0.01,
+    "cloud_saturation_threshold": 2.0,
+    "melting_rate": 0.15,
+    "evaporation_rate": 0.05,
+    "base_colors": {
             6: (1.0, 1.0, 1.0, 0.3),
             2: (0.7, 0.7, 0.7, 1.0),
             0: (0.0, 0.3, 1.0, 1.0),
@@ -105,57 +116,58 @@ DEFAULT_PRESET = {
             8: (1.0, 1.0, 1.0, 0.0),
     },
 }
-
-
 PRESET_CONFIGS = {
+    "Stable and Static Ecosystem (Scenario 1)": {
+        "days": 365,
+        "grid_size": (10, 10, 10),
+        "initial_ratios": {"forest": 0.6, "city": 0.2, "desert": 0.1, "vacuum": 0.1},
+        "baseline_temperature": [15.0, 20.0, 5.0, -15.0, 20.0, 35.0, 10.0, 12.0, -20.0],
+        "baseline_pollution_level":
+            [
+            0.0,   # Ocean
+            0.0,   # Desert
+            0.0,   # Clouds
+            0.0,   # Ice
+            0.0,  # Forest
+            0.0,   # Cloud
+            0.0,   # Ice
+            0.0,   # Forest
+            20.0,  # City
+            0.0,  # Air
+            0.0,   # Rain
+            0.0,   # Vacuum
+            ],
 
-    "Low Air Pollution Levels": {
-    "days": 365,
-    "grid_size": (10, 10, 10),
-    "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
-    "baseline_pollution_level":
-    [
-        3.0,   # Ocean: Some pollution from industrial waste and microplastics
-        10.0,  # Desert: Dust and localized human activity
-        1.0,   # Cloud: Minimal pollution
-        0.0,   # Ice: Pristine areas with negligible pollution
-        2.0,   # Forest: Absorbs pollution, very low levels
-        20.0,  # City: High pollution due to vehicles and factories
-        0.0,   # Air: Variable pollution based on proximity to cities
-        0.0,   # Rain: Cleanses the atmosphere
-        0.0,   # Vacuum: No pollution in empty space
-    ],
-    "cell_type_weights": {
-        0: 1.0,
-        1: 1.2,
-        2: 0.7,
-        3: 0.8,
-        4: 1.5,
-        5: 2.0,
-        6: 0.5,
-        7: 1.0,
-        8: 0.0,
-    },
-    "forest_pollution_absorption_rate": 0.1,
-    "forest_cooling_effect": 0.1,
-    "forest_pollution_extinction_point": 100.0,
-    "forest_temperature_extinction_point": 100.0,
-    "city_pollution_generation_rate": 0.1,
+        "cell_type_conversion_weights": {
+            0: 1.0,
+            1: 1.2,
+            2: 0.7,
+            3: 0.8,
+            4: 1.5,
+            5: 2.0,
+            6: 0.5,
+            7: 1.0,
+            8: 0.0,
+        },
+        "forest_pollution_absorption_rate": 0.3,
+        "forest_cooling_effect": 0.3,
+        "forest_pollution_extinction_point": 500.0,
+        "forest_temperature_extinction_point": 500.0,
+        "city_pollution_generation_rate": 0.1,
         "city_warming_effect": 0.1,
-        "city_temperature_extinction_point": 100.0,
-        "city_pollution_extinction_point": 100.0,
+        "city_temperature_extinction_point": 500.0,
+        "city_pollution_extinction_point": 500.0,
         "freezing_point": -15.0,
         "melting_point": 20.0,
         "evaporation_point": 35.0,
         "water_transfer_threshold": 0.05,
         "water_transfer_rate": 0.1,
         "ocean_conversion_threshold": 1.0,
-        "pollution_damage_threshold": 10.0,
+        "pollution_damage_threshold": 30.0,
         "pollution_level_tipping_point": 100.0,
-        "natural_pollution_decay_rate": 0.1,
-        "natural_temperature_decay_rate": 0.1,
-        "cloud_saturation_threshold": 2.0,
+        "natural_pollution_decay_rate": 0.2,
+        "natural_temperature_decay_rate": 0.2,
+        "cloud_saturation_threshold": 3.0,
         "melting_rate": 0.15,
         "evaporation_rate": 0.05,
         "base_colors": {
@@ -168,194 +180,8 @@ PRESET_CONFIGS = {
             4: (0.0, 0.6, 0.0, 1.0),
             5: (0.4, 0.0, 0.4, 1.0),
             8: (1.0, 1.0, 1.0, 0.0),
+        },
     },
-},
-   
-    "Medium Air Pollution Levels": {
-    "days": 365,
-    "grid_size": (10, 10, 10),
-    "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
-    "baseline_pollution_level":
-    [
-        3.0,   # Ocean: Some pollution from industrial waste and microplastics
-        10.0,  # Desert: Dust and localized human activity
-        1.0,   # Cloud: Minimal pollution
-        0.0,   # Ice: Pristine areas with negligible pollution
-        2.0,   # Forest: Absorbs pollution, very low levels
-        20.0,  # City: High pollution due to vehicles and factories
-        30.0,   # Air: Variable pollution based on proximity to cities
-        0.0,   # Rain: Cleanses the atmosphere
-        0.0,   # Vacuum: No pollution in empty space
-    ],
-    "cell_type_weights": {
-        0: 1.0,
-        1: 1.2,
-        2: 0.7,
-        3: 0.8,
-        4: 1.5,
-        5: 2.0,
-        6: 0.5,
-        7: 1.0,
-        8: 0.0,
-    },
-    "forest_pollution_absorption_rate": 0.1,
-    "forest_cooling_effect": 0.1,
-    "forest_pollution_extinction_point": 100.0,
-    "forest_temperature_extinction_point": 100.0,
-    "city_pollution_generation_rate": 0.1,
-        "city_warming_effect": 0.1,
-        "city_temperature_extinction_point": 100.0,
-        "city_pollution_extinction_point": 100.0,
-        "freezing_point": -15.0,
-        "melting_point": 20.0,
-        "evaporation_point": 35.0,
-        "water_transfer_threshold": 0.05,
-        "water_transfer_rate": 0.1,
-        "ocean_conversion_threshold": 1.0,
-        "pollution_damage_threshold": 10.0,
-        "pollution_level_tipping_point": 100.0,
-        "natural_pollution_decay_rate": 0.1,
-        "natural_temperature_decay_rate": 0.1,
-        "cloud_saturation_threshold": 2.0,
-        "melting_rate": 0.15,
-        "evaporation_rate": 0.05,
-        "base_colors": {
-            6: (1.0, 1.0, 1.0, 0.3),
-            2: (0.7, 0.7, 0.7, 1.0),
-            0: (0.0, 0.3, 1.0, 1.0),
-            3: (0.6, 0.8, 1.0, 1.0),
-            7: (0.5, 0.5, 1.0, 1.0),
-            1: (1.0, 0.8, 0.5, 1.0),
-            4: (0.0, 0.6, 0.0, 1.0),
-            5: (0.4, 0.0, 0.4, 1.0),
-            8: (1.0, 1.0, 1.0, 0.0),
-    },
-},
- 
-    "High Air Pollution Levels": {
-    "days": 365,
-    "grid_size": (10, 10, 10),
-    "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
-    "baseline_pollution_level":
-    [
-        3.0,   # Ocean: Some pollution from industrial waste and microplastics
-        10.0,  # Desert: Dust and localized human activity
-        1.0,   # Cloud: Minimal pollution
-        0.0,   # Ice: Pristine areas with negligible pollution
-        2.0,   # Forest: Absorbs pollution, very low levels
-        20.0,  # City: High pollution due to vehicles and factories
-        60.0,   # Air: Variable pollution based on proximity to cities
-        0.0,   # Rain: Cleanses the atmosphere
-        0.0,   # Vacuum: No pollution in empty space
-    ],
-    "cell_type_weights": {
-        0: 1.0,
-        1: 1.2,
-        2: 0.7,
-        3: 0.8,
-        4: 1.5,
-        5: 2.0,
-        6: 0.5,
-        7: 1.0,
-        8: 0.0,
-    },
-    "forest_pollution_absorption_rate": 0.1,
-    "forest_cooling_effect": 0.1,
-    "forest_pollution_extinction_point": 100.0,
-    "forest_temperature_extinction_point": 100.0,
-    "city_pollution_generation_rate": 0.1,
-        "city_warming_effect": 0.1,
-        "city_temperature_extinction_point": 100.0,
-        "city_pollution_extinction_point": 100.0,
-        "freezing_point": -15.0,
-        "melting_point": 20.0,
-        "evaporation_point": 35.0,
-        "water_transfer_threshold": 0.05,
-        "water_transfer_rate": 0.1,
-        "ocean_conversion_threshold": 1.0,
-        "pollution_damage_threshold": 10.0,
-        "pollution_level_tipping_point": 100.0,
-        "natural_pollution_decay_rate": 0.1,
-        "natural_temperature_decay_rate": 0.1,
-        "cloud_saturation_threshold": 2.0,
-        "melting_rate": 0.15,
-        "evaporation_rate": 0.05,
-        "base_colors": {
-            6: (1.0, 1.0, 1.0, 0.3),
-            2: (0.7, 0.7, 0.7, 1.0),
-            0: (0.0, 0.3, 1.0, 1.0),
-            3: (0.6, 0.8, 1.0, 1.0),
-            7: (0.5, 0.5, 1.0, 1.0),
-            1: (1.0, 0.8, 0.5, 1.0),
-            4: (0.0, 0.6, 0.0, 1.0),
-            5: (0.4, 0.0, 0.4, 1.0),
-            8: (1.0, 1.0, 1.0, 0.0),
-    },
-},
-
-"Unstable Ecosystem (Scenario 3)": {
-    "days": 365,
-    "grid_size": (10, 10, 10),
-    "initial_ratios": {"forest": 0.3, "city": 0.3, "desert": 0.2, "vacuum": 0.2},
-    "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 125.0, 10.0, 12.0, -20.0],
-    "baseline_pollution_level":
-    [
-        3.0,   # Ocean: Some pollution from industrial waste and microplastics
-        10.0,  # Desert: Dust and localized human activity
-        1.0,   # Cloud: Minimal pollution
-        0.0,   # Ice: Pristine areas with negligible pollution
-        2.0,   # Forest: Absorbs pollution, very low levels
-        20.0,  # City: High pollution due to vehicles and factories
-        50.0,   # Air: Variable pollution based on proximity to cities
-        0.0,   # Rain: Cleanses the atmosphere
-        0.0,   # Vacuum: No pollution in empty space
-    ],
-    "cell_type_weights": {
-        0: 1.0,
-        1: 1.2,
-        2: 0.7,
-        3: 0.8,
-        4: 1.5,
-        5: 2.0,
-        6: 0.5,
-        7: 1.0,
-        8: 0.0,
-    },
-    "forest_pollution_absorption_rate": 0.1,
-    "forest_cooling_effect": 0.1,
-    "forest_pollution_extinction_point": 100.0,
-    "forest_temperature_extinction_point": 100.0,
-    "city_pollution_generation_rate": 0.1,
-        "city_warming_effect": 0.1,
-        "city_temperature_extinction_point": 100.0,
-        "city_pollution_extinction_point": 100.0,
-        "freezing_point": -15.0,
-        "melting_point": 20.0,
-        "evaporation_point": 35.0,
-        "water_transfer_threshold": 0.05,
-        "water_transfer_rate": 0.1,
-        "ocean_conversion_threshold": 1.0,
-        "pollution_damage_threshold": 10.0,
-        "pollution_level_tipping_point": 100.0,
-        "natural_pollution_decay_rate": 0.1,
-        "natural_temperature_decay_rate": 0.1,
-        "cloud_saturation_threshold": 2.0,
-        "melting_rate": 0.15,
-        "evaporation_rate": 0.05,
-        "base_colors": {
-            6: (1.0, 1.0, 1.0, 0.3),
-            2: (0.7, 0.7, 0.7, 1.0),
-            0: (0.0, 0.3, 1.0, 1.0),
-            3: (0.6, 0.8, 1.0, 1.0),
-            7: (0.5, 0.5, 1.0, 1.0),
-            1: (1.0, 0.8, 0.5, 1.0),
-            4: (0.0, 0.6, 0.0, 1.0),
-            5: (0.4, 0.0, 0.4, 1.0),
-            8: (1.0, 1.0, 1.0, 0.0),
-    },
-}
 
 }
 
@@ -370,7 +196,18 @@ REQUIRED_KEYS = {
     },
     "baseline_temperature": list,
     "baseline_pollution_level": list,
-    "cell_type_weights": {
+    "cell_type_conversion_weights": {
+        0: float,  # Ocean
+        1: float,  # Desert
+        2: float,  # Cloud
+        3: float,  # Ice
+        4: float,  # Forest
+        5: float,  # City
+        6: float,  # Air
+        7: float,  # Rain
+        8: float  # Vacuum
+    },
+    "cell_type_pollution_transfer_weights":{
         0: float,  # Ocean
         1: float,  # Desert
         2: float,  # Cloud

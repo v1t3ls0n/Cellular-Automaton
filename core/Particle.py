@@ -361,7 +361,7 @@ class Particle:
         # Surrounded by water
         if self.is_surrounded_by_sea_cells(neighbors_above + neighbors_aligned):
             self.convert_to_ocean(neighbors)
-        elif (self.temperature >= forest_temperature_extinction_point or self.pollution_level >= forest_pollution_extinction_point) and self.is_surrounded_by_land_cells(neighbors_aligned):  # Forest destruction
+        elif (self.temperature >= forest_temperature_extinction_point or self.pollution_level >= forest_pollution_extinction_point) and self.is_surrounded_by_land_cells(neighbors_above):  # Forest destruction
             self.convert_to_desert(neighbors)
         elif (
             self.pollution_level < pollution_damage_threshold
@@ -382,6 +382,7 @@ class Particle:
         baseline_pollution_level = self.config["baseline_pollution_level"][self.cell_type]
         baseline_temperature = self.config["baseline_temperature"][self.cell_type]
         city_pollution_extinction_point = self.config["city_pollution_extinction_point"]
+        neighbors_above = self.get_above_neighbors(neighbors)
 
         # Update temperature and pollution level
         self.temperature = min(
@@ -404,7 +405,7 @@ class Particle:
         if self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_ocean(neighbors)
         # Excessive pollution or temperature
-        elif (self.pollution_level >= city_pollution_extinction_point or self.temperature >= abs(city_pollution_extinction_point)):
+        elif (self.pollution_level >= city_pollution_extinction_point or self.temperature >= abs(city_pollution_extinction_point)) or self.is_surrounded_by_sea_cells(neighbors_above):
             self.convert_to_desert(neighbors)
 
     def _update_air(self, neighbors):
@@ -698,8 +699,8 @@ class Particle:
 
         for neighbor in neighbors:
             weighted_temperature_sum += neighbor.temperature * \
-                self.config["cell_type_weights"][neighbor.cell_type]
-            total_weight += self.config["cell_type_weights"][neighbor.cell_type]
+                self.config["cell_type_conversion_weights"][neighbor.cell_type]
+            total_weight += self.config["cell_type_conversion_weights"][neighbor.cell_type]
 
         # Calculate weighted average temperature
         if total_weight > 0:
@@ -718,8 +719,8 @@ class Particle:
 
         for neighbor in neighbors:
             weighted_pollution_sum += neighbor.pollution_level * \
-                self.config["cell_type_weights"][neighbor.cell_type]
-            total_weight += self.config["cell_type_weights"][neighbor.cell_type]
+                self.config["cell_type_pollution_transfer_weights"][neighbor.cell_type]
+            total_weight += self.config["cell_type_pollution_transfer_weights"][neighbor.cell_type]
 
         # Calculate weighted average pollution level
         if total_weight > 0:
@@ -739,7 +740,7 @@ class Particle:
                 diff = abs(neighbor.water_mass - self.water_mass)
                 water_transfer = (
                     diff * 0.05 *
-                    self.config["cell_type_weights"][neighbor.cell_type]
+                    self.config["cell_type_conversion_weights"][neighbor.cell_type]
                     if diff < self.config["water_transfer_threshold"]
                     else 0
                 )
