@@ -1,7 +1,7 @@
 import os
 import logging
 from core.conf import update_config, get_config,validate_config
-from utils.constants import PRESET_CONFIGS, PARTICLE_MAPPING, KEY_LABELS
+from utils.constants import PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
 
@@ -88,14 +88,9 @@ def get_user_configuration():
     print("2. Set Custom Parameters")
 
     choice = input("Choose an option (1 or 2): ").strip()
-    if choice != "2":
-
-        if choice != "1":
-            print(f"Invalid choice. Using default configuration.\n")
-
-        preset_name = choose_preset()
-        update_config(preset_name=preset_name)
-    else:
+    if choice == "1":
+        return choose_preset()
+    elif choice == "2":
         user_config = {}
         print("Setting custom configuration...")
         for key, value in config.items():
@@ -120,13 +115,15 @@ def get_user_configuration():
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
                 user_config[key] = parse_input_value(input_value, value)
         
-        update_config(custom_config=user_config)
+        return user_config
+    else:
+        print(f"Invalid choice. Using default configuration.\n")
 
 
 # Main execution
 if __name__ == "__main__":
-    get_user_configuration()
-    config = get_config()
+    config = get_user_configuration()
+    update_config(config)
     try:
         validate_config(config)
         print("Configuration is valid.")
@@ -134,18 +131,17 @@ if __name__ == "__main__":
         grid_size = config["grid_size"]
         days = config["days"]
         initial_ratios = config["initial_ratios"]
-
         if round(sum(initial_ratios.values()), 2) != 1.0:
             print("Initial ratios must sum to 1. Adjusting to default ratios.")
             initial_ratios = config["initial_ratios"]
 
         # Initialize and run simulation
         simulation = Simulation(grid_size=grid_size, initial_ratios=initial_ratios, days=days)
-        # logging.info("Starting simulation...")
-        # simulation.precompute()
-        # logging.info("Simulation complete. Displaying results...")
-        # display = MatplotlibDisplay(simulation)
-        # display.plot_3d()
+        logging.info("Starting simulation...")
+        simulation.precompute()
+        logging.info("Simulation complete. Displaying results...")
+        display = MatplotlibDisplay(simulation)
+        display.plot_3d()
 
     except (KeyError, TypeError) as e:
         print(f"Configuration error: {e}")

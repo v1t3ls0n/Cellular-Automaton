@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 from core.conf import get_config
-
+import math
 
 class Particle:
     """
@@ -10,8 +10,7 @@ class Particle:
 
     This class provides methods for updating particle state, calculating movement, and visualizing the particle.
     """
-    config =  get_config() # Configuration dictionary shared across all particles
-
+    config = get_config() # Configuration dictionary shared across all particles
     def __init__(self, cell_type, temperature, water_mass, pollution_level, direction, position, grid_size):
         """
         Initializes a Particle object with specified attributes.
@@ -25,11 +24,13 @@ class Particle:
             position (tuple): Current position of the cell in the grid (x, y, z).
             grid_size (tuple): Dimensions of the simulation grid (x_max, y_max, z_max).
         """
+    
         self.cell_type = cell_type
         self.temperature = temperature
         self.water_mass = water_mass
         self.pollution_level = pollution_level
         self.direction = direction
+        self.weight = self.config.get("cell_type_weights").get(cell_type)
         self.position = position  # Particle's current position in the grid
         self.grid_size = grid_size  # Grid boundaries to manage particle movement
 
@@ -84,10 +85,10 @@ class Particle:
         Returns:
             tuple: RGBA color of the particle.
         """
-        if tint:  # If tinting based on pollution is enabled
-            return self.get_color_tinted_by_attributes()
-        else:  # Default to the base color of the particle type
+        if not tint:
             return self.get_base_color()
+        else:  # If tinting based on pollution is enabled and cell type is not 
+            return self.get_color_tinted_by_attributes()
 
     def get_color_tinted_by_attributes(self):
         """
@@ -99,9 +100,11 @@ class Particle:
         """
         base_color = self.get_base_color()
         if base_color is None or len(base_color) != 4:
-            logging.error(f"Invalid color definition for cell_type {
-                          self.cell_type}: {base_color}")
-            return (1.0, 1.0, 1.0, 1.0)  # Default to white color
+            logging.error(f"Invalid color definition for cell_type {self.cell_type}: {base_color}")
+            return (1.0, 1.0, 1.0, 0.0)  # Default to Transperant
+        elif self.cell_type == 8:
+            return base_color  # Vacuum don't have any properties that can effect tint
+
 
         # Scale pollution and temperature intensity to a range of [0.0, 1.0]
         pollution_intensity = max(0.0, min(self.pollution_level / 50.0, 1.0))
@@ -172,9 +175,15 @@ class Particle:
         Returns:
             Particle: The updated particle after applying its next state.
         """
-        new_cell = self.clone()
-        new_cell._apply_natural_decay()  # Apply natural decay processes
+                
 
+
+        new_cell = self.clone()
+        if new_cell.is_vacuum_cell():
+            return new_cell
+        
+        new_cell._apply_natural_decay()  # Apply natural decay processes
+        neighbors = [n for n in neighbors if not n.is_vacuum_cell()]
         new_cell._apply_natural_decay()
         new_cell.equilibrate_temperature(neighbors)
         new_cell.equilibrate_pollution_level(neighbors)
@@ -216,7 +225,7 @@ class Particle:
             evaporation_rate = self.config["evaporation_rate"]
             self.water_mass -= evaporation_rate  # Water evaporates
             if self.water_mass <= 0:  # Convert to air if water is fully evaporated
-                self.exchange_water_mass(
+                self.equilibrate_water_mass(
                     neighbors)  # Share water with neighboring cells
                 self.convert_to_air()
                 self.direction = self.calculate_dynamic_wind_direction(
@@ -265,7 +274,7 @@ class Particle:
             neighbors (list): List of neighboring particles.
         """
         self.direction = self.calculate_dynamic_wind_direction(neighbors)
-        self.exchange_water_mass(
+        self.equilibrate_water_mass(
             neighbors)  # Share water with neighboring cells
         saturation_threshold = self.config["cloud_saturation_threshold"]
         if self.water_mass >= saturation_threshold:  # Convert to rain if saturated
@@ -390,7 +399,7 @@ class Particle:
         
 
         # Exchange water mass with neighbors (e.g., clouds or other air particles)
-        self.exchange_water_mass(neighbors)
+        self.equilibrate_water_mass(neighbors)
 
         # Convert to cloud if the water mass exceeds the saturation threshold
         # and the particle is at or near the top of the grid.
@@ -399,7 +408,7 @@ class Particle:
 
         # Convert to vacuum if rain is above and the air cell is surrounded by land cells.
         elif rain_above and self.is_surrounded_by_land_cells(neighbors):
-            self.convert_to_vacuum()
+            self.convert_to_vacuum(neighbors)
 
         # If rain is above, move downward to support convection and interaction.
         elif rain_above:
@@ -550,7 +559,7 @@ class Particle:
         self.temperature += 2  # Air warms during evaporation
         self.go_up()  # Air moves upward
 
-    def convert_to_vacuum(self):
+    def convert_to_vacuum(self,neighbors):
         """
         Converts the current cell to a vacuum cell.
         Clears water mass, pollution level, and stabilizes motion.
@@ -563,6 +572,8 @@ class Particle:
         self.water_mass = 0  # No water in vacuum
         self.pollution_level = 0  # No pollution in vacuum
         self.direction = (0, 0, 0)  # No movement
+        self.weight = config.get("cell_type_weights").get(8)
+        self.temperature = math.avg([n.temperature for n in neighbors]) 
 
     def convert_to_rain(self):
         """
@@ -583,6 +594,7 @@ class Particle:
     ####################################################################################################################
 
     def _apply_natural_decay(self):
+
         """
         Apply natural decay to pollution level and temperature.
 
@@ -623,9 +635,8 @@ class Particle:
         weighted_temperature_sum = 0
 
         for neighbor in neighbors:
-            weight = self.config["cell_type_weights"][neighbor.cell_type]
-            weighted_temperature_sum += neighbor.temperature * weight
-            total_weight += weight
+            weighted_temperature_sum += neighbor.temperature * neighbor.weight
+            total_weight += neighbor.weight
 
         # Calculate weighted average temperature
         if total_weight > 0:
@@ -643,17 +654,15 @@ class Particle:
         weighted_pollution_sum = 0
 
         for neighbor in neighbors:
-            weight = self.config["cell_type_weights"].get(
-                neighbor.cell_type, 1.0)
-            weighted_pollution_sum += neighbor.pollution_level * weight
-            total_weight += weight
+            weighted_pollution_sum += neighbor.pollution_level * neighbor.weight
+            total_weight += neighbor.weight
 
         # Calculate weighted average pollution level
         if total_weight > 0:
             self.pollution_level = (
                 weighted_pollution_sum / total_weight + self.pollution_level) / 2
 
-    def exchange_water_mass(self, neighbors):
+    def equilibrate_water_mass(self, neighbors):
         """
         Exchange water mass with neighboring cells of type Cloud or Air.
 
@@ -664,10 +673,8 @@ class Particle:
         for neighbor in neighbors:
             if neighbor.cell_type in {2, 6}:  # Cloud or Air
                 diff = abs(neighbor.water_mass - self.water_mass)
-                weight = self.config["cell_type_weights"].get(
-                    neighbor.cell_type, 1.0)
                 water_transfer = (
-                    diff * 0.05 * weight
+                    diff * 0.05 * neighbor.weight
                     if diff < self.config["water_transfer_threshold"]
                     else 0
                 )
@@ -823,3 +830,6 @@ class Particle:
         Get all neighbors that are at the same elevation as the current cell.
         """
         return [n for n in neighbors if n.position[2] == self.position[2]]
+
+    def is_vacuum_cell(self):
+        return self.cell_type == 8

@@ -371,7 +371,8 @@ class World:
         """
 
         if (cell1.cell_type == 6 and cell2.cell_type == 6):
-            return cell1 if (cell1.water_mass + cell1.temperature) > (cell2.water_mass+cell2.temperature) else cell2
+            # return cell1 if (cell1.water_mass + cell1.temperature) > (cell2.water_mass+cell2.temperature) else cell2
+            return cell1 if cell1.water_mass >= cell2.water_mass else cell2
 
         # Prevent vacuum overwrite air or cloud
         if cell1.cell_type == 8 and cell2.cell_type in {2,6}:
@@ -395,7 +396,7 @@ class World:
                 return cell1 
 
         # Default behavior based on cell type weights
-        return cell1 if self.config["cell_type_weights"][cell1.cell_type] >= self.config["cell_type_weights"][cell2.cell_type] else cell2
+        return cell1 if cell1.weight > cell2.weight else cell2
     
 
     
@@ -432,6 +433,7 @@ class World:
         Returns:
             dict: A transfer map with positions as keys and transfer amounts as values.
         """
+
         transfer_map = {}
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):

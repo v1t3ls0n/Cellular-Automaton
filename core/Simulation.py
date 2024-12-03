@@ -111,7 +111,7 @@ class Simulation:
         self.states.append(initial_state)
         self._update_aggregates(initial_state)  # Update aggregates for Day 0
 
-        # Simulate for the specified number of days
+        # # Simulate for the specified number of days
         for day in range(self.days):
             logging.info(f"Day {day}...")
 
@@ -119,9 +119,9 @@ class Simulation:
             next_state = self.states[-1].clone()
             next_state.day_number += 1  # Increment the day number
             next_state.update_cells_on_grid()  # Update the grid cells
-            next_state._recalculate_global_attributes()  # Recalculate global attributes
-            self.states.append(next_state)  # Store the new state
-            self._update_aggregates(next_state)  # Update aggregates
+            # next_state._recalculate_global_attributes()  # Recalculate global attributes
+            # self.states.append(next_state)  # Store the new state
+            # self._update_aggregates(next_state)  # Update aggregates
 
     def get_averages_and_std_dev_over_time(self):
         """

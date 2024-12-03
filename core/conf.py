@@ -1,15 +1,26 @@
 # conf.py
 import logging
 from collections import defaultdict
-from utils.constants import PRESET_CONFIGS
+from utils.constants import PRESET_CONFIGS, DEFAULT_PRESET, required_keys
 # Global configuration dictionary
-CONFIG = defaultdict()
+CONFIG = DEFAULT_PRESET
 
 
 
 # Configuration settings for the simulation
 # This file contains all the parameters and settings used to define the behavior and appearance
 # of the cellular automata simulation.
+def get_config_preset(preset_name=None):
+    if preset_name:
+        if preset_name in PRESET_CONFIGS:            
+            return PRESET_CONFIGS[preset_name].copy()
+        else:
+            raise ValueError('Either preset_name or custom_config must be provided.')
+        
+    else:
+        logging.debug("preset_name is None. returning default config preset")
+        return DEFAULT_PRESET.copy()
+
 def get_config():
     global CONFIG
     return CONFIG.copy()
@@ -49,51 +60,6 @@ def validate_config(config):
     Raises:
         KeyError: If any required key or sub-key is missing.
     """
-    required_keys = {
-        "days": int,
-        "grid_size": tuple,
-        "initial_ratios": {
-            "forest": float,
-            "city": float,
-            "desert": float,
-            "vacuum": float,
-        },
-        "baseline_temperature": list,
-        "baseline_pollution_level": list,
-        "cell_type_weights": dict,
-        "forest_pollution_absorption_rate": float,
-        "forest_cooling_effect": float,
-        "forest_pollution_extinction_point": float,
-        "forest_temperature_extinction_point":float,
-        "city_pollution_generation_rate": float,
-        "city_warming_effect": float,
-        "city_temperature_extinction_point": float,
-        "city_pollution_extinction_point": float,
-        "freezing_point": float,
-        "melting_point": float,
-        "evaporation_point": float,
-        "water_transfer_threshold": float,
-        "water_transfer_rate": float,
-        "ocean_conversion_threshold": float,
-        "pollution_damage_threshold": float,
-        "pollution_level_tipping_point": float,
-        "natural_pollution_decay_rate": float,
-        "natural_temperature_decay_rate": float,
-        "cloud_saturation_threshold": float,
-        "melting_rate": float,
-        "evaporation_rate": float,
-        "base_colors": {
-            0: tuple,  # Ocean
-            1: tuple,  # Desert
-            2: tuple,  # Cloud
-            3: tuple,  # Ice
-            4: tuple,  # Forest
-            5: tuple,  # City
-            6: tuple,  # Air
-            7: tuple,  # Rain
-            8: tuple,  # Vacuum
-        },
-    }
 
     def check_keys(sub_config, required_sub_keys, path=""):
 

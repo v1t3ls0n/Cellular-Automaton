@@ -27,7 +27,7 @@ KEY_LABELS = {
     'city_pollution_generation_rate': 'City Pollution Increase Rate',
     'city_warming_effect': 'City Warming Effect',
     'city_temperature_extinction_point': 'City Temperature Extinction Point (°C)',
-    'city_pollution_extinction_point':'City Pollution Extinction Point (°C)',
+    'city_pollution_extinction_point': 'City Pollution Extinction Point (°C)',
     'freezing_point': 'Freezing Point (°C)',
     'melting_point': 'Melting Point (°C)',
     'evaporation_point': 'Evaporation Point (°C)',
@@ -43,10 +43,60 @@ KEY_LABELS = {
     'evaporation_rate': 'Evaporation Rate'
 }
 
+DEFAULT_PRESET = {
+        "days": 365,
+        "grid_size": (10, 10, 10),
+        "initial_ratios": {"forest": 0.08, "city": 0.9, "desert": 0.01, "vacuum": 0.01},
+        "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 25.0, 10.0, 12.0, -20.0],
+        "baseline_pollution_level": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "cell_type_weights": {
+            0: 1.0,
+            1: 1.2,
+            2: 0.7,
+            3: 0.8,
+            4: 1.5,
+            5: 2.0,
+            6: 0.5,
+            7: 1.0,
+            8: 0.0,
+        },
+        "forest_pollution_absorption_rate": 0.1,
+        "forest_cooling_effect": 0.1,
+        "forest_pollution_extinction_point": 100.0,
+        "forest_temperature_extinction_point": 100.0,
+        "city_pollution_generation_rate": 0.1,
+        "city_warming_effect": 0.1,
+        "city_temperature_extinction_point": 100.0,
+        "city_pollution_extinction_point": 100.0,
+        "freezing_point": -15.0,
+        "melting_point": 20.0,
+        "evaporation_point": 35.0,
+        "water_transfer_threshold": 0.05,
+        "water_transfer_rate": 0.1,
+        "ocean_conversion_threshold": 1.0,
+        "pollution_damage_threshold": 10.0,
+        "pollution_level_tipping_point": 50.0,
+        "natural_pollution_decay_rate": 0.1,
+        "natural_temperature_decay_rate": 0.1,
+        "cloud_saturation_threshold": 3.0,
+        "melting_rate": 0.15,
+        "evaporation_rate": 0.05,
+        "base_colors": {
+            6: (1.0, 1.0, 1.0, 0.3),
+            2: (0.7, 0.7, 0.7, 1.0),
+            0: (0.0, 0.3, 1.0, 1.0),
+            3: (0.6, 0.8, 1.0, 1.0),
+            7: (0.5, 0.5, 1.0, 1.0),
+            1: (1.0, 0.8, 0.5, 1.0),
+            4: (0.0, 0.6, 0.0, 1.0),
+            5: (0.4, 0.0, 0.4, 1.0),
+            8: (1.0, 1.0, 1.0, 0.0),
+        },
+    }
 
 PRESET_CONFIGS = {
     "Mass Extinction and Forest Regrowth (Scenario 1)": {
-        "days": 50,
+        "days": 365,
         "grid_size": (10, 10, 10),
         "initial_ratios": {"forest": 0.2, "city": 0.6, "desert": 0.1, "vacuum": 0.1},
         "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 35.0, 10.0, 12.0, -20.0],
@@ -146,7 +196,7 @@ PRESET_CONFIGS = {
         },
     },
     "Mass Extinction and Forest Regrowth (Scenario 2)": {
-        "days": 50,
+        "days": 365,
         "grid_size": (10, 10, 10),
         "initial_ratios": {"forest": 0.2, "city": 0.6, "desert": 0.1, "vacuum": 0.1},
         "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 35.0, 10.0, 12.0, -20.0],
@@ -196,7 +246,7 @@ PRESET_CONFIGS = {
         },
     },
     "Dynamic Stability Ecosystem (Scenario 2)": {
-        "days": 50,
+        "days": 365,
         "grid_size": (10, 10, 10),
         "initial_ratios": {"forest": 0.08, "city": 0.9, "desert": 0.01, "vacuum": 0.01},
         "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 35.0, 10.0, 12.0, -20.0],
@@ -246,7 +296,7 @@ PRESET_CONFIGS = {
         },
     },
     "Unstable Ecosystem (Scenario 3)": {
-        "days": 50,
+        "days": 365,
         "grid_size": (10, 10, 10),
         "initial_ratios": {"forest": 0.08, "city": 0.9, "desert": 0.01, "vacuum": 0.01},
         "baseline_temperature": [15.0, 30.0, 5.0, -15.0, 20.0, 35.0, 10.0, 12.0, -20.0],
@@ -297,3 +347,59 @@ PRESET_CONFIGS = {
     },
 }
 
+
+required_keys = {
+    "days": int,
+    "grid_size": tuple,
+    "initial_ratios": {
+        "forest": float,
+        "city": float,
+        "desert": float,
+        "vacuum": float,
+    },
+    "baseline_temperature": list,
+    "baseline_pollution_level": list,
+    "cell_type_weights": {
+        0: float,  # Ocean
+        1: float,  # Desert
+        2: float,  # Cloud
+        3: float,  # Ice
+        4: float,  # Forest
+        5: float,  # City
+        6: float,  # Air
+        7: float,  # Rain
+        8: float  # Vacuum
+    },
+    "forest_pollution_absorption_rate": float,
+    "forest_cooling_effect": float,
+    "forest_pollution_extinction_point": float,
+    "forest_temperature_extinction_point": float,
+    "city_pollution_generation_rate": float,
+    "city_warming_effect": float,
+    "city_temperature_extinction_point": float,
+    "city_pollution_extinction_point": float,
+    "freezing_point": float,
+    "melting_point": float,
+    "evaporation_point": float,
+    "water_transfer_threshold": float,
+    "water_transfer_rate": float,
+    "ocean_conversion_threshold": float,
+    "pollution_damage_threshold": float,
+    "pollution_level_tipping_point": float,
+    "natural_pollution_decay_rate": float,
+    "natural_temperature_decay_rate": float,
+    "cloud_saturation_threshold": float,
+    "melting_rate": float,
+    "evaporation_rate": float,
+    "base_colors": {
+        0: tuple,  # Ocean
+        1: tuple,  # Desert
+        2: tuple,  # Cloud
+        3: tuple,  # Ice
+        4: tuple,  # Forest
+        5: tuple,  # City
+        6: tuple,  # Air
+        7: tuple,  # Rain
+        8: tuple,  # Vacuum
+    },
+}
