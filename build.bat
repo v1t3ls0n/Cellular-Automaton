@@ -1,6 +1,6 @@
 @echo off
 REM Title: Build Script for PyInstaller
-REM Author: Your Name
+REM Author: Guy Vitelson
 REM Date: Today's Date
 
 REM Step 1: Set Python Path
