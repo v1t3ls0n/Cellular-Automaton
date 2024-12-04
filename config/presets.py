@@ -177,12 +177,12 @@ PRESET_CONFIGS = {
         # Physical Properties
         "freezing_point": -15.0,  # Freezing temperature for water (°C).
         "melting_point": 20.0,  # Melting temperature for ice (°C).
-        "evaporation_point": 35.0,  # Evaporation temperature for water (°C).
+        "evaporation_point": 25.0,  # Evaporation temperature for water (°C).
 
         # Water Transfer
         # Minimum water mass difference for transfer.
-        "water_transfer_threshold": 0.05,
-        "water_transfer_rate": 0.1,  # Rate of water transfer between cells.
+        "water_transfer_threshold": 0.005,
+        "water_transfer_rate": 0.4,  # Rate of water transfer between cells.
         # Water mass needed to convert a cell to ocean.
         "ocean_conversion_threshold": 1.0,
 
@@ -200,7 +200,7 @@ PRESET_CONFIGS = {
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 1.5,
+        "cloud_saturation_threshold": 1.1,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
@@ -263,7 +263,7 @@ PRESET_CONFIGS = {
             5.0,    # Cloud: Cool at high altitudes.
             -20.0,  # Ice: Below freezing point.
             25.0,   # Forest: Moderate, buffered by vegetation.
-            30.0,   # City: Warmer due to urban heat islands.
+            20.0,   # City: Warmer due to urban heat islands.
             10.0,   # Air: Cool and variable depending on altitude.
             12.0,   # Rain: Mild temperature, absorbs heat.
             -50.0,  # Vacuum: Close to absolute zero.
@@ -427,7 +427,7 @@ PRESET_CONFIGS = {
             5.0,    # Cloud: Cool at high altitudes.
             -20.0,  # Ice: Below freezing point.
             25.0,   # Forest: Moderate, buffered by vegetation.
-            30.0,   # City: Warmer due to urban heat islands.
+            40.0,   # City: Warmer due to urban heat islands.
             10.0,   # Air: Cool and variable depending on altitude.
             12.0,   # Rain: Mild temperature, absorbs heat.
             -50.0,  # Vacuum: Close to absolute zero.
@@ -604,7 +604,7 @@ PRESET_CONFIGS = {
             0.0,   # Ice: Pristine and isolated.
             5.0,   # Forest: Low pollution absorbed by vegetation.
             40.0,  # City: High due to factories and vehicles.
-            200.0,   # Air: Moderate, depends on proximity to cities.
+            300.0,   # Air: Moderate, depends on proximity to cities.
             2.0,   # Rain: Low, acts as a natural cleanser.
             0.0,   # Vacuum: No pollution, uninhabitable space.
         ],
