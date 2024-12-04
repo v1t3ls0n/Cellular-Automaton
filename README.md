@@ -105,8 +105,8 @@ The configuration properties are the foundation of this simulation. Each propert
 
 1. Clone this repository or download the ZIP file:
    ```bash
-   git clone <https://github.com/v1t3ls0n/Cellular-Automaton>
-   cd <Cellular-Automaton>
+   git clone https://github.com/v1t3ls0n/Cellular-Automaton
+   cd Cellular-Automaton
    ```
 
 2. Install the required dependencies:
