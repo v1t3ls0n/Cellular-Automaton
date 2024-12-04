@@ -6,7 +6,6 @@ This project is a **cellular automaton simulation** developed as an academic tas
 
 The entire project was developed independently by **[Your Name]** and is intended as a submission for the course instructor.
 
----
 
 ## Features
 - **Complete Configuration Control**: Configure properties for every aspect of the simulation, including pollution dynamics, temperature changes, water transfer, and more.
@@ -14,7 +13,6 @@ The entire project was developed independently by **[Your Name]** and is intende
 - **Real-Time Visualization**: View simulation progress through comprehensive 3D visualizations and time-series graphs.
 - **Educational Focus**: Designed to demonstrate the capabilities of cellular automata for academic study and research.
 
----
 
 ## Project Structure
 ```plaintext
@@ -36,8 +34,6 @@ The entire project was developed independently by **[Your Name]** and is intende
 └── utils/                     # Utility functions
     └── helpers.py
 ```
-
----
 
 ## Configuration Properties
 The configuration properties are the foundation of this simulation. Each property can be modified to customize the behavior and environment.
@@ -103,7 +99,6 @@ The configuration properties are the foundation of this simulation. Each propert
 ### Base Colors
 - `base_colors`: RGBA colors for each cell type.
 
----
 
 ## Installation
 
@@ -117,8 +112,6 @@ The configuration properties are the foundation of this simulation. Each propert
    ```bash
    pip install -r requirements.txt
    ```
-
----
 
 ## Usage Instructions
 
@@ -150,7 +143,6 @@ When prompted, select one of the following options:
 - Results and metrics are logged in `cli_output.log` for further analysis.
 - Metrics include averages, standard deviations, and configuration details.
 
----
 
 ## Code and Logic
 ### Core Components
@@ -162,7 +154,6 @@ When prompted, select one of the following options:
 - **`MatplotlibDisplay.py`**: Generates graphs and 3D visualizations.
 - **Real-Time GUI**: Displays metrics and allows interaction during the simulation.
 
----
 
 ## Example Workflow
 
@@ -175,15 +166,12 @@ When prompted, select one of the following options:
 4. CLI output example can be found in the `cli_output.log` file.
 5. GUI Screenshot ![Simulation Results Graphical User Interface Screenshot](screenshots/GUI.png)
 
----
 
 ## Academic Integrity
 This project is an independent academic submission for the **Biological Computation Course**. The implementation, configuration, and logic have been designed solely by **Guy Vitelson**.
 
----
 
 ## License
 This project is licensed under the MIT License.
 GitHub Repo : https://github.com/v1t3ls0n/bio-computation-course
 
----
