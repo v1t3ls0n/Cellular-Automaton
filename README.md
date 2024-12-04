@@ -105,8 +105,8 @@ The configuration properties are the foundation of this simulation. Each propert
 
 1. Clone this repository or download the ZIP file:
    ```bash
-   git clone <repository_url>
-   cd <repository_directory>
+   git clone <https://github.com/v1t3ls0n/Cellular-Automaton>
+   cd <Cellular-Automaton>
    ```
 
 2. Install the required dependencies:
@@ -171,8 +171,4 @@ When prompted, select one of the following options:
 ## Academic Integrity
 This project is an independent academic submission for the **Biological Computation Course**. The implementation, configuration, and logic have been designed solely by **Guy Vitelson**.
 
-
-## License
-This project is licensed under the MIT License.
-GitHub Repo : https://github.com/v1t3ls0n/bio-computation-course
 
