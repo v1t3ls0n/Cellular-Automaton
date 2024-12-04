@@ -192,7 +192,7 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_temperature_decay_rate": 0.1,
+        "natural_pollution_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
@@ -356,7 +356,7 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_temperature_decay_rate": 0.1,
+        "natural_pollution_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
@@ -520,7 +520,7 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_temperature_decay_rate": 0.1,
+        "natural_pollution_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
@@ -684,7 +684,7 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_temperature_decay_rate": 0.1,
+        "natural_pollution_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
@@ -848,7 +848,7 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_temperature_decay_rate": 0.1,
+        "natural_pollution_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
