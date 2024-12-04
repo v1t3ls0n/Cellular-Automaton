@@ -250,7 +250,6 @@ class World:
 
                     # Assign direction for dynamic cells
                     if cell_type in {0, 3}:  # Sea/Ice
-                        direction = (0, 0, 0)  # Static cells
                         dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])
                         dz = 0
                         direction = (dx, dy, dz)
