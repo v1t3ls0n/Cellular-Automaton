@@ -461,32 +461,27 @@ class World:
 
         self.grid = new_grid
         self._recalculate_global_attributes()
-
+    
     def _recalculate_global_attributes(self):
         """
         Recalculate global attributes like average temperature, pollution, water mass,
-        and counts of cities, forests, rain cells, and other cell types. 
-        Also calculates averages and standard deviations for temperature, pollution, water mass, 
-        and each cell type.
+        and counts of cities and forests. Also calculates averages and standard deviations
+        for temperature, pollution, water mass, city count, and forest count.
         """
         total_temperature = 0
         total_pollution = 0
         total_water_mass = 0
         total_cells = 0
 
-        # Initialize counts and metrics for all cell types
-        # Assuming 10 cell types (0-9)
-        cell_type_counts = {cell_type: 0 for cell_type in range(10)}
-        # To calculate water mass stats
-        cell_type_water_mass = {cell_type: [] for cell_type in range(10)}
-        # To calculate temperature stats
-        cell_type_temperature = {cell_type: [] for cell_type in range(10)}
+        temperature_values = []
+        pollution_values = []
+        water_mass_values = []
+        city_counts = []
+        forest_counts = []
 
-        temperature_values = []  # Store temperature values for global std dev
-        pollution_values = []  # Store pollution values for global std dev
-        water_mass_values = []  # Store water mass values for global std dev
         total_cities = 0
         total_forests = 0
+
         # Iterate over the grid
         for i in range(self.grid_size[0]):
             for j in range(self.grid_size[1]):
@@ -503,68 +498,29 @@ class World:
                     pollution_values.append(cell.pollution_level)
                     water_mass_values.append(cell.water_mass)
 
-                    # Update per-cell-type statistics
-                    cell_type_counts[cell.cell_type] += 1
-                    cell_type_water_mass[cell.cell_type].append(
-                        cell.water_mass)
-                    cell_type_temperature[cell.cell_type].append(
-                        cell.temperature)
+                    # Count cities and forests
                     if cell.cell_type == 5:  # City
                         total_cities += 1
                     elif cell.cell_type == 4:  # Forest
                         total_forests += 1
 
+        # Add city and forest counts for standard deviation calculations
+        city_counts.append(total_cities)
+        forest_counts.append(total_forests)
+
         # Global averages
         self.avg_temperature = total_temperature / total_cells if total_cells > 0 else 0
         self.avg_pollution = total_pollution / total_cells if total_cells > 0 else 0
         self.avg_water_mass = total_water_mass / total_cells if total_cells > 0 else 0
-        # Assign calculated values to instance attributes
+
+        # Total counts
         self.total_cities = total_cities
         self.total_forests = total_forests
         self.total_cells = total_cells
-        # Global standard deviations
-        if total_cells > 0:
-            self.std_dev_temperature = math.sqrt(
-                np.sum((temp - self.avg_temperature) **
-                    2 for temp in temperature_values) / total_cells
-            )
-            self.std_dev_pollution = math.sqrt(
-                np.sum((poll - self.avg_pollution) **
-                    2 for poll in pollution_values) / total_cells
-            )
-            self.std_dev_water_mass = math.sqrt(
-                np.sum((mass - self.avg_water_mass)  ** 2 for mass in water_mass_values) / total_cells
-            )
-        else:
-            self.std_dev_temperature = 0
-            self.std_dev_pollution = 0
-            self.std_dev_water_mass = 0
 
-        # Per-cell-type statistics
-        self.cell_type_stats = {}
-        for cell_type in cell_type_counts:
-            count = cell_type_counts[cell_type]
-            if count > 0:
-                avg_temp = np.sum(cell_type_temperature[cell_type]) / count
-                avg_water = np.sum(cell_type_water_mass[cell_type]) / count
-
-                temp_variance = np.sum(
-                    (t - avg_temp) ** 2 for t in cell_type_temperature[cell_type]) / count
-                water_variance = np.sum(
-                    (w - avg_water) ** 2 for w in cell_type_water_mass[cell_type]) / count
-
-                self.cell_type_stats[cell_type] = {
-                    "count": count,
-                    "avg_temperature": avg_temp,
-                    "std_dev_temperature": math.sqrt(temp_variance),
-                    "avg_water_mass": avg_water,
-                    "std_dev_water_mass": math.sqrt(water_variance),
-                }
-            else:
-                self.cell_type_stats[cell_type] = {
-                    "count": 0,
-                    "avg_temperature": 0,
-                    "std_dev_temperature": 0,
-                    "avg_water_mass": 0,
-                    "std_dev_water_mass": 0,
-                }
+        # Standard deviations
+        self.std_dev_temperature = np.std(temperature_values) if temperature_values else 0
+        self.std_dev_pollution = np.std(pollution_values) if pollution_values else 0
+        self.std_dev_water_mass = np.std(water_mass_values) if water_mass_values else 0
+        self.std_dev_city_population = np.std(city_counts) if city_counts else 0
+        self.std_dev_forest_count = np.std(forest_counts) if forest_counts else 0

@@ -43,55 +43,7 @@ class Simulation:
         # Standard deviation of city population
         self.std_dev_city_population_over_time = []
 
-    def _update_aggregates(self, state):
-        """
-        Update aggregate metrics based on the current state of the simulation.
 
-        Args:
-            state (World): Current World object representing the state of the grid.
-        """
-        self.pollution_over_time.append(state.avg_pollution)
-        self.temperature_over_time.append(state.avg_temperature)
-        self.city_population_over_time.append(state.total_cities)
-        self.forest_count_over_time.append(state.total_forests)
-        self.water_mass_over_time.append(state.avg_water_mass)
-        self.std_dev_pollution_over_time.append(state.std_dev_pollution)
-        self.std_dev_temperature_over_time.append(state.std_dev_temperature)
-        self.std_dev_water_mass_over_time.append(state.std_dev_water_mass)
-
-        for cell_type, stats in state.cell_type_stats.items():
-            self.cell_type_std_dev_over_time[cell_type].append(
-                stats["std_dev_temperature"])
-            self.cell_type_counts_over_time[cell_type].append(stats["count"])
-
-        # Calculate standard deviation of cell counts
-        cell_counts = [stats["count"]
-                       for stats in state.cell_type_stats.values()]
-        self.std_dev_cell_distribution_over_time.append(
-            self._calculate_standard_deviation(cell_counts))
-
-        # Compute standard deviation for forests and cities
-        self.std_dev_forest_count_over_time.append(
-            self._calculate_standard_deviation(self.forest_count_over_time)
-        )
-        self.std_dev_city_population_over_time.append(
-            self._calculate_standard_deviation(self.city_population_over_time)
-        )
-
-        # Calculate and log standardized values for pollution, temperature, and water mass
-        for param, values in {
-            "pollution": self.pollution_over_time,
-            "temperature": self.temperature_over_time,
-            "water_mass": self.water_mass_over_time,
-        }.items():
-            if len(values) > 1:  # Ensure enough data points for calculations
-                mean_value = np.mean(values)
-                std_dev_value = np.std(values)
-                standardized_values = [
-                    (value - mean_value) /
-                    std_dev_value if std_dev_value > 0 else 0
-                    for value in values
-                ]
 
     def precompute(self):
         """
@@ -126,41 +78,35 @@ class Simulation:
             self._update_aggregates(next_state)  # Update aggregates
         
         self.print_simulation_metrics()
-    def get_averages_and_std_dev_over_time(self):
-        """
-        Retrieve averages and standard deviations of metrics over the simulation period.
 
-        Returns:
-            dict: Averages and standard deviations of temperature, pollution, water mass, 
-                  city counts, forest counts, and cell type counts.
-        """
-        return {
-            "averages": {
-                "temperature": self.temperature_over_time,
-                "pollution": self.pollution_over_time,
-                "water_mass": self.water_mass_over_time,
-                "cities": self.city_population_over_time,
-                "forests": self.forest_count_over_time,
-                "cell_type_counts": self.cell_type_counts_over_time,
-            },
-            "std_devs": {
-                "temperature": self.std_dev_temperature_over_time,
-                "pollution": self.std_dev_pollution_over_time,
-                "water_mass": self.std_dev_water_mass_over_time,
-            }
-        }
 
-    def _calculate_standard_deviation(self, data_list):
+    def _update_aggregates(self, state):
         """
-        Calculate standard deviation for a list of data points.
+        Update aggregate metrics based on the current state of the simulation.
 
         Args:
-            data_list (list): A list of numerical data points.
-
-        Returns:
-            float: Standard deviation of the data.
+            state (World): Current World object representing the state of the grid.
         """
-        return np.std(data_list) if data_list else 0.0
+        # Append spatial averages from World
+        self.pollution_over_time.append(state.avg_pollution)
+        self.temperature_over_time.append(state.avg_temperature)
+        self.water_mass_over_time.append(state.avg_water_mass)
+        self.city_population_over_time.append(state.total_cities)
+        self.forest_count_over_time.append(state.total_forests)
+
+        # Append spatial std devs from World
+        self.std_dev_pollution_over_time.append(state.std_dev_pollution)
+        self.std_dev_temperature_over_time.append(state.std_dev_temperature)
+        self.std_dev_water_mass_over_time.append(state.std_dev_water_mass)
+
+        # Calculate temporal std devs dynamically
+        self.std_dev_forest_count_over_time.append(
+            np.std(self.forest_count_over_time) if len(self.forest_count_over_time) > 1 else 0
+        )
+        self.std_dev_city_population_over_time.append(
+            np.std(self.city_population_over_time) if len(self.city_population_over_time) > 1 else 0
+        )
+
 
     def print_simulation_metrics(self):
         logging.info("\n===== Simulation Metrics =====\n")
