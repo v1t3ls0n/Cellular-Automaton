@@ -17,24 +17,31 @@ This project is a **cellular automaton simulation** developed as an academic tas
 ## Project Structure
 ```plaintext
 .
-├── main.py                    # Main entry point for the simulation
-├── cli_output.log             # Cli output exapmle 
-├── config/                    # Configuration management files
-│   ├── config_state_handler.py
-│   └── conf_presets.py
-├── core/                      # Core simulation logic (critical for behavior)
-│   ├── Particle.py
-│   ├── Simulation.py
-│   ├── World.py
-│   └── __init__.py
-├── display/                   # Visualization modules
-│   ├── MatplotlibDisplay.py
-│   └── __init__.py
-├── docs/               # Screenshot of the graphical interface
-│   └── _GUI.png
-└── utils/                     # Utility functions
-    └── helpers.py
-```
+├── main.py                     # Main entry point for the simulation
+├── config/                     # Configuration management files
+│   ├── conf_presets.py         # Presets for simulation configuration
+│   └── config_state_handler.py # Handles configuration validation and updates
+├── core/                       # Core simulation logic
+│   ├── Particle.py             # Manages particle behavior in the simulation
+│   ├── Simulation.py           # Main simulation engine
+│   ├── World.py                # Manages the simulation world/environment
+│   └── __init__.py             # Initialization file for the core module
+├── display/                    # Visualization components
+│   ├── MatplotlibDisplay.py    # Handles Matplotlib-based visualization
+│   └── __init__.py             # Initialization file for the display module
+├── docs/                       # Documentation and resources
+│   └── GUI.png                 # Screenshot or image of the GUI
+├── scripts/                    # Shell/Batch Scripts for dev automation and utilities
+│   ├── build.bat               # Script to compile the project into an executable
+│   ├── clean_git_ignored.sh    # Script to delete all ignored files and folders
+│   ├── git_update.sh           # Script to update the repository
+│   └── zip_non_ignored.sh      # Script to zip non-ignored files
+├── utils/                      # Utility functions
+│   └── helpers.py              # Helper functions for the project
+├── .gitignore                  # Git ignore file
+├── README.md                   # Project documentation
+├── requirements.txt            # Python dependencies
+
 
 ## Configuration Properties
 The configuration properties are the foundation of this simulation. Each property can be modified to customize the behavior and environment.
