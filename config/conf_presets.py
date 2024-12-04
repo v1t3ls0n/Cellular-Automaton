@@ -77,143 +77,6 @@ KEY_LABELS = {
     "base_colors": "Base Colors for Cell Types",
 }
 
-DEFAULT_PRESET = {
-    # General Simulation Parameters
-    "days": 365,
-    "grid_size": (10, 10, 10),
-    "initial_ratios": {
-        "forest": 0.3,
-        "city": 0.3,
-        "desert": 0.2,
-        "vacuum": 0.2,
-    },
-
-    # Baseline Environmental Properties
-    "baseline_temperature": [
-        15.0,  # Ocean
-        35.0,  # Desert
-        5.0,   # Cloud
-        -20.0, # Ice
-        25.0,  # Forest
-        30.0,  # City
-        10.0,  # Air
-        12.0,  # Rain
-        -50.0, # Vacuum
-    ],
-    "baseline_pollution_level": [
-        3.0,   # Ocean
-        2.0,   # Desert
-        1.0,   # Cloud
-        0.0,   # Ice
-        5.0,   # Forest
-        40.0,  # City
-        5.0,   # Air
-        2.0,   # Rain
-        0.0,   # Vacuum
-    ],
-
-    # Pollution Transfer Weights
-    "cell_type_pollution_transfer_weights": {
-        0: 0.5,  # Ocean
-        1: 0.2,  # Desert
-        2: 0.9,  # Cloud
-        3: 0.3,  # Ice
-        4: 0.8,  # Forest
-        5: 1.0,  # City
-        6: 0.9,  # Air
-        7: 0.7,  # Rain
-        8: 0.0,  # Vacuum
-    },
-
-    # Temperature Transfer Weights
-    "cell_type_temperature_transfer_weights": {
-        0: 0.4,  # Ocean
-        1: 0.3,  # Desert
-        2: 0.9,  # Cloud
-        3: 0.2,  # Ice
-        4: 0.7,  # Forest
-        5: 0.8,  # City
-        6: 1.0,  # Air
-        7: 0.8,  # Rain
-        8: 0.0,  # Vacuum
-    },
-
-    # Water Transfer Weights
-    "cell_type_water_transfer_weights": {
-        0: 0.9,  # Ocean
-        1: 0.2,  # Desert
-        2: 1.0,  # Cloud
-        3: 0.4,  # Ice
-        4: 0.8,  # Forest
-        5: 0.6,  # City
-        6: 1.0,  # Air
-        7: 1.0,  # Rain
-        8: 0.0,  # Vacuum
-    },
-
-    # Forest Properties
-    "forest_pollution_absorption_rate": 0.1,
-    "forest_cooling_effect": 0.1,
-    "forest_pollution_extinction_point": 100.0,
-    "forest_temperature_extinction_point": 100.0,
-
-    # City Properties
-    "city_pollution_generation_rate": 0.1,
-    "city_warming_effect": 0.1,
-    "city_temperature_extinction_point": 100.0,
-    "city_pollution_extinction_point": 100.0,
-
-    # Physical Properties
-    "freezing_point": -10.0,
-    "melting_point": 15.0,
-    "evaporation_point": 30.0,
-
-    # Water Transfer
-    "water_transfer_threshold": 0.02,
-    "water_transfer_rate": 0.2,
-    "ocean_conversion_threshold": 0.9,  # Added key for ocean conversion
-
-    # Pollution Dynamics
-    "pollution_damage_threshold": 7.0,
-    "pollution_level_tipping_point": 50.0,
-    "natural_pollution_decay_rate": 0.05,
-
-    # Temperature Dynamics
-    "natural_temperature_decay_rate": 0.05,
-
-    # Cloud Properties
-    "cloud_saturation_threshold": 0.8,
-
-    # Environmental Change Rates
-    "melting_rate": 0.2,
-    "evaporation_rate": 0.6,
-
-    # Collision Weights
-    "cell_type_collision_weights": {
-        0: 1.1,  # Ocean
-        1: 0.8,  # Desert
-        2: 1.0,  # Cloud
-        3: 1.1,  # Ice
-        4: 1.5,  # Forest
-        5: 2.0,  # City
-        6: 0.9,  # Air
-        7: 1.2,  # Rain
-        8: 0.0,  # Vacuum
-    },
-
-    # Colors
-    "base_colors": {
-        0: (0.0, 0.3, 1.0, 1.0),
-        1: (1.0, 0.7, 0.3, 1.0),
-        2: (0.7, 0.7, 0.7, 1.0),
-        3: (0.6, 0.8, 1.0, 1.0),
-        4: (0.0, 0.6, 0.0, 1.0),
-        5: (0.4, 0.0, 0.4, 1.0),
-        6: (1.0, 1.0, 1.0, 0.5),
-        7: (0.5, 0.5, 1.0, 1.0),
-        8: (1.0, 1.0, 1.0, 0.0),
-    },
-}
 
 
 PRESET_CONFIGS = {
@@ -862,6 +725,8 @@ PRESET_CONFIGS = {
 
 },
 }
+
+DEFAULT_PRESET = PRESET_CONFIGS["Normal Air Pollution (80.0) - Stable"]
 
 REQUIRED_KEYS = {
     "days": int,
