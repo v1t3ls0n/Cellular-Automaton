@@ -1,13 +1,11 @@
 import numpy as np
 from .Particle import Particle
-import math
-from config.config_state_handler import get_config
+from config.Config import config_instance 
 
 class World:
     """
     Represents the simulation world, including the grid of particles and associated behaviors.
     """
-    config = get_config()
     def __init__(self, grid_size=None, initial_ratios=None, day_number=0):
         """
         Initialize the World class.
@@ -17,7 +15,7 @@ class World:
             initial_ratios (dict): Initial ratios for cell types. Defaults to config's initial ratios.
             day_number (int): The current day in the simulation.
         """
-        self.config = get_config()
+        self.config = config_instance.get()  # Access the centralized configuration
         self.grid_size = grid_size or self.config["grid_size"]
         self.grid = np.empty(self.grid_size, dtype=object)
 
@@ -26,8 +24,9 @@ class World:
         self.initial_forests_ratio = initial_ratios["forest"]
         self.initial_deserts_ratio = initial_ratios["desert"]
         self.initial_vacuum_ratio = initial_ratios["vacuum"]
-
         self.day_number = day_number
+
+
 
     def clone(self):
         """

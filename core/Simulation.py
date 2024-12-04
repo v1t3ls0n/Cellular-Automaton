@@ -129,12 +129,4 @@ class Simulation:
         logging.info(f"Forest Count Over Time: {self.forest_count_over_time}")
         logging.info(f"Standard Deviation of Forest Count: {self.std_dev_forest_count_over_time}\n")
         
-        logging.info("** Cell Type Metrics **")
-        for cell_type, counts in self.cell_type_counts_over_time.items():
-            logging.info(f"Cell Type {cell_type} Counts Over Time: {counts}")
-        for cell_type, std_devs in self.cell_type_std_dev_over_time.items():
-            logging.info(f"Cell Type {cell_type} Std Dev Over Time: {std_devs}\n")
-        
-        logging.info("** Cell Distribution Metrics **")
-        logging.info(f"Standard Deviation of Cell Distribution Over Time: {self.std_dev_cell_distribution_over_time}")
         logging.info("\n=================================\n")

@@ -1,7 +1,7 @@
 import logging
 from sys import exit
-from config.config_state_handler import update_config, get_config, validate_config, finalize_config
-from config.conf_presets import PRESET_CONFIGS, DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
+from config.Config import config_instance
+from config.presets import PRESET_CONFIGS, DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
 
@@ -10,7 +10,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # File handler for logging DEBUG and above
-file_handler = logging.FileHandler("simulation.log", mode="a", encoding="utf-8")
+file_handler = logging.FileHandler(
+    "simulation.log", mode="a", encoding="utf-8")
 file_handler.setLevel(logging.INFO)
 
 # Console handler for logging INFO and above
@@ -36,78 +37,68 @@ def parse_grid_size(input_value):
         # Replace spaces with commas and split by commas
         return tuple(int(value.strip()) for value in input_value.replace(" ", ",").split(","))
     except ValueError:
-        raise ValueError("Invalid grid size format. Please provide integers separated by commas or spaces.")
-
+        raise ValueError(
+            "Invalid grid size format. Please provide integers separated by commas or spaces.")
 
 def collect_user_input():
     """
     Collect user input for all configuration parameters, including grid size, days, and others.
-    Configuration is updated only once at the end.
     """
     logging.info("Prompting user for grid size and simulation days.")
 
-    # Start with a copy of the default preset
-    user_config = DEFAULT_PRESET.copy()
+    # Access the shared config instance
+    config = config_instance.get()
 
-    # Get grid size
-    logging.info(f"Default grid size: {user_config['grid_size']}")
-    grid_size_input = input("Enter grid size as comma-separated integers (press Enter to use default): ").strip()
-    if grid_size_input:
-        try:
-            user_config["grid_size"] = parse_grid_size(grid_size_input)
-        except ValueError as e:
-            logging.warning(f"Invalid grid size input: {e}. Keeping default grid size: {user_config['grid_size']}.")
+    # Get user input for grid size
+    default_grid_size = config["grid_size"]
+    grid_size_input = input(f"Enter grid size as comma-separated integers (default: {default_grid_size}): ").strip()
+    grid_size = parse_grid_size(grid_size_input) if grid_size_input else default_grid_size
 
-    # Get number of days
-    logging.info(f"Default number of days: {user_config['days']}")
-    days_input = input("Enter number of days for the simulation (press Enter to use default): ").strip()
-    if days_input:
-        try:
-            days = int(days_input)
-            if days > 0:
-                user_config["days"] = days
-            else:
-                logging.warning(f"Invalid number of days: {days_input}. Keeping default: {user_config['days']}.")
-        except ValueError:
-            logging.warning(f"Invalid input for number of days: {days_input}. Keeping default: {user_config['days']}.")
+    # Get user input for number of days
+    default_days = config["days"]
+    days_input = input(f"Enter number of days for the simulation (default: {default_days}): ").strip()
+    days = int(days_input) if days_input.isdigit() and int(days_input) > 0 else default_days
 
-    # Prompt for additional configuration options
-    logging.info("Prompting user for additional configuration options.")
-    logging.info("\n--- Simulation Configuration ---")
-    logging.info("1. Use Default Configuration Preset")
-    logging.info("2. Choose Configuration Preset")
-    logging.info("3. Customize Additional Parameters")
+    # Prompt for preset or custom configuration
+    print("\n--- Simulation Configuration ---")
+    print("1. Use Default Configuration Preset")
+    print("2. Choose Configuration Preset")
+    print("3. Customize Additional Parameters")
 
     choice = input("Choose an option (1, 2, 3): ").strip()
+
     if choice == "2":
         preset_name = choose_preset()
         logging.info(f"User selected preset: {preset_name}.")
-        user_config.update(preset_name = preset_name)
+        config_instance.update(preset_name=preset_name)  # Apply the preset
     elif choice == "3":
         logging.info("Setting custom configuration...")
-        for key, value in DEFAULT_PRESET.items():
+        updated_config = config.copy()
+        for key, value in config.items():
             if key in {"grid_size", "days"}:
-                # Skip grid size and days as they are already set
-                continue
+                continue  # Skip as these are already handled
 
             label = KEY_LABELS.get(key, key)
             if isinstance(value, dict):
-                user_config[key] = {}
-                logging.info(f"\n{label}:")
+                updated_config[key] = {}
+                print(f"\n{label}:")
                 for sub_key, sub_value in value.items():
                     input_value = input(f"Enter value for {sub_key} (default: {sub_value}): ").strip()
-                    user_config[key][sub_key] = parse_input_value(input_value, sub_value)
+                    updated_config[key][sub_key] = parse_input_value(input_value, sub_value)
             else:
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
-                user_config[key] = parse_input_value(input_value, value)
-
+                updated_config[key] = parse_input_value(input_value, value)
+        config_instance.update(custom_config=updated_config)
     elif choice == "1":
         logging.info("User chose default configuration preset.")
     else:
         logging.warning("Invalid choice from user. Using default configuration preset.")
-        logging.info("Invalid choice. Using default configuration.")
 
-    return user_config
+    # Override grid size and days with user input
+    config_instance.update(custom_config={"grid_size": grid_size, "days": days})
+
+    return config_instance.get()
+
 
 
 def parse_input_value(input_value, default_value):
@@ -137,9 +128,9 @@ def choose_preset():
     Allow the user to choose a configuration preset from a list.
     """
     logging.info("Displaying configuration presets for user.")
-    logging.info("Available Configuration Presets:")
+    print("\nAvailable Configuration Presets:")
     for i, preset_name in enumerate(PRESET_CONFIGS.keys(), 1):
-        logging.info(f"{i}. {preset_name}")
+        print(f"{i}. {preset_name}")
 
     while True:
         try:
@@ -147,27 +138,18 @@ def choose_preset():
             if 1 <= choice <= len(PRESET_CONFIGS):
                 return list(PRESET_CONFIGS.keys())[choice - 1]
             else:
-                logging.info("Invalid choice. Please choose a number from the list.")
+                print("Invalid choice. Please choose a number from the list.")
         except ValueError:
-            logging.warning("Invalid input. User did not enter a number.")
-            logging.info("Invalid input. Please enter a number.")
+            print("Invalid input. Please enter a number.")
 
 
-# Main Execution
 if __name__ == "__main__":
     try:
         logging.info("Starting the Cellular Automaton Simulation.")
 
-        # Collect all user inputs
-        final_config = collect_user_input()
-
-        # Update the configuration once with all collected inputs
-        update_config(custom_config=final_config)
-
-        # Validate and finalize configuration
-        config = get_config()
-        validate_config(config)
-        finalize_config()
+        # Collect user inputs and update configuration
+        config = collect_user_input()
+        config_instance.finalize()  # Finalize configuration to make it immutable
 
         # Extract essential parameters for simulation
         grid_size = config["grid_size"]
@@ -187,11 +169,43 @@ if __name__ == "__main__":
         display = MatplotlibDisplay(simulation)
         display.render_graphic_user_interface()
 
-        if get_config() != config:
-            logging.error("Configuration was updated during simulation.")
-            raise ValueError("Configuration mismatch detected.")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
-        logging.info(f"An error occurred: {e}")
+        input("Press Enter to exit...")
+        exit(1)
+
+    try:
+        logging.info("Starting the Cellular Automaton Simulation.")
+
+        # Collect user inputs and update configuration
+        final_config = collect_user_input()
+        config = Config()
+        Config.update(custom_config=final_config)  # Update shared configuration
+        Config.finalize()  # Finalize configuration
+
+        # Validate configuration
+        config = Config.get()
+        config.validate_config()
+
+        # Extract essential parameters for simulation
+        grid_size = config["grid_size"]
+        days = config["days"]
+        initial_ratios = config.get("initial_ratios", {})
+
+        if round(sum(initial_ratios.values()), 2) != 1.0:
+            logging.warning("Initial ratios do not sum to 1. Adjusting to default ratios.")
+            initial_ratios = DEFAULT_PRESET["initial_ratios"]
+
+        # Initialize and run simulation
+        simulation = Simulation(grid_size=grid_size, initial_ratios=initial_ratios, days=days)
+        logging.info("Starting simulation...")
+        simulation.precompute()
+        logging.info("Simulation complete. Displaying results.")
+
+        display = MatplotlibDisplay(simulation)
+        display.render_graphic_user_interface()
+
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
         input("Press Enter to exit...")
         exit(1)

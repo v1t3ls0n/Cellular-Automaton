@@ -1,4 +1,4 @@
-from config.config_state_handler import get_config
+from config.Config import config_instance 
 import math
 import logging
 
@@ -9,8 +9,6 @@ class Particle:
 
     This class provides methods for updating particle state, calculating movement, and visualizing the particle.
     """
-    config = get_config()  # Configuration dictionary shared across all particles
-
     def __init__(self, cell_type, temperature, water_mass, pollution_level, direction, position, grid_size):
         """
         Initializes a Particle object with specified attributes.
@@ -24,7 +22,6 @@ class Particle:
             position (tuple): Current position of the cell in the grid (x, y, z).
             grid_size (tuple): Dimensions of the simulation grid (x_max, y_max, z_max).
         """
-
         self.cell_type = cell_type
         self.temperature = temperature
         self.water_mass = water_mass
@@ -32,6 +29,7 @@ class Particle:
         self.direction = direction
         self.position = position  # Particle's current position in the grid
         self.grid_size = grid_size  # Grid boundaries to manage particle movement
+        self.config = config_instance.get()  # Access the centralized configuration
 
     ####################################################################################################################
     ###################################### CLASS UTILS #################################################################

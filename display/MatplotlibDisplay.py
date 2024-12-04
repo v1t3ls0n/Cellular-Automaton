@@ -1,23 +1,19 @@
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.colors import to_rgba
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 import logging
-from config.config_state_handler import get_config
-from config.conf_presets import KEY_LABELS, PARTICLE_MAPPING
 from utils.helpers import format_config_value,  rgba_to_hex
-import matplotlib.gridspec as gridspec
 import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
+from config.Config import config_instance 
+from config.presets import KEY_LABELS, PARTICLE_MAPPING
 
 
 class MatplotlibDisplay:
-    config = get_config()
 
     def __init__(self, simulation):
+        self.config = config_instance.get()  # Access the centralized configuration
         self.simulation = simulation
         self.precomputed_results = simulation.states
         self.fig = None
