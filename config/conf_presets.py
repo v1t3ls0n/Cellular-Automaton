@@ -388,7 +388,7 @@ PRESET_CONFIGS = {
         8: 0.0,  # Vacuum: No conversion as collisions can't occur in a vacuum.
     },
 
-     {
+     "base_colors":{
         6: (1.0, 1.0, 1.0, 0.5),  # Air: Light white with some transparency
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud: Neutral gray, opaque
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean: Deep blue, opaque
