@@ -19,3 +19,4 @@ echo "Step 3: Running PyInstaller to create the executable..."
     main.py
 
 echo "Build process completed successfully!"
+    

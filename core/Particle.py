@@ -101,8 +101,7 @@ class Particle:
         """
         base_color = self.get_base_color()
         if base_color is None or len(base_color) != 4:
-            logging.error(f"Invalid base color for cell_type {
-                          self.cell_type}: {base_color}")
+            print(f"Invalid base color for cell_type {self.cell_type}: {base_color}")
             return (1.0, 1.0, 1.0, 0.0)  # Default to transparent
 
         # Handle vacuum cells separately (no tint effects)
@@ -188,8 +187,7 @@ class Particle:
         """
         base_color = self.config["base_colors"].get(self.cell_type)
         if base_color is None:
-            logging.error(f"Base color for cell_type {
-                          self.cell_type} is not defined.")
+            print(f"Base color for cell_type {self.cell_type} is not defined.")
         # Default to white color if the cell type is undefined
         return base_color if base_color[3] != 0.0 else (1.0, 1.0, 1.0, 0.0)
 

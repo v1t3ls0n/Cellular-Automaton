@@ -1,10 +1,9 @@
 import os
 import logging
-from config.config_state_handler import update_config, get_config, validate_config,finalize_config
-from config.conf_presets import  PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS, REQUIRED_KEYS
+from config.config_state_handler import update_config, get_config, validate_config, finalize_config
+from config.conf_presets import PRESET_CONFIGS, DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
-
 
 def choose_preset():
     """
@@ -13,8 +12,9 @@ def choose_preset():
     print("Available Configuration Presets:")
     for i, preset_name in enumerate(PRESET_CONFIGS.keys(), 1):
         print(f"{i}. {preset_name}")
+
     limit_bad_input = 10
-    while limit_bad_input:
+    while limit_bad_input > 0:
         try:
             choice = int(input("Enter the number of your chosen preset: "))
             if 1 <= choice <= len(PRESET_CONFIGS):
@@ -24,31 +24,12 @@ def choose_preset():
             else:
                 print("Invalid choice. Please choose a number from the list.")
         except ValueError:
-            limit_bad_input-=1
             print("Invalid input. Please enter a number.")
-            return DEFAULT_PRESET
+        limit_bad_input -= 1
 
-def parse_grid_size(input_value):
-    """
-    Parse the grid size from a string or list.
-    """
-    if isinstance(input_value, str):
-        return tuple(int(value) for value in input_value.replace(",", " ").split())
-    elif isinstance(input_value, (list, tuple)):
-        return tuple(int(value) for value in input_value)
-    else:
-        raise ValueError("Invalid grid size format. Provide a list, tuple, or string.")
+    print("Too many invalid attempts. Using default preset.")
+    return DEFAULT_PRESET
 
-def parse_boolean(input_value):
-    """
-    Parse boolean input from strings like "true" or "false".
-    """
-    if isinstance(input_value, str):
-        if input_value.lower() in {"true", "yes", "1"}:
-            return True
-        elif input_value.lower() in {"false", "no", "0"}:
-            return False
-    return input_value
 
 def parse_input_value(input_value, default_value):
     """
@@ -57,28 +38,28 @@ def parse_input_value(input_value, default_value):
     if not input_value:
         return default_value
 
-    boolean_value = parse_boolean(input_value)
-    if isinstance(boolean_value, bool):
-        return boolean_value
+    if isinstance(default_value, bool):
+        return input_value.lower() in {"true", "yes", "1"} if isinstance(input_value, str) else bool(input_value)
 
     try:
-        if isinstance(default_value, float):
-            return float(input_value)
         if isinstance(default_value, int):
             return int(input_value)
+        if isinstance(default_value, float):
+            return float(input_value)
     except ValueError:
         pass
 
     return input_value
 
+
 def parse_user_input():
     """
-    Prompt user for all configuration parameters or use presets.
+    Prompt user for configuration parameters or use presets.
     """
     print("\n--- Simulation Configuration ---")
-    print("1. Go With Default Configuration Preset")
+    print("1. Go with Default Configuration Preset")
     print("2. Choose Configuration Presets")
-    print("3. Choose Custom Parameters")
+    print("3. Customize Parameters")
 
     choice = input("Choose an option (1, 2, 3): ").strip()
     if choice == "2":
@@ -87,9 +68,6 @@ def parse_user_input():
         user_config = {}
         print("Setting custom configuration...")
         for key, value in DEFAULT_PRESET.items():
-            if key == "base_colors":
-                user_config[key] = value
-                continue
             label = KEY_LABELS.get(key, key)
             if isinstance(value, dict):
                 user_config[key] = {}
@@ -98,50 +76,51 @@ def parse_user_input():
                     particle_label = PARTICLE_MAPPING.get(sub_key, sub_key)
                     input_value = input(f"Enter value for {particle_label} (default: {sub_value}): ").strip()
                     user_config[key][sub_key] = parse_input_value(input_value, sub_value)
-            elif isinstance(value, list):
-                user_config[key] = []
-                print(f"\n{label} (list values):")
-                for i, v in enumerate(value):
-                    particle_label = PARTICLE_MAPPING.get(i, i)
-                    input_value = input(f"Enter value for {particle_label} (default: {v}): ").strip()
-                    user_config[key].append(parse_input_value(input_value, v))
             else:
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
                 user_config[key] = parse_input_value(input_value, value)
+
         update_config(custom_config=user_config)
     elif choice == "1":
-        print("setting Default Configuration Preset")
+        print("Using Default Configuration Preset")
         update_config(custom_config=DEFAULT_PRESET)
     else:
-        print(f"Invalid choice. Using default configuration.\n")
+        print("Invalid choice. Using default configuration.")
+        update_config(custom_config=DEFAULT_PRESET)
 
 
-# Main execution
+# Main Execution
 if __name__ == "__main__":
-
     try:
+        logging.basicConfig(filename="simulation.log", level=logging.DEBUG)
+        logging.info("Starting the Cellular Automaton Simulation...")
+
         parse_user_input()
         config = get_config()
         validate_config(config)
         finalize_config()
+
         # Extract essential parameters for simulation
-        grid_size = config["grid_size"]
-        days = config["days"]
-        initial_ratios = config["initial_ratios"]
+        grid_size = config.get("grid_size", (10, 10, 10))
+        days = config.get("days", 100)
+        initial_ratios = config.get("initial_ratios", {})
+
         if round(sum(initial_ratios.values()), 2) != 1.0:
             print("Initial ratios must sum to 1. Adjusting to default ratios.")
-            initial_ratios = config["initial_ratios"]
+            initial_ratios = DEFAULT_PRESET["initial_ratios"]
 
-        # # Initialize and run simulation
+        # Initialize and run simulation
         simulation = Simulation(grid_size=grid_size, initial_ratios=initial_ratios, days=days)
         print("Starting simulation...")
         simulation.precompute()
         print("Simulation complete. Displaying results...")
+
         display = MatplotlibDisplay(simulation)
         display.render_graphic_user_interface()
-        if get_config() != config:
-            raise ValueError("config updated during running the cellular automatan")
-    except (KeyError, TypeError) as e:
-        print(f"Configuration error: {e}")
-        exit(1)
 
+        if get_config() != config:
+            raise ValueError("Configuration was updated during simulation.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        input("Press Enter to exit...")
+        exit(1)
