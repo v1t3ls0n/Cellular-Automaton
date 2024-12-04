@@ -219,9 +219,9 @@ When prompted, select one of the following options:
        --add-data "utils/*.py;utils" ^
        main.py
    ```
-3. The executable will be located in the `dist/` folder:
+3. The executable will be located in the `root` folder folder:
    ```plaintext
-   dist\main.exe
+   main.exe
    ```
 
 ### Compiling for Windows on Linux/Bash
@@ -242,9 +242,9 @@ When prompted, select one of the following options:
        main.py
    ```
 
-3. The compiled `.exe` file will be located in the `dist/` folder:
+3. The compiled `.exe` file will be located in the `root` folder:
    ```bash
-   dist/main.exe
+   ./main.exe
    ```
 
 ## Troubleshooting
@@ -259,7 +259,7 @@ When prompted, select one of the following options:
 2. **Executable Closes Immediately**:
    Run the executable from a terminal or Command Prompt to view error messages:
    ```bash
-   ./dist/main.exe
+   ./main.exe
    ```
 
 3. **FileNotFoundError**:
