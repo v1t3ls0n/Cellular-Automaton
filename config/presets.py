@@ -20,17 +20,17 @@ KEY_LABELS = {
     "initial_ratios": "Initial Ratios (Proportions)",
 
     # Baseline Environmental Properties
-    "baseline_temperature": "Baseline Temperature (°C) - [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum]",
-    "baseline_pollution_level": "Baseline Pollution Levels - [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum]",
+    "baseline_temperature": "Baseline Temperature (°C) (List: [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum])",
+    "baseline_pollution_level": "Baseline Pollution Levels (List: [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum])",
 
     # Pollution Transfer Weights
-    "cell_type_pollution_transfer_weights": "Pollution Transfer Weights by Cell Type - [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum]",
+    "cell_type_pollution_transfer_weights": "Pollution Transfer Weights by Cell Type (List: [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum])",
 
     # Temperature Transfer Weights
-    "cell_type_temperature_transfer_weights": "Temperature Transfer Weights by Cell Type - [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum]",
+    "cell_type_temperature_transfer_weights": "Temperature Transfer Weights by Cell Type",
 
     # Water Transfer Weights
-    "cell_type_water_transfer_weights": "Water Transfer Weights by Cell Type - [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum]",
+    "cell_type_water_transfer_weights": "Water Transfer Weights by Cell Type",
 
     # Forest Properties
     "forest_pollution_absorption_rate": "Forest Pollution Absorption Rate",
@@ -70,10 +70,10 @@ KEY_LABELS = {
     "evaporation_rate": "Evaporation Rate",
 
     # Conversion Weights
-    "cell_type_collision_weights": "Cell Type Collision Weights - [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum]",
+    "cell_type_collision_weights": "Cell Type Collision Weights (List:[Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum])",
 
     # Base Colors
-    "base_colors": "Base Colors for Cell Types - [Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum]",
+    "base_colors": "Base Colors for Cell Types (List:[Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum])",
 }
 
 
