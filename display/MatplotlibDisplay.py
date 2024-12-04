@@ -479,7 +479,7 @@ class MatplotlibDisplay:
             if label or fill_label:
                 ax.legend()
         else:
-            print(f"Data length mismatch in graph: {title}")
+            logging.info(f"Data length mismatch in graph: {title}")
 
     def render_population_graph(self, ax, color):
         """Render the city population graph over time."""

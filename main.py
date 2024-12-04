@@ -50,7 +50,7 @@ def collect_user_input():
     user_config = DEFAULT_PRESET.copy()
 
     # Get grid size
-    print(f"Default grid size: {user_config['grid_size']}")
+    logging.info(f"Default grid size: {user_config['grid_size']}")
     grid_size_input = input("Enter grid size as comma-separated integers (press Enter to use default): ").strip()
     if grid_size_input:
         try:
@@ -59,7 +59,7 @@ def collect_user_input():
             logging.warning(f"Invalid grid size input: {e}. Keeping default grid size: {user_config['grid_size']}.")
 
     # Get number of days
-    print(f"Default number of days: {user_config['days']}")
+    logging.info(f"Default number of days: {user_config['days']}")
     days_input = input("Enter number of days for the simulation (press Enter to use default): ").strip()
     if days_input:
         try:
@@ -73,10 +73,10 @@ def collect_user_input():
 
     # Prompt for additional configuration options
     logging.info("Prompting user for additional configuration options.")
-    print("\n--- Simulation Configuration ---")
-    print("1. Use Default Configuration Preset")
-    print("2. Choose Configuration Preset")
-    print("3. Customize Additional Parameters")
+    logging.info("\n--- Simulation Configuration ---")
+    logging.info("1. Use Default Configuration Preset")
+    logging.info("2. Choose Configuration Preset")
+    logging.info("3. Customize Additional Parameters")
 
     choice = input("Choose an option (1, 2, 3): ").strip()
     if choice == "2":
@@ -84,7 +84,7 @@ def collect_user_input():
         logging.info(f"User selected preset: {preset_name}.")
         user_config.update(PRESET_CONFIGS[preset_name])
     elif choice == "3":
-        print("Setting custom configuration...")
+        logging.info("Setting custom configuration...")
         for key, value in DEFAULT_PRESET.items():
             if key in {"grid_size", "days"}:
                 # Skip grid size and days as they are already set
@@ -93,7 +93,7 @@ def collect_user_input():
             label = KEY_LABELS.get(key, key)
             if isinstance(value, dict):
                 user_config[key] = {}
-                print(f"\n{label}:")
+                logging.info(f"\n{label}:")
                 for sub_key, sub_value in value.items():
                     input_value = input(f"Enter value for {sub_key} (default: {sub_value}): ").strip()
                     user_config[key][sub_key] = parse_input_value(input_value, sub_value)
@@ -105,7 +105,7 @@ def collect_user_input():
         logging.info("User chose default configuration preset.")
     else:
         logging.warning("Invalid choice from user. Using default configuration preset.")
-        print("Invalid choice. Using default configuration.")
+        logging.info("Invalid choice. Using default configuration.")
 
     return user_config
 
@@ -137,9 +137,9 @@ def choose_preset():
     Allow the user to choose a configuration preset from a list.
     """
     logging.info("Displaying configuration presets for user.")
-    print("Available Configuration Presets:")
+    logging.info("Available Configuration Presets:")
     for i, preset_name in enumerate(PRESET_CONFIGS.keys(), 1):
-        print(f"{i}. {preset_name}")
+        logging.info(f"{i}. {preset_name}")
 
     while True:
         try:
@@ -147,10 +147,10 @@ def choose_preset():
             if 1 <= choice <= len(PRESET_CONFIGS):
                 return list(PRESET_CONFIGS.keys())[choice - 1]
             else:
-                print("Invalid choice. Please choose a number from the list.")
+                logging.info("Invalid choice. Please choose a number from the list.")
         except ValueError:
             logging.warning("Invalid input. User did not enter a number.")
-            print("Invalid input. Please enter a number.")
+            logging.info("Invalid input. Please enter a number.")
 
 
 # Main Execution
@@ -192,6 +192,6 @@ if __name__ == "__main__":
             raise ValueError("Configuration mismatch detected.")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
-        print(f"An error occurred: {e}")
+        logging.info(f"An error occurred: {e}")
         input("Press Enter to exit...")
         exit(1)
