@@ -26,8 +26,6 @@ class World:
         self.initial_vacuum_ratio = initial_ratios["vacuum"]
         self.day_number = day_number
 
-
-
     def clone(self):
         """
         Create a deep copy of the current World state.

@@ -110,8 +110,6 @@ def collect_user_input():
 
     return config_instance.get()
 
-
-
 def parse_input_value(input_value, default_value):
     """
     Parse the input value based on the type of the default value.
@@ -133,7 +131,6 @@ def parse_input_value(input_value, default_value):
 
     return default_value
 
-
 def choose_preset():
     """
     Allow the user to choose a configuration preset from a list.
@@ -152,7 +149,6 @@ def choose_preset():
                 print("Invalid choice. Please choose a number from the list.")
         except ValueError:
             print("Invalid input. Please enter a number.")
-
 
 if __name__ == "__main__":
     try:
