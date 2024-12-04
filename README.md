@@ -1,17 +1,12 @@
-## Academic Integrity
-This project is an independent academic submission for the **Biological Computation Course**. The implementation, configuration, and logic have been designed solely by **Guy Vitelson**.
-
 # Cellular Automaton Simulation for Biological Computation (Maman 11)
 
 ## Overview
 This project is a **cellular automaton simulation** developed as an academic task for the **Biological Computation Course**. It models complex environmental interactions using a particle-based system where each cell interacts with its neighbors based on configurable properties. The project explores emergent behavior and environmental dynamics using cellular automata principles.
 
-
 ## Features
-
+- **Educational Focus**: Designed to demonstrate the capabilities of cellular automata for academic study and research.
 - **Complete Configuration Control**: Configure properties for every aspect of the simulation, including pollution dynamics, temperature changes, water transfer, and more.
 - **Robust Core Logic**: The heart of the simulation lies in the `core` folder, which meticulously implements the cellular automaton behavior.
-- **Educational Focus**: Designed to demonstrate the capabilities of cellular automata for academic study and research.
 - **Graphical User Interface**:
   - Real-time visualization of simulation results
 - **Logging**:
@@ -104,17 +99,6 @@ The configuration properties are the foundation of this simulation. Each propert
 
 ### Base Colors
 - `base_colors`: RGBA colors for each cell type.
-
-
-### 2. Choose Configuration
-When prompted, select one of the following options:
-1. **Default Configuration Preset**: Uses pre-defined default parameters.
-2. **Choose Preset**: Select from a list of predefined presets (e.g., low pollution, high pollution).
-3. **Custom Parameters**: Define every property manually.
-
-### 3. Simulation Execution
-- After selecting a configuration, the program validates it and begins the simulation.
-- Progress is displayed in real time through a graphical interface.
 
 ### 4. Visualizations
 - **Graphs**:
@@ -209,6 +193,15 @@ Download the project files to your local machine.
    ```bash
    python3 main.py
    ```
+### 2. Choose Configuration
+When prompted, select one of the following options:
+1. **Default Configuration Preset**: Uses pre-defined default parameters.
+2. **Choose Preset**: Select from a list of predefined presets (e.g., low pollution, high pollution).
+3. **Custom Parameters**: Define every property manually.
+
+### 3. Simulation Execution
+- After selecting a configuration, the program validates it and begins the simulation.
+- Progress is displayed in real time through a graphical interface.
 
 ## Compiling to an Executable
 
@@ -277,6 +270,5 @@ Download the project files to your local machine.
 - **Console Output**: Info-level messages are printed to the console.
 - **File Logging**: Detailed logs are saved to `simulation.log`.
 
-
-```
-
+## Academic Integrity
+This project is an independent academic submission for the **Biological Computation Course**. The implementation, configuration, and logic have been designed solely by **Guy Vitelson**.
