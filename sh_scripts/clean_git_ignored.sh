@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cd ..
 # Confirm the action with the user
 echo "This script will delete all files and directories ignored by Git (as per .gitignore)."
 read -p "Are you sure you want to proceed? This action is irreversible! (y/N): " confirm
