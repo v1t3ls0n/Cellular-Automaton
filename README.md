@@ -278,7 +278,5 @@ Download the project files to your local machine.
 - **File Logging**: Detailed logs are saved to `simulation.log`.
 
 
-## Contact
-For any questions or issues, feel free to reach out!
 ```
 
