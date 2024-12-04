@@ -18,8 +18,8 @@ This project is a **cellular automaton simulation** developed as an academic tas
 ```plaintext
 ├── main.py                     # Main entry point for the simulation
 ├── config/                     # Configuration management files
-│   ├── conf_presets.py         # Presets for simulation configuration
-│   └── Config.py # Handles configuration validation and updates
+│   ├── presets.py              # Presets for simulation configuration
+│   └── Config.py               # Handles configuration validation and updates (Config Singleton Instance)
 ├── core/                       # Core simulation logic
 │   ├── Particle.py             # Manages particle behavior in the simulation
 │   ├── Simulation.py           # Main simulation engine
