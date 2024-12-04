@@ -1,7 +1,6 @@
 from core.World import World  # Import the World class
-
+import logging
 import numpy as np
-
 
 class Simulation:
     """
