@@ -5,7 +5,7 @@ __pycache__/
 git_update.sh
 # C extensions
 *.so
-
+*.zip
 # Distribution / packaging
 .Python
 build/
