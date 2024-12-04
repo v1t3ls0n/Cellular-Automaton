@@ -5,16 +5,6 @@ from config.conf_presets import  PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    filename="simulation.log",
-    filemode="w",  # Overwrite the file each time
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
-
 
 def choose_preset():
     """
