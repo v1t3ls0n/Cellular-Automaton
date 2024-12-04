@@ -243,7 +243,7 @@ PRESET_CONFIGS = {
 
 
     },
-    "Low Air Pollution (5.0) - Stable": {
+    "Low Air Pollution (Stable)": {
 
         # General Simulation Parameters
         "days": 365,  # Total number of simulation days.
@@ -407,7 +407,7 @@ PRESET_CONFIGS = {
 
 
     },
-    "Normal Air Pollution (80.0) - Stable": {
+    "Normal Air Pollution (Stable)": {
 
         # General Simulation Parameters
         "days": 365,  # Total number of simulation days.
@@ -571,7 +571,7 @@ PRESET_CONFIGS = {
 
 
     },
-    "High Air Pollution (200.0) - Mass Extinction Of Cities": {
+    "High Air Pollution (Mass Extinction Of Cities)": {
 
         # General Simulation Parameters
         "days": 365,  # Total number of simulation days.
@@ -735,7 +735,7 @@ PRESET_CONFIGS = {
 
 
     },
-    "Extremely High Air Pollution - Mass Extinction Of Forests and Cities (500.0)": {
+    "Extremely High Air Pollution (Mass Extinction Of Forests and Cities)": {
 
         # General Simulation Parameters
         "days": 365,  # Total number of simulation days.
