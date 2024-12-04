@@ -79,11 +79,6 @@ class Simulation:
             self._calculate_standard_deviation(self.city_population_over_time)
         )
 
-        # Log aggregate metrics
-        logging.info(f"Day {state.day_number}: Total forests = {
-                     state.total_forests}")
-        logging.info(f"Aggregated forest count: {self.forest_count_over_time}")
-
         # Calculate and log standardized values for pollution, temperature, and water mass
         for param, values in {
             "pollution": self.pollution_over_time,
@@ -98,10 +93,6 @@ class Simulation:
                     std_dev_value if std_dev_value > 0 else 0
                     for value in values
                 ]
-                logging.info(
-                    f"Day {state.day_number}: Standardized {param.capitalize()} Values = {
-                        standardized_values}"
-                )
 
     def precompute(self):
         """

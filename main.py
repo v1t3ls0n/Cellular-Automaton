@@ -134,8 +134,7 @@ if __name__ == "__main__":
         config = get_config()
         validate_config(config)
         finalize_config()
-        logging.info("Configuration is valid.")
-            # Extract essential parameters for simulation
+        # Extract essential parameters for simulation
         grid_size = config["grid_size"]
         days = config["days"]
         initial_ratios = config["initial_ratios"]

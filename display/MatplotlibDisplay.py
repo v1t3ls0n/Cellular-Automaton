@@ -383,7 +383,6 @@ class MatplotlibDisplay:
         """
         Precompute 3D visualization data for all days.
         """
-        logging.info("Precomputing 3D visualizations...")
         for state in self.simulation.states:
             points = []
             untinted_colors = []
@@ -410,7 +409,6 @@ class MatplotlibDisplay:
                 "sizes": sizes
             })
 
-        logging.info("3D precomputation complete.")
 
 
     def render_day(self, day):

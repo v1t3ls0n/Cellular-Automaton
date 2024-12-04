@@ -17,7 +17,6 @@ def finalize_config():
         raise RuntimeError("Configuration is already finalized.")
     CONFIG = MappingProxyType(CONFIG)  # Make CONFIG immutable
     CONFIG_FINALIZED = True
-    logging.info("Configuration has been finalized and is now immutable.")
 
 
 def get_config_preset(preset_name=None):
@@ -68,12 +67,10 @@ def update_config(preset_name=None, custom_config=None):
     if preset_name:
         if preset_name in PRESET_CONFIGS:
             CONFIG = PRESET_CONFIGS[preset_name]
-            logging.info(f"Loaded preset configuration: {preset_name}")
         else:
             raise ValueError(f"Preset {preset_name} does not exist.")
     elif custom_config:
         CONFIG = custom_config
-        logging.info("Loaded custom configuration.")
     else:
         raise ValueError("Either preset_name or custom_config must be provided.")
 

@@ -159,7 +159,6 @@ class World:
         forests_ratio = self.initial_forests_ratio / total_ratio
         deserts_ratio = self.initial_deserts_ratio / total_ratio
         vacuum_ratio = self.initial_vacuum_ratio / total_ratio
-        # logging.info(f"cities:{cities_ratio} forests:{forests_ratio}")
         plane_surfaces_map = {}  # Tracks the type of surface for each plane
 
         # Use baseline values for temperature and pollution from config
@@ -281,8 +280,7 @@ class World:
                         )
 
         self._recalculate_global_attributes()  # Update global stats
-        logging.info(f"Grid initialized successfully with dimensions: {
-                     self.grid_size}")
+
 
     def update_cells_on_grid(self):
         """
@@ -497,7 +495,6 @@ class World:
                 for k in range(self.grid_size[2]):
                     cell = self.grid[i, j, k]
                     if cell is None:
-                        logging.info("cell is none")
                         continue
                     total_cells += 1
                     total_temperature += cell.temperature
@@ -573,22 +570,3 @@ class World:
                     "avg_water_mass": 0,
                     "std_dev_water_mass": 0,
                 }
-
-        # Log results (optional)
-
-        logging.info(
-            f"Global - Avg Temp: {self.avg_temperature:.2f}, Std Dev Temp: {
-                self.std_dev_temperature:.2f}, "
-            f"Avg Pollution: {self.avg_pollution:.2f}, Std Dev Pollution: {
-                self.std_dev_pollution:.2f}, "
-            f"Avg Water Mass: {self.avg_water_mass:.2f}, Std Dev Water Mass: {
-                self.std_dev_water_mass:.2f}"
-        )
-        for cell_type, stats in self.cell_type_stats.items():
-            logging.info(
-                f"Cell Type {cell_type} - Count: {stats["count"]}, "
-                f"Avg Temp: {stats["avg_temperature"]:.2f}, Std Dev Temp: {
-                    stats["std_dev_temperature"]:.2f}, "
-                f"Avg Water Mass: {stats["avg_water_mass"]:.2f}, Std Dev Water Mass: {
-                    stats["std_dev_water_mass"]:.2f}"
-            )
