@@ -570,7 +570,7 @@ PRESET_CONFIGS = {
 
 
     },
-    "Exteemely High Air Pollution - Mass Extinction Of Forests and Cities (500.0)": {
+    "Extremely High Air Pollution - Mass Extinction Of Forests and Cities (500.0)": {
 
         # General Simulation Parameters
         "days": 365,  # Total number of simulation days.
