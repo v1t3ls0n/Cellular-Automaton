@@ -35,7 +35,19 @@ logger.warning("This is a WARNING message (console and file)")
 logger.error("This is an ERROR message (console and file)")
 logger.critical("This is a CRITICAL message (console and file)")
 
-
+def parse_grid_size(input_value):
+    """
+    Parse the grid size from a string or list into a tuple.
+    """
+    if isinstance(input_value, str):
+        try:
+            return tuple(int(value.strip()) for value in input_value.split(","))
+        except ValueError:
+            raise ValueError("Invalid grid size format. Please provide integers separated by commas.")
+    elif isinstance(input_value, (list, tuple)):
+        return tuple(int(value) for value in input_value)
+    else:
+        raise ValueError("Invalid grid size format. Provide a list, tuple, or string.")
 
 def choose_preset():
     """
@@ -66,7 +78,6 @@ def choose_preset():
     print("Too many invalid attempts. Using default preset.")
     return DEFAULT_PRESET
 
-
 def parse_input_value(input_value, default_value):
     """
     Parse the input value based on the type of the default value.
@@ -86,7 +97,6 @@ def parse_input_value(input_value, default_value):
 
     return input_value
 
-
 def parse_user_input():
     """
     Prompt user for configuration parameters or use presets.
@@ -105,7 +115,20 @@ def parse_user_input():
         print("Setting custom configuration...")
         for key, value in DEFAULT_PRESET.items():
             label = KEY_LABELS.get(key, key)
-            if isinstance(value, dict):
+
+            if key == "grid_size":
+                # Special parsing for grid_size to convert it into a tuple
+                input_value = input(f"Enter value for {label} as comma-separated integers (default: {value}): ").strip()
+                if input_value:
+                    try:
+                        user_config[key] = parse_grid_size(input_value)
+                    except ValueError as e:
+                        logging.warning(f"Invalid grid_size input: {e}")
+                        print(f"Invalid input for {label}. Using default: {value}")
+                        user_config[key] = value
+                else:
+                    user_config[key] = value
+            elif isinstance(value, dict):
                 user_config[key] = {}
                 print(f"\n{label}:")
                 for sub_key, sub_value in value.items():
@@ -124,6 +147,19 @@ def parse_user_input():
         print("Invalid choice. Using default configuration.")
         update_config(custom_config=DEFAULT_PRESET)
 
+def parse_grid_size(input_value):
+    """
+    Parse the grid size from a string into a tuple of integers.
+    """
+    if isinstance(input_value, str):
+        try:
+            return tuple(int(value.strip()) for value in input_value.split(","))
+        except ValueError:
+            raise ValueError("Invalid grid size format. Please provide integers separated by commas.")
+    elif isinstance(input_value, (list, tuple)):
+        return tuple(int(value) for value in input_value)
+    else:
+        raise ValueError("Invalid grid size format. Provide a string, list, or tuple.")
 
 # Main Execution
 if __name__ == "__main__":
