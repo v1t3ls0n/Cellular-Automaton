@@ -16,7 +16,6 @@ This project is a **cellular automaton simulation** developed as an academic tas
 
 ## Project Structure
 ```plaintext
-.
 ├── main.py                     # Main entry point for the simulation
 ├── config/                     # Configuration management files
 │   ├── conf_presets.py         # Presets for simulation configuration
@@ -41,7 +40,7 @@ This project is a **cellular automaton simulation** developed as an academic tas
 ├── .gitignore                  # Git ignore file
 ├── README.md                   # Project documentation
 ├── requirements.txt            # Python dependencies
-
+```
 
 ## Configuration Properties
 The configuration properties are the foundation of this simulation. Each property can be modified to customize the behavior and environment.
