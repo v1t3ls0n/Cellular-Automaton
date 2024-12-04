@@ -82,7 +82,7 @@ def collect_user_input():
     if choice == "2":
         preset_name = choose_preset()
         logging.info(f"User selected preset: {preset_name}.")
-        user_config.update(PRESET_CONFIGS[preset_name])
+        user_config.update(preset_name = preset_name)
     elif choice == "3":
         logging.info("Setting custom configuration...")
         for key, value in DEFAULT_PRESET.items():
