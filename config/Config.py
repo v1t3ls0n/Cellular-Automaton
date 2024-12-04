@@ -1,5 +1,6 @@
 from types import MappingProxyType
-from config.presets import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
+from config.presets import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS, PARTICLE_MAPPING, KEY_LABELS
+import logging
 
 # Config.py
 class Config:
@@ -89,6 +90,30 @@ class Config:
                         )
 
         check_keys(self._config, REQUIRED_KEYS)
+
+    def log_full_configuration(self):
+        """
+        Logs the full configuration in a human-readable format using PARTICLE_MAPPING and KEY_LABELS.
+        """
+        config = self.get()  # Get the current configuration
+        logging.info("Full Configuration:")
+        
+        for key, value in config.items():
+            label = KEY_LABELS.get(key, key)  # Use human-readable labels if available
+            if isinstance(value, dict):
+                logging.info(f"{label}:")
+                for sub_key, sub_value in value.items():
+                    particle_label = PARTICLE_MAPPING.get(sub_key, sub_key)  # Use particle mapping if applicable
+                    logging.info(f"  {particle_label}: {sub_value}")
+            elif isinstance(value, list):
+                logging.info(f"{label}:")
+                for sub_key, sub_value in enumerate(value):
+                    particle_label = PARTICLE_MAPPING.get(sub_key, sub_key)  # Use particle mapping if applicable
+                    logging.info(f"  {particle_label}: {sub_value}")
+            else:
+                logging.info(f"{label}: {value}")
+
+
 
 
 # Singleton instance accessor

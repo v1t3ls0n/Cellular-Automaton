@@ -161,6 +161,7 @@ if __name__ == "__main__":
         # Collect user inputs and update configuration
         config = collect_user_input()
         config_instance.finalize()  # Finalize configuration to make it immutable
+        config_instance.log_full_configuration()
 
         # Extract essential parameters for simulation
         grid_size = config["grid_size"]
