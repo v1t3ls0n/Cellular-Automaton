@@ -15,8 +15,8 @@ PARTICLE_MAPPING = {
 # Labels for configuration keys to provide context in the UI or logs
 KEY_LABELS = {
     # General Simulation Parameters
-    "days": "Default Simulation Duration (Days)",
-    "grid_size": "Default Grid Size (X, Y, Z)",
+    "days": "Simulation Duration (Days)",
+    "grid_size": "Grid Dimensions (X, Y, Z)",
     "initial_ratios": "Initial Ratios (Proportions)",
 
     # Baseline Environmental Properties

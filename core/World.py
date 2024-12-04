@@ -11,7 +11,7 @@ class World:
         Initialize the World class.
 
         Args:
-            grid_size (tuple): Dimensions of the grid (x, y, z). Defaults to config's default grid size.
+            grid_size (tuple): Dimensions of the grid (x, y, z). Defaults to config's Grid Dimensions.
             initial_ratios (dict): Initial ratios for cell types. Defaults to config's initial ratios.
             day_number (int): The current day in the simulation.
         """

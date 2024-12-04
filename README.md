@@ -46,8 +46,8 @@ This project is a **cellular automaton simulation** developed as an academic tas
 The configuration properties are the foundation of this simulation. Each property can be modified to customize the behavior and environment.
 
 ### General Simulation Parameters
-- `days`: Default Simulation Duration (Days).
-- `grid_size`: Default Grid Size `(X, Y, Z)`.
+- `days`: Simulation Duration (Days).
+- `grid_size`: Grid Dimensions `(X, Y, Z)`.
 - `initial_ratios`: Proportions of cell types (e.g., `forest`, `city`, etc.).
 
 ### Baseline Environmental Properties
