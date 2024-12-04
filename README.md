@@ -1,8 +1,5 @@
-Below is the updated and detailed **README.md**, including all configuration properties and full usage instructions for your program:
 
----
-
-# Cellular Automaton Simulation for Biological Computation
+# Cellular Automaton Simulation for Biological Computation (Maman 11)
 
 ## Overview
 This project is a **cellular automaton simulation** developed as an academic task for the **Biological Computation Course**. It models complex environmental interactions using a particle-based system where each cell interacts with its neighbors based on configurable properties. The project explores emergent behavior and environmental dynamics using cellular automata principles.
