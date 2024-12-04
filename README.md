@@ -4,7 +4,7 @@
 ## Overview
 This project is a **cellular automaton simulation** developed as an academic task for the **Biological Computation Course**. It models complex environmental interactions using a particle-based system where each cell interacts with its neighbors based on configurable properties. The project explores emergent behavior and environmental dynamics using cellular automata principles.
 
-The entire project was developed independently by **Guy Vitelson* and is intended as a submission for the course instructor.
+The entire project was developed independently by **Guy Vitelson** and is intended as a submission for the course instructor.
 
 
 ## Features
