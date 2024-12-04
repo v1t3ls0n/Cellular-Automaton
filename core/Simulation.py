@@ -134,7 +134,8 @@ class Simulation:
             next_state._recalculate_global_attributes()  # Recalculate global attributes
             self.states.append(next_state)  # Store the new state
             self._update_aggregates(next_state)  # Update aggregates
-
+        
+        self.print_simulation_metrics()
     def get_averages_and_std_dev_over_time(self):
         """
         Retrieve averages and standard deviations of metrics over the simulation period.
@@ -170,3 +171,34 @@ class Simulation:
             float: Standard deviation of the data.
         """
         return np.std(data_list) if data_list else 0.0
+
+    def print_simulation_metrics(self):
+        print("\n===== Simulation Metrics =====\n")
+        
+        print("** Pollution Metrics **")
+        print(f"Average Pollution Over Time: {self.pollution_over_time}")
+        print(f"Standard Deviation of Pollution Over Time: {self.std_dev_pollution_over_time}\n")
+        
+        print("** Temperature Metrics **")
+        print(f"Average Temperature Over Time: {self.temperature_over_time}")
+        print(f"Standard Deviation of Temperature Over Time: {self.std_dev_temperature_over_time}\n")
+        
+        print("** Water Mass Metrics **")
+        print(f"Average Water Mass Over Time: {self.water_mass_over_time}")
+        print(f"Standard Deviation of Water Mass Over Time: {self.std_dev_water_mass_over_time}\n")
+        
+        print("** City and Forest Metrics **")
+        print(f"City Population Over Time: {self.city_population_over_time}")
+        print(f"Standard Deviation of City Population: {self.std_dev_city_population_over_time}")
+        print(f"Forest Count Over Time: {self.forest_count_over_time}")
+        print(f"Standard Deviation of Forest Count: {self.std_dev_forest_count_over_time}\n")
+        
+        print("** Cell Type Metrics **")
+        for cell_type, counts in self.cell_type_counts_over_time.items():
+            print(f"Cell Type {cell_type} Counts Over Time: {counts}")
+        for cell_type, std_devs in self.cell_type_std_dev_over_time.items():
+            print(f"Cell Type {cell_type} Std Dev Over Time: {std_devs}\n")
+        
+        print("** Cell Distribution Metrics **")
+        print(f"Standard Deviation of Cell Distribution Over Time: {self.std_dev_cell_distribution_over_time}")
+        print("\n=================================\n")

@@ -1,6 +1,6 @@
 import os
 import logging
-from config.config_state_handler import update_config, get_config, validate_config
+from config.config_state_handler import update_config, get_config, validate_config,finalize_config
 from config.conf_presets import  PRESET_CONFIGS,DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS, REQUIRED_KEYS
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         parse_user_input()
         config = get_config()
         validate_config(config)
-        
+        finalize_config()
         logging.info("Configuration is valid.")
             # Extract essential parameters for simulation
         grid_size = config["grid_size"]
@@ -150,7 +150,8 @@ if __name__ == "__main__":
         print("Simulation complete. Displaying results...")
         display = MatplotlibDisplay(simulation)
         display.render_graphic_user_interface()
-
+        if get_config() != config:
+            raise ValueError("config updated during running the cellular automatan")
     except (KeyError, TypeError) as e:
         print(f"Configuration error: {e}")
         exit(1)
