@@ -227,7 +227,7 @@ PRESET_CONFIGS = {
     },
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.2),  # Air: Light white with some transparency
+        6: (1.0, 1.0, 1.0, 0.35),  # Air: Light white with some transparency
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud: Neutral gray, opaque
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean: Deep blue, opaque
         3: (0.6, 0.8, 1.0, 1.0),  # Ice: Pale blue, opaque
@@ -388,7 +388,7 @@ PRESET_CONFIGS = {
     },
 
      "base_colors":{
-        6: (1.0, 1.0, 1.0, 0.2),  # Air: Light white with some transparency
+        6: (1.0, 1.0, 1.0, 0.35),  # Air: Light white with some transparency
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud: Neutral gray, opaque
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean: Deep blue, opaque
         3: (0.6, 0.8, 1.0, 1.0),  # Ice: Pale blue, opaque
@@ -549,7 +549,7 @@ PRESET_CONFIGS = {
     },
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.2),  # Air: Light white with some transparency
+        6: (1.0, 1.0, 1.0, 0.35),  # Air: Light white with some transparency
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud: Neutral gray, opaque
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean: Deep blue, opaque
         3: (0.6, 0.8, 1.0, 1.0),  # Ice: Pale blue, opaque
@@ -710,7 +710,7 @@ PRESET_CONFIGS = {
     },
 
     "base_colors": {
-        6: (1.0, 1.0, 1.0, 0.2),  # Air: Light white with some transparency
+        6: (1.0, 1.0, 1.0, 0.35),  # Air: Light white with some transparency
         2: (0.7, 0.7, 0.7, 1.0),  # Cloud: Neutral gray, opaque
         0: (0.0, 0.3, 1.0, 1.0),  # Ocean: Deep blue, opaque
         3: (0.6, 0.8, 1.0, 1.0),  # Ice: Pale blue, opaque
