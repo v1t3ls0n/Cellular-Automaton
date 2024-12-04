@@ -3,7 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.colors import to_rgba
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
-import logging
+
 from config.config_state_handler import get_config
 from config.conf_presets import KEY_LABELS, PARTICLE_MAPPING
 from utils.helpers import format_config_value,  rgba_to_hex

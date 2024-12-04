@@ -1,5 +1,5 @@
 import numpy as np
-import logging
+
 from .Particle import Particle
 import math
 from config.config_state_handler import get_config

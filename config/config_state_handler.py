@@ -1,4 +1,4 @@
-import logging
+
 from collections import defaultdict
 from types import MappingProxyType
 from config.conf_presets import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
@@ -35,7 +35,6 @@ def get_config_preset(preset_name=None):
         else:
             raise ValueError('Preset name does not exist.')
     else:
-        logging.debug("preset_name is None. Returning default config preset.")
         return DEFAULT_PRESET.copy()
 
 
