@@ -111,7 +111,7 @@ PRESET_CONFIGS = {
             1.0,   # Cloud: Almost no pollution, cleanses atmosphere.
             0.0,   # Ice: Pristine and isolated.
             5.0,   # Forest: Low pollution absorbed by vegetation.
-            40.0,  # City: High due to factories and vehicles.
+            500.0,  # City: High due to factories and vehicles.
             5.0,   # Air: Moderate, depends on proximity to cities.
             2.0,   # Rain: Low, acts as a natural cleanser.
             0.0,   # Vacuum: No pollution, uninhabitable space.
@@ -192,15 +192,15 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_pollution_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
-        "natural_temperature_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 2.0,
+        "cloud_saturation_threshold": 1.5,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
@@ -356,15 +356,15 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_pollution_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
-        "natural_temperature_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 2.0,
+        "cloud_saturation_threshold": 1.5,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
@@ -520,15 +520,15 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_pollution_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
-        "natural_temperature_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 2.0,
+        "cloud_saturation_threshold": 1.5,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
@@ -684,15 +684,15 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_pollution_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
-        "natural_temperature_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 2.0,
+        "cloud_saturation_threshold": 1.5,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
@@ -848,15 +848,15 @@ PRESET_CONFIGS = {
         # Pollution level beyond which damage accelerates.
         "pollution_level_tipping_point": 50.0,
         # Rate at which pollution decays naturally.
-        "natural_pollution_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Temperature Dynamics
         # Rate at which temperature equalizes to baseline.
-        "natural_temperature_decay_rate": 0.01,
+        "natural_temperature_decay_rate": 0.1,
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 2.0,
+        "cloud_saturation_threshold": 1.5,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
