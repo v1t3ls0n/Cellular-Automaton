@@ -70,10 +70,10 @@ KEY_LABELS = {
     "cell_type_water_transfer_weights": "Water Transfer Weights by Cell Type",
 
     # Conversion Weights
-    "cell_type_collision_weights": "Cell Type Collision Weights (List:[Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum])",
+    "cell_type_collision_weights": "Cell Type Collision Weights",
 
     # Base Colors
-    "base_colors": "Base Colors for Cell Types (List:[Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum])",
+    "base_colors": "Base Colors for Cell Types",
 }
 
 

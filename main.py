@@ -19,7 +19,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
 # Formatter
-formatter = logging.Formatter("%(levelname)s - %(message)s")
+formatter = logging.Formatter("%(message)s")
 file_handler.setFormatter(formatter)
 console_handler.setFormatter(formatter)
 
@@ -103,7 +103,7 @@ def collect_user_input():
     elif choice == "1":
         logging.info("User chose default configuration preset.")
     else:
-        logging.warning("Invalid choice from user. Using default configuration preset.")
+        logging.info("Invalid choice from user. Using default configuration preset.")
 
     # Override grid size and days with user input
     config_instance.update(custom_config={"grid_size": grid_size, "days": days})
@@ -129,7 +129,7 @@ def parse_input_value(input_value, default_value):
         if isinstance(default_value, float):
             return float(input_value)  # Convert to float
     except ValueError:
-        logging.warning(f"Could not parse input value '{input_value}' for type {type(default_value).__name__}. Using default: {default_value}")
+        logging.info(f"Could not parse input value '{input_value}' for type {type(default_value).__name__}. Using default: {default_value}")
 
     return default_value
 
@@ -156,7 +156,7 @@ def choose_preset():
 
 if __name__ == "__main__":
     try:
-        logging.info("Configure Cellular Automaton Initial Parameters.")
+        logging.info("\nCellular Automaton is Running\n")
 
         # Collect user inputs and update configuration
         config = collect_user_input()
@@ -169,7 +169,7 @@ if __name__ == "__main__":
         initial_ratios = config.get("initial_ratios", {})
 
         if round(sum(initial_ratios.values()), 2) != 1.0:
-            logging.warning("Initial ratios do not sum to 1. Adjusting to default ratios.")
+            logging.info("Initial ratios do not sum to 1. Adjusting to default ratios.")
             initial_ratios = DEFAULT_PRESET["initial_ratios"]
 
         # Initialize and run simulation
