@@ -23,15 +23,6 @@ KEY_LABELS = {
     "baseline_temperature": "Baseline Temperature (°C) ",
     "baseline_pollution_level": "Baseline Pollution Levels ",
 
-    # Pollution Transfer Weights
-    "cell_type_pollution_transfer_weights": "Pollution Transfer Weights by Cell Type ",
-
-    # Temperature Transfer Weights
-    "cell_type_temperature_transfer_weights": "Temperature Transfer Weights by Cell Type",
-
-    # Water Transfer Weights
-    "cell_type_water_transfer_weights": "Water Transfer Weights by Cell Type",
-
     # Forest Properties
     "forest_pollution_absorption_rate": "Forest Pollution Absorption Rate",
     "forest_cooling_effect": "Forest Cooling Effect",
@@ -68,6 +59,15 @@ KEY_LABELS = {
     # Environmental Change Rates
     "melting_rate": "Melting Rate",
     "evaporation_rate": "Evaporation Rate",
+    
+    # Pollution Transfer Weights
+    "cell_type_pollution_transfer_weights": "Pollution Transfer Weights by Cell Type ",
+
+    # Temperature Transfer Weights
+    "cell_type_temperature_transfer_weights": "Temperature Transfer Weights by Cell Type",
+
+    # Water Transfer Weights
+    "cell_type_water_transfer_weights": "Water Transfer Weights by Cell Type",
 
     # Conversion Weights
     "cell_type_collision_weights": "Cell Type Collision Weights (List:[Ocean, Desert, Clouds, Icebergs, Forests, Cities, Air, Rain, Vacuum])",
@@ -91,6 +91,7 @@ PRESET_CONFIGS = {
             "desert": 0.2,  # 20% of the grid is desert.
             "vacuum": 0.2,  # 20% of the grid is uninhabitable.
         },
+
         # Baseline Environmental Properties
         "baseline_temperature": [
             15.0,   # Ocean: Moderate temperature due to high heat capacity.
@@ -103,6 +104,7 @@ PRESET_CONFIGS = {
             12.0,   # Rain: Mild temperature, absorbs heat.
             -50.0,  # Vacuum: Close to absolute zero.
         ],
+
         "baseline_pollution_level": [
             3.0,   # Ocean: Pollution from industrial and plastic waste.
             2.0,   # Desert: Sparse pollution due to limited human activity.
@@ -115,6 +117,44 @@ PRESET_CONFIGS = {
             0.0,   # Vacuum: No pollution, uninhabitable space.
         ],
 
+        # Pollution Transfer Weights
+        "cell_type_pollution_transfer_weights": {
+            0: 0.3,  # Ocean: Moderate exchange due to water currents.
+            1: 0.1,  # Desert: Minimal exchange due to sparse vegetation.
+            2: 0.8,  # Cloud: High due to atmospheric circulation.
+            3: 0.1,  # Ice: Low, isolated conditions.
+            4: 0.6,  # Forest: Moderate, acts as a pollution sink.
+            5: 0.9,  # City: High, concentrated emissions.
+            6: 0.7,  # Air: High, pollution disperses easily.
+            7: 0.5,  # Rain: Moderate, washes pollution from the air.
+            8: 0.0,  # Vacuum: No transfer, uninhabitable space.
+        },
+
+        # Temperature Transfer Weights
+        "cell_type_temperature_transfer_weights": {
+            0: 0.3,  # Ocean: Moderate due to water's heat capacity.
+            1: 0.2,  # Desert: Low due to poor heat conductivity.
+            2: 0.8,  # Cloud: High due to rapid atmospheric mixing.
+            3: 0.1,  # Ice: Very low due to insulation.
+            4: 0.5,  # Forest: Moderate due to vegetation as a buffer.
+            5: 0.7,  # City: High, urban areas retain and radiate heat.
+            6: 1.0,  # Air: Very high due to convection currents.
+            7: 0.6,  # Rain: Moderate, transfers heat efficiently.
+            8: 0.0,  # Vacuum: No transfer possible.
+        },
+
+        # Water Transfer Weights
+        "cell_type_water_transfer_weights": {
+            0: 0.8,  # Ocean: High transfer due to large water bodies.
+            1: 0.1,  # Desert: Low due to poor water retention.
+            2: 0.9,  # Cloud: Very high due to atmospheric water vapor.
+            3: 0.3,  # Ice: Low, solid state hinders transfer.
+            4: 0.6,  # Forest: Moderate due to vegetation transpiration.
+            5: 0.4,  # City: Low, impermeable surfaces limit transfer.
+            6: 1.0,  # Air: Very high due to vapor movement.
+            7: 0.9,  # Rain: Very high, direct water transfer.
+            8: 0.0,  # Vacuum: No transfer possible.
+        },
 
         # Forest Properties
         # Rate of pollution absorption by forests.
@@ -165,44 +205,6 @@ PRESET_CONFIGS = {
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
         "evaporation_rate": 0.05,  # Rate at which water evaporates.
-        # Pollution Transfer Weights
-        "cell_type_pollution_transfer_weights": {
-            0: 0.3,  # Ocean: Moderate exchange due to water currents.
-            1: 0.1,  # Desert: Minimal exchange due to sparse vegetation.
-            2: 0.8,  # Cloud: High due to atmospheric circulation.
-            3: 0.1,  # Ice: Low, isolated conditions.
-            4: 0.6,  # Forest: Moderate, acts as a pollution sink.
-            5: 0.9,  # City: High, concentrated emissions.
-            6: 0.7,  # Air: High, pollution disperses easily.
-            7: 0.5,  # Rain: Moderate, washes pollution from the air.
-            8: 0.0,  # Vacuum: No transfer, uninhabitable space.
-        },
-
-        # Temperature Transfer Weights
-        "cell_type_temperature_transfer_weights": {
-            0: 0.3,  # Ocean: Moderate due to water's heat capacity.
-            1: 0.2,  # Desert: Low due to poor heat conductivity.
-            2: 0.8,  # Cloud: High due to rapid atmospheric mixing.
-            3: 0.1,  # Ice: Very low due to insulation.
-            4: 0.5,  # Forest: Moderate due to vegetation as a buffer.
-            5: 0.7,  # City: High, urban areas retain and radiate heat.
-            6: 1.0,  # Air: Very high due to convection currents.
-            7: 0.6,  # Rain: Moderate, transfers heat efficiently.
-            8: 0.0,  # Vacuum: No transfer possible.
-        },
-
-        # Water Transfer Weights
-        "cell_type_water_transfer_weights": {
-            0: 0.8,  # Ocean: High transfer due to large water bodies.
-            1: 0.1,  # Desert: Low due to poor water retention.
-            2: 0.9,  # Cloud: Very high due to atmospheric water vapor.
-            3: 0.3,  # Ice: Low, solid state hinders transfer.
-            4: 0.6,  # Forest: Moderate due to vegetation transpiration.
-            5: 0.4,  # City: Low, impermeable surfaces limit transfer.
-            6: 1.0,  # Air: Very high due to vapor movement.
-            7: 0.9,  # Rain: Very high, direct water transfer.
-            8: 0.0,  # Vacuum: No transfer possible.
-        },
 
 
         "cell_type_collision_weights": {
@@ -934,7 +936,7 @@ REQUIRED_KEYS = {
     "cloud_saturation_threshold": float,
     "melting_rate": float,
     "evaporation_rate": float,
-    "cell_type_collision_weights": {
+        "cell_type_collision_weights": {
         0: float,  # Ocean
         1: float,  # Desert
         2: float,  # Cloud

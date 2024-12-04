@@ -153,7 +153,7 @@ def choose_preset():
 
 if __name__ == "__main__":
     try:
-        logging.info("Starting the Cellular Automaton Simulation.")
+        logging.info("Configure Cellular Automaton Initial Parameters.")
 
         # Collect user inputs and update configuration
         config = collect_user_input()
