@@ -1,8 +1,6 @@
 
-from collections import defaultdict
 from types import MappingProxyType
 from config.conf_presets import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
-
 # Global configuration dictionary
 CONFIG = DEFAULT_PRESET
 CONFIG_FINALIZED = False

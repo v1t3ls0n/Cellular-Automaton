@@ -1,4 +1,3 @@
-
 # conf_presets.py
 # Mapping of particle types to descriptive names
 PARTICLE_MAPPING = {
