@@ -295,31 +295,31 @@ class World:
                 Particle: The resolved cell after the collision.
             """
 
-            if (cell1.cell_type == 6 and cell2.cell_type == 6):
-                # return cell1 if (cell1.water_mass + cell1.temperature) > (cell2.water_mass+cell2.temperature) else cell2
-                return cell1 if cell1.water_mass >= cell2.water_mass else cell2
+            # if (cell1.cell_type == 6 and cell2.cell_type == 6):
+            #     # return cell1 if (cell1.water_mass + cell1.temperature) > (cell2.water_mass+cell2.temperature) else cell2
+            #     return cell1 if cell1.water_mass >= cell2.water_mass else cell2
 
-            # Prevent vacuum overwrite air or cloud
-            if cell1.cell_type == 8 and cell2.cell_type in {2, 6}:
-                return cell2
-            if cell2.cell_type == 8 and cell1.cell_type in {2, 6}:
-                return cell1
+            # # Prevent vacuum overwrite air or cloud
+            # if cell1.cell_type == 8 and cell2.cell_type in {2, 6}:
+            #     return cell2
+            # if cell2.cell_type == 8 and cell1.cell_type in {2, 6}:
+            #     return cell1
 
-            # Handle rain interactions
-            if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
-                return cell1
+            # # Handle rain interactions
+            # if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
+            #     return cell1
 
-            if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
-                return cell2
+            # if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
+            #     return cell2
 
-            if cell1.cell_type == 7 and cell2.cell_type == 7:
-                return cell1 if cell1.water_mass > cell2.water_mass else cell2
-            # Handle rain clouds interactions (Clouds replace air)
-            if cell1.cell_type == 6 and cell2.cell_type == 2:  # Cell1 is Rain
-                return cell2
+            # if cell1.cell_type == 7 and cell2.cell_type == 7:
+            #     return cell1 if cell1.water_mass > cell2.water_mass else cell2
+            # # Handle rain clouds interactions (Clouds replace air)
+            # if cell1.cell_type == 6 and cell2.cell_type == 2:  # Cell1 is Rain
+            #     return cell2
 
-            if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
-                return cell1
+            # if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
+            #     return cell1
 
             # Default behavior based on cell type weights
             return cell1 if self.config["cell_type_collision_weights"][cell1.cell_type] >= self.config["cell_type_collision_weights"][cell2.cell_type] else cell2
