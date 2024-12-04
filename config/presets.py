@@ -364,7 +364,7 @@ PRESET_CONFIGS = {
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 1.5,
+        "cloud_saturation_threshold": 0.9,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
@@ -528,7 +528,7 @@ PRESET_CONFIGS = {
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 1.5,
+        "cloud_saturation_threshold": 0.9,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
@@ -692,7 +692,7 @@ PRESET_CONFIGS = {
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 1.5,
+        "cloud_saturation_threshold": 0.9,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
@@ -856,7 +856,7 @@ PRESET_CONFIGS = {
 
         # Cloud Properties
         # Minimum water mass for clouds to precipitate.
-        "cloud_saturation_threshold": 1.5,
+        "cloud_saturation_threshold": 0.9,
 
         # Environmental Change Rates
         "melting_rate": 0.15,  # Rate at which ice melts.
