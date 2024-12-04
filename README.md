@@ -1,5 +1,3 @@
-
-The entire project was developed independently by **Guy Vitelson** and is intended as a submission for the course instructor.
 ## Academic Integrity
 This project is an independent academic submission for the **Biological Computation Course**. The implementation, configuration, and logic have been designed solely by **Guy Vitelson**.
 
