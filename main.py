@@ -11,7 +11,7 @@ logger.setLevel(logging.DEBUG)  # Set the lowest level you want to log (DEBUG in
 
 # Create a file handler for logging all messages (DEBUG and above)
 file_handler = logging.FileHandler("simulation.log")
-file_handler.setLevel(logging.DEBUG)  # Logs everything to the file
+file_handler.setLevel(logging.INFO)  # Logs everything to the file
 
 # Create a console handler for logging only INFO and above
 console_handler = logging.StreamHandler()
