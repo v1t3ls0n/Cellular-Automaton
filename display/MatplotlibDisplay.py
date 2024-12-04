@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-from config.Config import config_instance 
+from config.Config import config_instance
 from config.presets import KEY_LABELS, PARTICLE_MAPPING
 
 
@@ -486,82 +486,80 @@ class MatplotlibDisplay:
         else:
             logging.info(f"Data length mismatch in graph: {title}")
 
-
-
-
-
     def render_forests_graph(self, ax, color):
         """Render the forest count graph over time."""
         self.render_generic_graph(
             ax=ax,
-            title="Forest Count Over Time",
+            title="Average Number of Forests Over Time",
             xlabel="Day",
             ylabel="Number of Forests",
             days=self.days,
             data=self.simulation.forest_count_over_time,
             color=color,
-            label="Forests"
+            label="Average Number of Forests"
         )
+
     def render_standardized_forests_graph(self, ax, color="green"):
         """Render the forests graph (Standardized)."""
         standardized_data = self.standardize_data(
             self.simulation.forest_count_over_time)
         self.render_generic_graph(
             ax=ax,
-            title="Forest Count Graph (Standardized)",
+            title="Standardized Forest Count (Z-Score)",
             xlabel="Day",
             ylabel="Standardized Number of Forests",
             days=self.days,
             data=standardized_data,
             std_dev=self.simulation.std_dev_forest_count_over_time,
             color=color,
-            label="Standardized Forests",
-            fill_label="Forest Std Dev Range"
+            label="Standardized Forest Count",
+            fill_label="Forest Temporal Std Dev Range"
         )
+
     def render_std_dev_forests_graph(self, ax, color="green"):
         """Render the temporal standard deviation of forest count graph."""
         self.render_generic_graph(
             ax=ax,
-            title="Temporal Variability of Forest Count (Std Dev Over Time)",
+            title="Temporal Variability in Forest Count (Std Dev)",
             xlabel="Day",
             ylabel="Forest Count Std Dev",
             days=self.days,
             data=self.simulation.std_dev_forest_count_over_time,
-            std_dev=None,  # No shading, only the Std Dev values over time
+            std_dev=None,
             color=color,
             label="Forest Count Temporal Std Dev"
         )
 
- 
-
+    def render_population_graph(self, ax, color="purple"):
+        """Render the city population graph over time."""
+        self.render_generic_graph(
+            ax=ax,
+            title="Average Number of Cities Over Time",
+            xlabel="Day",
+            ylabel="Number of Cities",
+            days=self.days,
+            data=self.simulation.city_population_over_time,
+            color=color,
+            label="Average Number of Cities"
+        )
 
     def render_standardized_population_graph(self, ax, color="purple"):
         """Render the standardized population graph with temporal variability (z-scores)."""
-        standardized_data = self.standardize_data(self.simulation.city_population_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.city_population_over_time)
         self.render_generic_graph(
             ax=ax,
-            title="City Population (Standardized with Temporal Variability)",
+            title="Standardized City Count (Z-Score)",
             xlabel="Day",
             ylabel="Standardized City Count",
             days=self.days,
             data=standardized_data,
             std_dev=self.simulation.std_dev_city_population_over_time,
             color=color,
-            label="Standardized Population",
-            fill_label="Population Temporal Std Dev Range"
+            label="Standardized City Count",
+            fill_label="City Population Temporal Std Dev Range"
         )
-    def render_population_graph(self, ax, color="purple"):
-        """Render the city population graph over time."""
-        self.render_generic_graph(
-            ax=ax,
-            title="City Population Over Time",
-            xlabel="Day",
-            ylabel="Number of Cities",
-            days=self.days,
-            data=self.simulation.city_population_over_time,
-            color=color,
-            label="Cities"
-        )
+
     def render_std_dev_population_graph(self, ax, color="purple"):
         """Render the temporal standard deviation of city population graph."""
         self.render_generic_graph(
@@ -576,40 +574,38 @@ class MatplotlibDisplay:
             label="City Population Temporal Std Dev"
         )
 
-
-
-
-
-
-    def render_standardized_pollution_graph(self, ax, color="black"):
-        """Render the standardized pollution graph with temporal variability (z-scores)."""
-        standardized_data = self.standardize_data(self.simulation.pollution_over_time)
-        self.render_generic_graph(
-            ax=ax,
-            title="Pollution (Standardized with Temporal Variability)",
-            xlabel="Day",
-            ylabel="Standardized Pollution",
-            days=self.days,
-            data=standardized_data,
-            std_dev=self.simulation.std_dev_pollution_over_time,
-            color=color,
-            label="Standardized Pollution",
-            fill_label="Pollution Temporal Std Dev Range"
-        )
     def render_pollution_graph(self, ax, color="black"):
         """Render the absolute pollution graph with temporal variability (non-standardized)."""
         self.render_generic_graph(
             ax=ax,
-            title="Pollution (Absolute with Temporal Variability)",
+            title="Average Pollution Level Over Time",
             xlabel="Day",
             ylabel="Average Pollution",
             days=self.days,
             data=self.simulation.pollution_over_time,
             std_dev=self.simulation.std_dev_pollution_over_time,
             color=color,
-            label="Pollution",
+            label="Average Pollution Level",
             fill_label="Pollution Temporal Std Dev Range"
         )
+
+    def render_standardized_pollution_graph(self, ax, color="black"):
+        """Render the standardized pollution graph with temporal variability (z-scores)."""
+        standardized_data = self.standardize_data(
+            self.simulation.pollution_over_time)
+        self.render_generic_graph(
+            ax=ax,
+            title="Standardized Pollution Level (Z-Score)",
+            xlabel="Day",
+            ylabel="Standardized Pollution",
+            days=self.days,
+            data=standardized_data,
+            std_dev=self.simulation.std_dev_pollution_over_time,
+            color=color,
+            label="Standardized Pollution Level",
+            fill_label="Pollution Temporal Std Dev Range"
+        )
+
     def render_std_dev_pollution_graph(self, ax, color="black"):
         """Render the temporal standard deviation of pollution graph."""
         self.render_generic_graph(
@@ -624,14 +620,28 @@ class MatplotlibDisplay:
             label="Pollution Temporal Std Dev"
         )
 
-
+    def render_temperature_graph(self, ax, color="red"):
+        """Render the absolute temperature graph with temporal variability (non-standardized)."""
+        self.render_generic_graph(
+            ax=ax,
+            title="Average Temperature Over Time",
+            xlabel="Day",
+            ylabel="Average Temperature",
+            days=self.days,
+            data=self.simulation.temperature_over_time,
+            std_dev=self.simulation.std_dev_temperature_over_time,
+            color=color,
+            label="Average Temperature",
+            fill_label="Temperature Temporal Std Dev Range"
+        )
 
     def render_standardized_temperature_graph(self, ax, color="red"):
         """Render the standardized temperature graph with temporal variability (z-scores)."""
-        standardized_data = self.standardize_data(self.simulation.temperature_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.temperature_over_time)
         self.render_generic_graph(
             ax=ax,
-            title="Temperature (Standardized with Temporal Variability)",
+            title="Standardized Temperature (Z-Score)",
             xlabel="Day",
             ylabel="Standardized Temperature",
             days=self.days,
@@ -641,20 +651,7 @@ class MatplotlibDisplay:
             label="Standardized Temperature",
             fill_label="Temperature Temporal Std Dev Range"
         )
-    def render_temperature_graph(self, ax, color="red"):
-        """Render the absolute temperature graph with temporal variability (non-standardized)."""
-        self.render_generic_graph(
-            ax=ax,
-            title="Temperature (Absolute with Temporal Variability)",
-            xlabel="Day",
-            ylabel="Average Temperature",
-            days=self.days,
-            data=self.simulation.temperature_over_time,
-            std_dev=self.simulation.std_dev_temperature_over_time,
-            color=color,
-            label="Temperature",
-            fill_label="Temperature Temporal Std Dev Range"
-        )
+
     def render_std_dev_temperature_graph(self, ax, color="red"):
         """Render the temporal standard deviation of temperature graph."""
         self.render_generic_graph(
@@ -669,14 +666,28 @@ class MatplotlibDisplay:
             label="Temperature Temporal Std Dev"
         )
 
-
+    def render_water_mass_graph(self, ax, color="cyan"):
+        """Render the absolute water mass graph with temporal variability (non-standardized)."""
+        self.render_generic_graph(
+            ax=ax,
+            title="Average Water Mass Over Time",
+            xlabel="Day",
+            ylabel="Average Water Mass",
+            days=self.days,
+            data=self.simulation.water_mass_over_time,
+            std_dev=self.simulation.std_dev_water_mass_over_time,
+            color=color,
+            label="Average Water Mass",
+            fill_label="Water Mass Temporal Std Dev Range"
+        )
 
     def render_standardized_water_mass_graph(self, ax, color="cyan"):
         """Render the standardized water mass graph with temporal variability (z-scores)."""
-        standardized_data = self.standardize_data(self.simulation.water_mass_over_time)
+        standardized_data = self.standardize_data(
+            self.simulation.water_mass_over_time)
         self.render_generic_graph(
             ax=ax,
-            title="Water Mass (Standardized with Temporal Variability)",
+            title="Standardized Water Mass (Z-Score)",
             xlabel="Day",
             ylabel="Standardized Water Mass",
             days=self.days,
@@ -686,20 +697,7 @@ class MatplotlibDisplay:
             label="Standardized Water Mass",
             fill_label="Water Mass Temporal Std Dev Range"
         )
-    def render_water_mass_graph(self, ax, color="cyan"):
-        """Render the absolute water mass graph with temporal variability (non-standardized)."""
-        self.render_generic_graph(
-            ax=ax,
-            title="Water Mass (Absolute with Temporal Variability)",
-            xlabel="Day",
-            ylabel="Average Water Mass",
-            days=self.days,
-            data=self.simulation.water_mass_over_time,
-            std_dev=self.simulation.std_dev_water_mass_over_time,
-            color=color,
-            label="Water Mass",
-            fill_label="Water Mass Temporal Std Dev Range"
-        )
+
     def render_std_dev_water_mass_graph(self, ax, color="cyan"):
         """Render the temporal standard deviation of water mass graph."""
         self.render_generic_graph(
@@ -713,18 +711,6 @@ class MatplotlibDisplay:
             color=color,
             label="Water Mass Temporal Std Dev"
         )
-
-
-
-
-
-
-
-
-
-
-
-
 
     def standardize_data(self, data):
         if not data:
