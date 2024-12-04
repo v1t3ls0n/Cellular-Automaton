@@ -294,31 +294,35 @@ class World:
             Returns:
                 Particle: The resolved cell after the collision.
             """
-            
-            # Special case: Rain (cell_type == 7) always overrides Air (cell_type == 6) or Cloud (cell_type == 2)
-            if cell1.cell_type == 7:
-                return cell1
-            elif cell2.cell_type == 7:
+
+            if (cell1.cell_type == 6 and cell2.cell_type == 6):
+                # return cell1 if (cell1.water_mass + cell1.temperature) > (cell2.water_mass+cell2.temperature) else cell2
+                return cell1 if cell1.water_mass >= cell2.water_mass else cell2
+
+            # Prevent vacuum overwrite air or cloud
+            if cell1.cell_type == 8 and cell2.cell_type in {2, 6}:
                 return cell2
-            # Air (cell_type == 6) can override Cloud (cell_type == 2) if water mass exceeds a threshold
-            if cell1.cell_type == 6 and cell2.cell_type == 2:
-                if cell1.water_mass > self.config.get("air_overrides_cloud_threshold", 1.0):  # Threshold for Air to override Cloud
-                    return cell1
-                else:
-                    return cell2
+            if cell2.cell_type == 8 and cell1.cell_type in {2, 6}:
+                return cell1
 
-            if cell1.cell_type == 2 and cell2.cell_type == 6:
-                if cell2.water_mass > self.config.get("air_overrides_cloud_threshold", 1.0):  # Threshold for Air to override Cloud
-                    return cell2
-                else:
-                    return cell1
+            # Handle rain interactions
+            if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
+                return cell1
 
+            if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
+                return cell2
+
+            if cell1.cell_type == 7 and cell2.cell_type == 7:
+                return cell1 if cell1.water_mass > cell2.water_mass else cell2
+            # Handle rain clouds interactions (Clouds replace air)
+            if cell1.cell_type == 6 and cell2.cell_type == 2:  # Cell1 is Rain
+                return cell2
+
+            if cell1.cell_type == 2 and cell2.cell_type == 6:  # Cell2 is Rain
+                return cell1
 
             # Default behavior based on cell type weights
-            weight1 = self.config["cell_type_collision_weights"].get(cell1.cell_type)
-            weight2 = self.config["cell_type_collision_weights"].get(cell2.cell_type)
-
-            return cell1 if weight1 >= weight2 else cell2
+            return cell1 if self.config["cell_type_collision_weights"][cell1.cell_type] >= self.config["cell_type_collision_weights"][cell2.cell_type] else cell2
 
         def get_neighbor_positions(i, j, k):
             """
@@ -426,7 +430,7 @@ class World:
         # Phase 4: Resolve collisions
         position_map = {}
         for (i, j, k), updated_cell in updates.items():
-            if updated_cell.cell_type in {1, 4, 5}:
+            if updated_cell.cell_type in {0, 3, 1, 4, 5, 8}:
                 position_map[i, j, k] = updated_cell
                 continue
 
