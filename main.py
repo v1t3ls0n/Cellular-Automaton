@@ -83,13 +83,16 @@ def collect_user_input():
                 updated_config[key] = {}
                 print(f"\n{label}:")
                 for sub_key, sub_value in value.items():
-                    input_value = input(f"Enter value for {PARTICLE_MAPPING[sub_key]} (default: {sub_value}): ").strip()
-                    updated_config[key][sub_key] = parse_input_value(input_value, sub_value)
+                    if sub_key in {0,1,2,3,4,5,6,7,8}:
+                        input_value = input(f"Enter value for {PARTICLE_MAPPING[sub_key]} (default: {sub_value}): ").strip()
+                        updated_config[key][sub_key] = parse_input_value(input_value, sub_value)
+                print()
             elif isinstance(value, list):
                 print(f"\n{label}:")
                 for sub_key, sub_value in enumerate(value):
                     input_value = input(f"Enter value for {PARTICLE_MAPPING[sub_key]} (default: {sub_value}): ").strip()
                     updated_config[key][sub_key] = parse_input_value(input_value, sub_value)
+                print()
             else:
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
                 updated_config[key] = parse_input_value(input_value, value)
