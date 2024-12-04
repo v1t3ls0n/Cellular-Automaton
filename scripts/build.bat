@@ -5,7 +5,6 @@ setlocal enabledelayedexpansion
 echo Compiling Cellular Automaton Simulation...
 
 REM Move to the parent directory (root of the project)
-cd ..
 
 REM Define the root directory as the target for the executable
 set ROOT_DIR=%cd%
