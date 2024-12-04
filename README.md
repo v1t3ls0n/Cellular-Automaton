@@ -18,8 +18,7 @@ The entire project was developed independently by **[Your Name]** and is intende
 ```plaintext
 .
 ├── main.py                    # Main entry point for the simulation
-├── cli_output.log             # Log file capturing simulation results and errors
-├── Graphic Interface.png      # Screenshot of the graphical interface
+├── cli_output.log             # Cli output exapmle 
 ├── config/                    # Configuration management files
 │   ├── config_state_handler.py
 │   └── conf_presets.py
@@ -31,6 +30,8 @@ The entire project was developed independently by **[Your Name]** and is intende
 ├── display/                   # Visualization modules
 │   ├── MatplotlibDisplay.py
 │   └── __init__.py
+├── screenshots/               # Screenshot of the graphical interface
+│   └── _GUI.png
 └── utils/                     # Utility functions
     └── helpers.py
 ```
