@@ -1,5 +1,4 @@
 #!/bin/bash
-cd ..
 # Define the output zip file name
 OUTPUT_ZIP="mmn11_by_guy_vitelson.zip"
 
