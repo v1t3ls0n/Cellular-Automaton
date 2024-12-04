@@ -1,52 +1,34 @@
-Here is an analysis of the extracted project structure to help draft the `README.md` file:
+Below is the updated and detailed **README.md**, including all configuration properties and full usage instructions for your program:
 
-### Project Structure:
-1. **Root Directory:**
-   - `main.py`: Likely the main entry point for the application.
-   - `cli_output.log`: Log file; possibly from previous executions.
-   - `Graphic Interface.png`: Screenshot or diagram for the graphic interface.
+---
 
-2. **`config` Directory:**
-   - `config_state_handler.py`: Handles configurations related to states.
-   - `conf_presets.py`: Contains preset configurations.
-
-3. **`core` Directory:**
-   - `Particle.py`, `Simulation.py`, `World.py`: Core components for the simulation.
-   - `__init__.py`: Indicates this is a package.
-
-4. **`display` Directory:**
-   - `MatplotlibDisplay.py`: Likely responsible for visualization using Matplotlib.
-   - `__init__.py`: Indicates this is a package.
-
-5. **`utils` Directory:**
-   - `helpers.py`: Contains utility functions.
-   - `__pycache__/helpers.cpython-312.pyc`: Compiled Python bytecode.
-
-### README.md Content
-
-```markdown
-# Simulation Project
+# Cellular Automaton Simulation for Biological Computation
 
 ## Overview
-This project provides a modular simulation framework designed to model and visualize particle-based systems. The application supports custom configurations, visual displays, and flexible simulation logic.
+This project is a **cellular automaton simulation** developed as an academic task for the **Biological Computation Course**. It models complex environmental interactions using a particle-based system where each cell interacts with its neighbors based on configurable properties. The project explores emergent behavior and environmental dynamics using cellular automata principles.
+
+The entire project was developed independently by **[Your Name]** and is intended as a submission for the course instructor.
+
+---
 
 ## Features
-- **Customizable Configurations**: Easily adjust settings and presets via configuration files.
-- **Dynamic Simulation Core**: Models particles and their interactions within a simulated world.
-- **Visualization**: Supports graphical outputs using Matplotlib.
-- **Command-line Interface**: Logs execution details for troubleshooting and optimization.
+- **Complete Configuration Control**: Configure properties for every aspect of the simulation, including pollution dynamics, temperature changes, water transfer, and more.
+- **Robust Core Logic**: The heart of the simulation lies in the `core` folder, which meticulously implements the cellular automaton behavior.
+- **Real-Time Visualization**: View simulation progress through comprehensive 3D visualizations and time-series graphs.
+- **Educational Focus**: Designed to demonstrate the capabilities of cellular automata for academic study and research.
+
+---
 
 ## Project Structure
-```
 ```plaintext
 .
-├── main.py                    # Main entry point of the application
-├── cli_output.log             # Log file containing CLI execution output
-├── Graphic Interface.png      # Image representing the graphical interface
-├── config/                    # Configuration files
+├── main.py                    # Main entry point for the simulation
+├── cli_output.log             # Log file capturing simulation results and errors
+├── Graphic Interface.png      # Screenshot of the graphical interface
+├── config/                    # Configuration management files
 │   ├── config_state_handler.py
 │   └── conf_presets.py
-├── core/                      # Core simulation logic
+├── core/                      # Core simulation logic (critical for behavior)
 │   ├── Particle.py
 │   ├── Simulation.py
 │   ├── World.py
@@ -55,63 +37,156 @@ This project provides a modular simulation framework designed to model and visua
 │   ├── MatplotlibDisplay.py
 │   └── __init__.py
 └── utils/                     # Utility functions
-    ├── helpers.py
-    └── __pycache__/helpers.cpython-312.pyc
-```
+    └── helpers.py
 ```
 
+---
+
+## Configuration Properties
+The configuration properties are the foundation of this simulation. Each property can be modified to customize the behavior and environment.
+
+### General Simulation Parameters
+- `days`: Default Simulation Duration (Days).
+- `grid_size`: Default Grid Size `(X, Y, Z)`.
+- `initial_ratios`: Proportions of cell types (e.g., `forest`, `city`, etc.).
+
+### Baseline Environmental Properties
+- `baseline_temperature`: Baseline Temperature (°C).
+- `baseline_pollution_level`: Baseline Pollution Levels.
+
+### Pollution Transfer Weights
+- `cell_type_pollution_transfer_weights`: Pollution Transfer Weights by Cell Type.
+
+### Temperature Transfer Weights
+- `cell_type_temperature_transfer_weights`: Temperature Transfer Weights by Cell Type.
+
+### Water Transfer Weights
+- `cell_type_water_transfer_weights`: Water Transfer Weights by Cell Type.
+
+### Forest Properties
+- `forest_pollution_absorption_rate`: Rate at which forests absorb pollution.
+- `forest_cooling_effect`: Cooling effect of forests on the environment.
+- `forest_pollution_extinction_point`: Pollution level beyond which forests die.
+- `forest_temperature_extinction_point`: Temperature beyond which forests die.
+
+### City Properties
+- `city_pollution_generation_rate`: Rate of pollution generation by cities.
+- `city_warming_effect`: Warming effect caused by cities.
+- `city_temperature_extinction_point`: Maximum temperature for city survival.
+- `city_pollution_extinction_point`: Pollution level beyond which cities collapse.
+
+### Physical Properties
+- `freezing_point`: Temperature (°C) at which water freezes.
+- `melting_point`: Temperature (°C) at which ice melts.
+- `evaporation_point`: Temperature (°C) at which water evaporates.
+
+### Water Transfer Dynamics
+- `water_transfer_threshold`: Minimum water mass difference for transfer.
+- `water_transfer_rate`: Rate of water transfer between cells.
+- `ocean_conversion_threshold`: Water mass required to convert a cell to ocean.
+
+### Pollution Dynamics
+- `pollution_damage_threshold`: Pollution level causing damage to ecosystems.
+- `pollution_level_tipping_point`: Pollution level beyond which damage accelerates.
+- `natural_pollution_decay_rate`: Rate at which pollution naturally decays.
+
+### Temperature Dynamics
+- `natural_temperature_decay_rate`: Rate at which temperature equalizes to baseline.
+
+### Cloud Properties
+- `cloud_saturation_threshold`: Minimum water mass for clouds to precipitate.
+
+### Environmental Change Rates
+- `melting_rate`: Rate at which ice melts.
+- `evaporation_rate`: Rate at which water evaporates.
+
+### Conversion Weights
+- `cell_type_collision_weights`: Weights governing cell-type collisions.
+
+### Base Colors
+- `base_colors`: RGBA colors for each cell type.
+
+---
+
 ## Installation
-1. Clone this repository or download the ZIP file and extract it.
+
+1. Clone this repository or download the ZIP file:
    ```bash
    git clone <repository_url>
    cd <repository_directory>
    ```
-2. Install required dependencies.
+
+2. Install the required dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Run the application.
-   ```bash
-   python main.py
-   ```
 
-## Usage
-1. Adjust configuration files in the `config` directory to suit your simulation requirements.
-2. Launch the simulation with:
-   ```bash
-   python main.py
-   ```
-3. Logs are stored in `cli_output.log` for later review.
+---
 
-## Visualization
-- The simulation's graphical output is generated using Matplotlib. Refer to the file `Graphic Interface.png` for a sample interface.
+## Usage Instructions
 
-## Modules
-- **Main (`main.py`)**: Starts the simulation and coordinates between modules.
-- **Core (`core/`)**:
-  - `Particle.py`: Manages individual particle behavior.
-  - `Simulation.py`: Handles the overall simulation lifecycle.
-  - `World.py`: Defines the environment and its properties.
-- **Config (`config/`)**:
-  - `config_state_handler.py`: Loads and manages configuration states.
-  - `conf_presets.py`: Provides default settings and presets.
-- **Display (`display/`)**: Renders the simulation using Matplotlib.
-- **Utils (`utils/`)**: Helper functions for reusable logic.
-
-## Contributing
-1. Fork the repository.
-2. Create a feature branch.
-   ```bash
-   git checkout -b feature-branch
-   ```
-3. Commit your changes and push to the branch.
-4. Open a pull request.
-
-## License
-This project is licensed under the MIT License. See `LICENSE` for details.
-
-## Acknowledgments
-Special thanks to the contributors and open-source libraries used in this project.
+### 1. Run the Program
+Start the program by executing:
+```bash
+python main.py
 ```
 
-This README.md file is ready to use or customize further based on specific project goals or details. Let me know if you need any modifications!
+### 2. Choose Configuration
+When prompted, select one of the following options:
+1. **Default Configuration Preset**: Uses pre-defined default parameters.
+2. **Choose Preset**: Select from a list of predefined presets (e.g., low pollution, high pollution).
+3. **Custom Parameters**: Define every property manually.
+
+### 3. Simulation Execution
+- After selecting a configuration, the program validates it and begins the simulation.
+- Progress is displayed in real time through a graphical interface.
+
+### 4. Visualizations
+- **Graphs**:
+  - Pollution trends over time.
+  - Average temperature and water mass.
+  - Cell type population counts and standard deviations.
+- **3D Visualization**:
+  - Displays the grid and cell types with their interactions and transformations.
+
+### 5. Logs and Results
+- Results and metrics are logged in `cli_output.log` for further analysis.
+- Metrics include averages, standard deviations, and configuration details.
+
+---
+
+## Code and Logic
+### Core Components
+- **`Particle.py`**: Defines the behavior of individual cells, including pollution absorption, water transfer, and type-specific interactions.
+- **`Simulation.py`**: Manages the simulation lifecycle, precomputing states for multiple days and tracking metrics.
+- **`World.py`**: Represents the grid and initializes particles using elevation maps.
+
+### Visualization
+- **`MatplotlibDisplay.py`**: Generates graphs and 3D visualizations.
+- **Real-Time GUI**: Displays metrics and allows interaction during the simulation.
+
+---
+
+## Example Workflow
+
+1. Run the program:
+   ```bash
+   python main.py
+   ```
+2. Choose a configuration preset or define your custom setup.
+3. Observe the simulation progress through the GUI.
+4. CLI output example can be found in the `cli_output.log` file.
+5. GUI Screenshot ![Simulation Results Graphical User Interface Screenshot](screenshots/GUI.png)
+
+---
+
+## Academic Integrity
+This project is an independent academic submission for the **Biological Computation Course**. The implementation, configuration, and logic have been designed solely by **Guy Vitelson**.
+
+---
+
+## License
+This project is licensed under the MIT License.
+GitHub Repo : https://github.com/v1t3ls0n/bio-computation-course
+
+---
