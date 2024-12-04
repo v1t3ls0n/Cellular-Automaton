@@ -5,35 +5,25 @@ from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
 
 # Configure logging
-# Configure the root logger
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)  # Set the lowest level you want to log (DEBUG in this case)
+logger.setLevel(logging.DEBUG)
 
-# Create a file handler for logging all messages (DEBUG and above)
-file_handler = logging.FileHandler("simulation.log")
-file_handler.setLevel(logging.INFO)  # Logs everything to the file
+# File handler for logging DEBUG and above
+file_handler = logging.FileHandler("simulation.log", mode="a", encoding="utf-8")
+file_handler.setLevel(logging.DEBUG)
 
-# Create a console handler for logging only INFO and above
+# Console handler for logging INFO and above
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)  # Logs only INFO and above to the console
+console_handler.setLevel(logging.INFO)
 
-# Create a formatter for both handlers
+# Formatter
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-
-# Attach the formatter to the handlers
 file_handler.setFormatter(formatter)
 console_handler.setFormatter(formatter)
 
-# Add the handlers to the logger
+# Add handlers
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
-
-# Example usage
-logger.debug("This is a DEBUG message (file only)")
-logger.info("This is an INFO message (console and file)")
-logger.warning("This is a WARNING message (console and file)")
-logger.error("This is an ERROR message (console and file)")
-logger.critical("This is a CRITICAL message (console and file)")
 
 def parse_grid_size(input_value):
     """
@@ -41,13 +31,13 @@ def parse_grid_size(input_value):
     """
     if isinstance(input_value, str):
         try:
-            return tuple(int(value.strip()) for value in input_value.split(","))
+            return tuple(int(value.strip()) for value in input_value.replace(" ", ",").split(","))
         except ValueError:
             raise ValueError("Invalid grid size format. Please provide integers separated by commas.")
     elif isinstance(input_value, (list, tuple)):
         return tuple(int(value) for value in input_value)
     else:
-        raise ValueError("Invalid grid size format. Provide a list, tuple, or string.")
+        raise ValueError("Invalid grid size format. Provide a string, list, or tuple.")
 
 def choose_preset():
     """
@@ -95,7 +85,7 @@ def parse_input_value(input_value, default_value):
     except ValueError:
         logging.warning(f"Could not parse input value: {input_value}")
 
-    return input_value
+    return default_value
 
 def parse_user_input():
     """
@@ -117,7 +107,7 @@ def parse_user_input():
             label = KEY_LABELS.get(key, key)
 
             if key == "grid_size":
-                # Special parsing for grid_size to convert it into a tuple
+                # Special parsing for grid_size
                 input_value = input(f"Enter value for {label} as comma-separated integers (default: {value}): ").strip()
                 if input_value:
                     try:
@@ -147,20 +137,6 @@ def parse_user_input():
         print("Invalid choice. Using default configuration.")
         update_config(custom_config=DEFAULT_PRESET)
 
-def parse_grid_size(input_value):
-    """
-    Parse the grid size from a string into a tuple of integers.
-    """
-    if isinstance(input_value, str):
-        try:
-            return tuple(int(value.strip()) for value in input_value.split(","))
-        except ValueError:
-            raise ValueError("Invalid grid size format. Please provide integers separated by commas.")
-    elif isinstance(input_value, (list, tuple)):
-        return tuple(int(value) for value in input_value)
-    else:
-        raise ValueError("Invalid grid size format. Provide a string, list, or tuple.")
-
 # Main Execution
 if __name__ == "__main__":
     try:
@@ -173,7 +149,7 @@ if __name__ == "__main__":
 
         # Extract essential parameters for simulation
         grid_size = config.get("grid_size", (10, 10, 10))
-        days = config.get("days", 100)
+        days = int(config.get("days", 100))  # Ensure `days` is an integer
         initial_ratios = config.get("initial_ratios", {})
 
         if round(sum(initial_ratios.values()), 2) != 1.0:
