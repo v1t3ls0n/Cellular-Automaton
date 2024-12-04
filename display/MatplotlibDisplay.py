@@ -126,8 +126,8 @@ class MatplotlibDisplay:
 
             # Row 4: Forests and water mass metrics
             "std_forests": self.fig.add_subplot(gs[3, 0]),
-            "std_water_mass": self.fig.add_subplot(gs[3, 1]),
-            "std_dev_forests": self.fig.add_subplot(gs[3, 2]),
+            "std_water_mass": self.fig.add_subplot(gs[3, 2]),
+            "std_dev_forests": self.fig.add_subplot(gs[3, 1]),
 
             # Row 5: Absolute forest and water mass values
             "forests": self.fig.add_subplot(gs[4, 0]),
