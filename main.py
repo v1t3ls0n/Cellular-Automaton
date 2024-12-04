@@ -1,14 +1,47 @@
-import os
-
+import logging
 from config.config_state_handler import update_config, get_config, validate_config, finalize_config
 from config.conf_presets import PRESET_CONFIGS, DEFAULT_PRESET, PARTICLE_MAPPING, KEY_LABELS
 from display.MatplotlibDisplay import MatplotlibDisplay
 from core.Simulation import Simulation
 
+# Configure logging
+# Configure the root logger
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)  # Set the lowest level you want to log (DEBUG in this case)
+
+# Create a file handler for logging all messages (DEBUG and above)
+file_handler = logging.FileHandler("simulation.log")
+file_handler.setLevel(logging.DEBUG)  # Logs everything to the file
+
+# Create a console handler for logging only INFO and above
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)  # Logs only INFO and above to the console
+
+# Create a formatter for both handlers
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+# Attach the formatter to the handlers
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add the handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+# Example usage
+logger.debug("This is a DEBUG message (file only)")
+logger.info("This is an INFO message (console and file)")
+logger.warning("This is a WARNING message (console and file)")
+logger.error("This is an ERROR message (console and file)")
+logger.critical("This is a CRITICAL message (console and file)")
+
+
+
 def choose_preset():
     """
     Allow the user to choose a configuration preset from a list.
     """
+    logging.info("Displaying configuration presets for user.")
     print("Available Configuration Presets:")
     for i, preset_name in enumerate(PRESET_CONFIGS.keys(), 1):
         print(f"{i}. {preset_name}")
@@ -20,13 +53,16 @@ def choose_preset():
             if 1 <= choice <= len(PRESET_CONFIGS):
                 chosen_preset = list(PRESET_CONFIGS.keys())[choice - 1]
                 print(f"Selected preset: {chosen_preset}")
+                logging.info(f"User selected preset: {chosen_preset}")
                 return chosen_preset
             else:
                 print("Invalid choice. Please choose a number from the list.")
         except ValueError:
+            logging.warning("Invalid input. User did not enter a number.")
             print("Invalid input. Please enter a number.")
         limit_bad_input -= 1
 
+    logging.warning("User exceeded invalid input attempts. Default preset selected.")
     print("Too many invalid attempts. Using default preset.")
     return DEFAULT_PRESET
 
@@ -38,16 +74,15 @@ def parse_input_value(input_value, default_value):
     if not input_value:
         return default_value
 
-    if isinstance(default_value, bool):
-        return input_value.lower() in {"true", "yes", "1"} if isinstance(input_value, str) else bool(input_value)
-
     try:
+        if isinstance(default_value, bool):
+            return input_value.lower() in {"true", "yes", "1"} if isinstance(input_value, str) else bool(input_value)
         if isinstance(default_value, int):
             return int(input_value)
         if isinstance(default_value, float):
             return float(input_value)
     except ValueError:
-        pass
+        logging.warning(f"Could not parse input value: {input_value}")
 
     return input_value
 
@@ -56,6 +91,7 @@ def parse_user_input():
     """
     Prompt user for configuration parameters or use presets.
     """
+    logging.info("Prompting user for configuration options.")
     print("\n--- Simulation Configuration ---")
     print("1. Go with Default Configuration Preset")
     print("2. Choose Configuration Presets")
@@ -73,8 +109,7 @@ def parse_user_input():
                 user_config[key] = {}
                 print(f"\n{label}:")
                 for sub_key, sub_value in value.items():
-                    particle_label = PARTICLE_MAPPING.get(sub_key, sub_key)
-                    input_value = input(f"Enter value for {particle_label} (default: {sub_value}): ").strip()
+                    input_value = input(f"Enter value for {sub_key} (default: {sub_value}): ").strip()
                     user_config[key][sub_key] = parse_input_value(input_value, sub_value)
             else:
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
@@ -82,9 +117,10 @@ def parse_user_input():
 
         update_config(custom_config=user_config)
     elif choice == "1":
-        print("Using Default Configuration Preset")
+        logging.info("User chose default configuration preset.")
         update_config(custom_config=DEFAULT_PRESET)
     else:
+        logging.warning("Invalid choice from user. Default configuration used.")
         print("Invalid choice. Using default configuration.")
         update_config(custom_config=DEFAULT_PRESET)
 
@@ -92,8 +128,7 @@ def parse_user_input():
 # Main Execution
 if __name__ == "__main__":
     try:
-        logging.basicConfig(filename="simulation.log", level=logging.DEBUG)
-        logging.info("Starting the Cellular Automaton Simulation...")
+        logging.info("Starting the Cellular Automaton Simulation.")
 
         parse_user_input()
         config = get_config()
@@ -106,21 +141,23 @@ if __name__ == "__main__":
         initial_ratios = config.get("initial_ratios", {})
 
         if round(sum(initial_ratios.values()), 2) != 1.0:
-            print("Initial ratios must sum to 1. Adjusting to default ratios.")
+            logging.warning("Initial ratios do not sum to 1. Adjusting to default ratios.")
             initial_ratios = DEFAULT_PRESET["initial_ratios"]
 
         # Initialize and run simulation
         simulation = Simulation(grid_size=grid_size, initial_ratios=initial_ratios, days=days)
-        print("Starting simulation...")
+        logging.info("Starting simulation...")
         simulation.precompute()
-        print("Simulation complete. Displaying results...")
+        logging.info("Simulation complete. Displaying results.")
 
         display = MatplotlibDisplay(simulation)
         display.render_graphic_user_interface()
 
         if get_config() != config:
-            raise ValueError("Configuration was updated during simulation.")
+            logging.error("Configuration was updated during simulation.")
+            raise ValueError("Configuration mismatch detected.")
     except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
         print(f"An error occurred: {e}")
         input("Press Enter to exit...")
         exit(1)

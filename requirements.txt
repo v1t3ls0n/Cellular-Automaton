@@ -1,4 +1,3 @@
 numpy==1.24.4
 noise==1.2.2
 matplotlib==3.9.3
-logging
