@@ -174,37 +174,6 @@ if __name__ == "__main__":
         input("Press Enter to exit...")
         exit(1)
 
-    try:
-        logging.info("Starting the Cellular Automaton Simulation.")
-
-        # Collect user inputs and update configuration
-        final_config = collect_user_input()
-        config = Config()
-        Config.update(custom_config=final_config)  # Update shared configuration
-        Config.finalize()  # Finalize configuration
-
-        # Validate configuration
-        config = Config.get()
-        config.validate_config()
-
-        # Extract essential parameters for simulation
-        grid_size = config["grid_size"]
-        days = config["days"]
-        initial_ratios = config.get("initial_ratios", {})
-
-        if round(sum(initial_ratios.values()), 2) != 1.0:
-            logging.warning("Initial ratios do not sum to 1. Adjusting to default ratios.")
-            initial_ratios = DEFAULT_PRESET["initial_ratios"]
-
-        # Initialize and run simulation
-        simulation = Simulation(grid_size=grid_size, initial_ratios=initial_ratios, days=days)
-        logging.info("Starting simulation...")
-        simulation.precompute()
-        logging.info("Simulation complete. Displaying results.")
-
-        display = MatplotlibDisplay(simulation)
-        display.render_graphic_user_interface()
-
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
         input("Press Enter to exit...")
