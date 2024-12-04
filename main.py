@@ -7,11 +7,11 @@ from core.Simulation import Simulation
 
 # Configure logging
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # File handler for logging DEBUG and above
 file_handler = logging.FileHandler("simulation.log", mode="a", encoding="utf-8")
-file_handler.setLevel(logging.DEBUG)
+file_handler.setLevel(logging.INFO)
 
 # Console handler for logging INFO and above
 console_handler = logging.StreamHandler()
