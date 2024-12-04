@@ -119,16 +119,16 @@ class MatplotlibDisplay:
             # Leave an empty slot at the second row, third column (gs[1, 2] is unused)
 
             # Non-Standardized graphs
-            "pollution": self.fig.add_subplot(gs[2, 0]),
-            "temperature": self.fig.add_subplot(gs[2, 1]),
-            "water_mass": self.fig.add_subplot(gs[2, 2]),  # Right of temperature
-            "forests": self.fig.add_subplot(gs[3, 0]),  # Left of population
-            "population": self.fig.add_subplot(gs[3, 1]),  # Right of forests
+            "pollution": self.fig.add_subplot(gs[3, 0]),
+            "temperature": self.fig.add_subplot(gs[3, 1]),
+            "water_mass": self.fig.add_subplot(gs[3, 2]),  # Right of temperature
+            "forests": self.fig.add_subplot(gs[4, 0]),  # Left of population
+            "population": self.fig.add_subplot(gs[4, 1]),  # Right of forests
 
             # Standard Deviation graphs
-            "std_dev_pollution": self.fig.add_subplot(gs[4, 0]),
-            "std_dev_temperature": self.fig.add_subplot(gs[4, 1]),
-            "std_dev_water_mass": self.fig.add_subplot(gs[4, 2]),
+            "std_dev_pollution": self.fig.add_subplot(gs[2, 0]),
+            "std_dev_temperature": self.fig.add_subplot(gs[2, 1]),
+            "std_dev_water_mass": self.fig.add_subplot(gs[2, 2]),
         }
 
 
