@@ -27,23 +27,16 @@ logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
 
-def parse_grid_size(input_value, default_value):
+def parse_grid_size(input_value):
     """
     Parse the grid size from a string into a tuple of integers.
-    Fallbacks to default value if parsing fails.
+    Supports both comma-separated and space-separated strings.
     """
-    if isinstance(input_value, str):
-        try:
-            # Replace spaces with commas and split by commas
-            return tuple(int(value.strip()) for value in input_value.replace(" ", ",").split(","))
-        except ValueError:
-            logging.warning(f"Invalid grid size input: {input_value}. Falling back to default value: {default_value}.")
-            return default_value
-    elif isinstance(input_value, (list, tuple)):
-        return tuple(int(value) for value in input_value)
-    else:
-        logging.warning(f"Invalid grid size input type. Falling back to default value: {default_value}.")
-        return default_value
+    try:
+        # Replace spaces with commas and split by commas
+        return tuple(int(value.strip()) for value in input_value.replace(" ", ",").split(","))
+    except ValueError:
+        raise ValueError("Invalid grid size format. Please provide integers separated by commas or spaces.")
 
 
 def collect_user_input():
@@ -51,27 +44,32 @@ def collect_user_input():
     Collect user input for all configuration parameters, including grid size, days, and others.
     Configuration is updated only once at the end.
     """
-    # logging.info("Prompting user for grid size and simulation days.")
+    logging.info("Prompting user for grid size and simulation days.")
 
-    # Collect initial configuration
-    user_config = {}
+    # Start with a copy of the default preset
+    user_config = DEFAULT_PRESET.copy()
 
     # Get grid size
-    default_grid_size = DEFAULT_PRESET.get("grid_size", (10, 10, 10))
-    grid_size_input = input(f"Enter grid size as comma-separated integers (default: {default_grid_size}): ").strip()
-    user_config["grid_size"] = parse_grid_size(grid_size_input, default_grid_size)
+    print(f"Default grid size: {user_config['grid_size']}")
+    grid_size_input = input("Enter grid size as comma-separated integers (press Enter to use default): ").strip()
+    if grid_size_input:
+        try:
+            user_config["grid_size"] = parse_grid_size(grid_size_input)
+        except ValueError as e:
+            logging.warning(f"Invalid grid size input: {e}. Keeping default grid size: {user_config['grid_size']}.")
 
     # Get number of days
-    default_days = DEFAULT_PRESET.get("days", 100)
-    try:
-        days_input = input(f"Enter number of days for the simulation (default: {default_days}): ").strip()
-        user_config["days"] = int(days_input) if days_input else default_days
-        if user_config["days"] <= 0:
-            logging.warning(f"Invalid number of days: {days_input}. Falling back to default value: {default_days}.")
-            user_config["days"] = default_days
-    except ValueError:
-        logging.warning(f"Invalid input for number of days: {days_input}. Falling back to default value: {default_days}.")
-        user_config["days"] = default_days
+    print(f"Default number of days: {user_config['days']}")
+    days_input = input("Enter number of days for the simulation (press Enter to use default): ").strip()
+    if days_input:
+        try:
+            days = int(days_input)
+            if days > 0:
+                user_config["days"] = days
+            else:
+                logging.warning(f"Invalid number of days: {days_input}. Keeping default: {user_config['days']}.")
+        except ValueError:
+            logging.warning(f"Invalid input for number of days: {days_input}. Keeping default: {user_config['days']}.")
 
     # Prompt for additional configuration options
     logging.info("Prompting user for additional configuration options.")
@@ -88,12 +86,12 @@ def collect_user_input():
     elif choice == "3":
         print("Setting custom configuration...")
         for key, value in DEFAULT_PRESET.items():
-            label = KEY_LABELS.get(key, key)
-
             if key in {"grid_size", "days"}:
-                # Skip grid size and days as they are already collected
+                # Skip grid size and days as they are already set
                 continue
-            elif isinstance(value, dict):
+
+            label = KEY_LABELS.get(key, key)
+            if isinstance(value, dict):
                 user_config[key] = {}
                 print(f"\n{label}:")
                 for sub_key, sub_value in value.items():
@@ -102,13 +100,12 @@ def collect_user_input():
             else:
                 input_value = input(f"Enter value for {label} (default: {value}): ").strip()
                 user_config[key] = parse_input_value(input_value, value)
+
     elif choice == "1":
         logging.info("User chose default configuration preset.")
-        user_config.update(DEFAULT_PRESET)
     else:
         logging.warning("Invalid choice from user. Using default configuration preset.")
         print("Invalid choice. Using default configuration.")
-        user_config.update(DEFAULT_PRESET)
 
     return user_config
 
