@@ -109,7 +109,7 @@ The configuration properties are the foundation of this simulation. Each propert
   - Displays the grid and cell types with their interactions and transformations.
 
 ### 5. Logs and Results
-- Results and metrics are logged in `cli_output.log` for further analysis.
+- Results and metrics are logged in `simulation.log` for further analysis and also are printed in the CLI.
 - Metrics include averages, standard deviations, and configuration details.
 
 
