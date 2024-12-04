@@ -111,7 +111,7 @@ PRESET_CONFIGS = {
             1.0,   # Cloud: Almost no pollution, cleanses atmosphere.
             0.0,   # Ice: Pristine and isolated.
             5.0,   # Forest: Low pollution absorbed by vegetation.
-            500.0,  # City: High due to factories and vehicles.
+            20.0,  # City: High due to factories and vehicles.
             5.0,   # Air: Moderate, depends on proximity to cities.
             2.0,   # Rain: Low, acts as a natural cleanser.
             0.0,   # Vacuum: No pollution, uninhabitable space.
