@@ -30,7 +30,7 @@ This project is a **cellular automaton simulation** developed as an academic tas
 ├── display/                   # Visualization modules
 │   ├── MatplotlibDisplay.py
 │   └── __init__.py
-├── screenshots/               # Screenshot of the graphical interface
+├── docs/               # Screenshot of the graphical interface
 │   └── _GUI.png
 └── utils/                     # Utility functions
     └── helpers.py
@@ -133,7 +133,7 @@ The configuration properties are the foundation of this simulation. Each propert
 2. Choose a configuration preset or define your custom setup.
 3. Observe the simulation progress through the GUI.
 4. CLI output example can be found in the `cli_output` file.
-5. GUI Screenshot ![Simulation Results Graphical User Interface Screenshot](screenshots/GUI.png)
+5. GUI Screenshot ![Simulation Results Graphical User Interface Screenshot](docs/GUI.png)
 
 
 
