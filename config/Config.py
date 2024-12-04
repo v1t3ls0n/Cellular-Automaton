@@ -1,8 +1,7 @@
 from types import MappingProxyType
 from config.presets import PRESET_CONFIGS, DEFAULT_PRESET, REQUIRED_KEYS
-import logging
 
-
+# Config.py
 class Config:
     """
     Singleton class to manage the global configuration for the simulation.
