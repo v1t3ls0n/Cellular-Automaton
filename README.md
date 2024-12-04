@@ -164,7 +164,7 @@ When prompted, select one of the following options:
    ```
 2. Choose a configuration preset or define your custom setup.
 3. Observe the simulation progress through the GUI.
-4. CLI output example can be found in the `cli_output.log` file.
+4. CLI output example can be found in the `cli_output` file.
 5. GUI Screenshot ![Simulation Results Graphical User Interface Screenshot](screenshots/GUI.png)
 
 
