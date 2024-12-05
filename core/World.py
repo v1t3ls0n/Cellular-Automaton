@@ -1,11 +1,13 @@
 import numpy as np
 from .Particle import Particle
-from config.Config import config_instance 
+from config.Config import config_instance
+
 
 class World:
     """
     Represents the simulation world, including the grid of particles and associated behaviors.
     """
+
     def __init__(self, grid_size=None, initial_ratios=None, day_number=0):
         """
         Initialize the World class.
@@ -248,7 +250,8 @@ class World:
 
                     # Assign direction for dynamic cells
                     if cell_type in {0, 3}:  # Sea/Ice
-                        dx, dy = np.random.choice([-1, 0, 1]), np.random.choice([-1, 0, 1])
+                        dx, dy = np.random.choice(
+                            [-1, 0, 1]), np.random.choice([-1, 0, 1])
                         dz = 0
                         direction = (dx, dy, dz)
 
@@ -274,7 +277,6 @@ class World:
                         )
 
         self._recalculate_global_attributes()  # Update global stats
-
 
     def update_cells_on_grid(self):
         """
@@ -303,10 +305,12 @@ class World:
                 return cell1
 
             # Handle rain interactions
-            if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:  # Cell1 is Rain
+            # Cell1 is Rain
+            if cell1.cell_type == 7 and cell2.cell_type in {6, 8}:
                 return cell1
 
-            if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:  # Cell2 is Rain
+            # Cell2 is Rain
+            if cell2.cell_type == 7 and cell1.cell_type in {6, 8}:
                 return cell2
 
             if cell1.cell_type == 7 and cell2.cell_type == 7:
@@ -366,11 +370,15 @@ class World:
                                 self.grid[nx, ny, nz]
                                 for nx, ny, nz in get_neighbor_positions(i, j, k)
                             ]
-                            cell_transfers = cell.calculate_water_transfer(neighbors)
+                            cell_transfers = cell.calculate_water_transfer(
+                                neighbors)
                             for neighbor_pos, transfer_amount in cell_transfers.items():
                                 # Scale transfer amounts if they exceed the scale factor
-                                scaled_transfer = transfer_amount / scale_factor if abs(transfer_amount) > scale_factor else transfer_amount
-                                transfer_map[neighbor_pos] = transfer_map.get(neighbor_pos, 0) + scaled_transfer
+                                scaled_transfer = transfer_amount / \
+                                    scale_factor if abs(
+                                        transfer_amount) > scale_factor else transfer_amount
+                                transfer_map[neighbor_pos] = transfer_map.get(
+                                    neighbor_pos, 0) + scaled_transfer
 
             return transfer_map
 
@@ -388,7 +396,8 @@ class World:
                     cell.water_mass += transfer_amount
 
                     # Clamp water_mass to stay within defined bounds
-                    cell.water_mass = max(min_water_mass, min(cell.water_mass, max_water_mass))
+                    cell.water_mass = max(min_water_mass, min(
+                        cell.water_mass, max_water_mass))
 
         x, y, z = self.grid_size
 
@@ -442,6 +451,7 @@ class World:
         # Phase 5: Populate the new grid
         new_grid = np.empty_like(self.grid)
         for (i, j, k), cell in position_map.items():
+            cell.position = (i, j, k)
             new_grid[i, j, k] = cell
 
         # Fill remaining cells with vacuum
@@ -461,7 +471,7 @@ class World:
 
         self.grid = new_grid
         self._recalculate_global_attributes()
-    
+
     def _recalculate_global_attributes(self):
         """
         Recalculate global attributes like average temperature, pollution, water mass,
@@ -519,8 +529,13 @@ class World:
         self.total_cells = total_cells
 
         # Standard deviations
-        self.std_dev_temperature = np.std(temperature_values) if temperature_values else 0
-        self.std_dev_pollution = np.std(pollution_values) if pollution_values else 0
-        self.std_dev_water_mass = np.std(water_mass_values) if water_mass_values else 0
-        self.std_dev_city_population = np.std(city_counts) if city_counts else 0
-        self.std_dev_forest_count = np.std(forest_counts) if forest_counts else 0
+        self.std_dev_temperature = np.std(
+            temperature_values) if temperature_values else 0
+        self.std_dev_pollution = np.std(
+            pollution_values) if pollution_values else 0
+        self.std_dev_water_mass = np.std(
+            water_mass_values) if water_mass_values else 0
+        self.std_dev_city_population = np.std(
+            city_counts) if city_counts else 0
+        self.std_dev_forest_count = np.std(
+            forest_counts) if forest_counts else 0
