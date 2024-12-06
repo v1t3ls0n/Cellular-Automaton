@@ -167,7 +167,7 @@ PRESET_CONFIGS = {
 
         # City Properties
         # Rate of pollution generation in urban areas.
-        "city_pollution_generation_rate": 0.1,
+        "city_pollution_generation_rate": 0.8,
         "city_warming_effect": 0.1,  # Heat retention in cities.
         # Max temperature before urban collapse.
         "city_temperature_extinction_point": 70.0,
