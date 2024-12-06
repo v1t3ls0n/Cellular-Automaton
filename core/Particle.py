@@ -1,7 +1,6 @@
-from config.Config import config_instance
+from config.Config import config_instance 
 import math
 import logging
-
 
 class Particle:
     """
@@ -10,7 +9,6 @@ class Particle:
 
     This class provides methods for updating particle state, calculating movement, and visualizing the particle.
     """
-
     def __init__(self, cell_type, temperature, water_mass, pollution_level, direction, position, grid_size):
         """
         Initializes a Particle object with specified attributes.
@@ -99,8 +97,7 @@ class Particle:
         """
         base_color = self.get_base_color()
         if base_color is None or len(base_color) != 4:
-            logging.info(f"Invalid base color for cell_type {
-                         self.cell_type}: {base_color}")
+            logging.info(f"Invalid base color for cell_type {self.cell_type}: {base_color}")
             return (1.0, 1.0, 1.0, 0.0)  # Default to transparent
 
         # Handle vacuum cells separately (no tint effects)
@@ -186,8 +183,7 @@ class Particle:
         """
         base_color = self.config["base_colors"].get(self.cell_type)
         if base_color is None:
-            logging.info(f"Base color for cell_type {
-                         self.cell_type} is not defined.")
+            logging.info(f"Base color for cell_type {self.cell_type} is not defined.")
         # Default to white color if the cell type is undefined
         return base_color if base_color[3] != 0.0 else (1.0, 1.0, 1.0, 0.0)
 
@@ -259,7 +255,7 @@ class Particle:
             new_cell._update_rain(neighbors)
         elif self.cell_type == 8:  # Vacuum
             new_cell._update_vacuum(neighbors)
-
+        
         return new_cell
 
     def _update_ocean(self, neighbors):
@@ -274,8 +270,8 @@ class Particle:
         neighbors_above = self.get_above_neighbors(neighbors)
         neighbors_below = self.get_below_neighbors(neighbors)
         neighbors_aligned = self.get_aligned_neighbors(neighbors)
-        dx, dy, _ = self.calculate_dynamic_wind_direction(neighbors)
-        self.direction = (dx, dy, 0)
+        dx,dy,_ = self.calculate_dynamic_wind_direction(neighbors)
+        self.direction = (dx,dy,0)
         # Ocean cells tend to move downward (e.g., gravity)
         self.go_down(neighbors)
         if self.is_surrounded_by_sea_cells(neighbors_below) and self.temperature > self.config["evaporation_point"] - 5:
@@ -398,7 +394,7 @@ class Particle:
             self.convert_to_desert(neighbors)
         elif (
             self.pollution_level < pollution_damage_threshold
-            and int(forest_baseline_temperature) - 10 <= self.temperature <= int(forest_baseline_temperature) + 10
+            and int(forest_baseline_temperature) -10 <= self.temperature <= int(forest_baseline_temperature) + 10
             and (self.is_surrounded_by_desert_cells(neighbors_aligned) or self.is_surrounded_by_city_cells(neighbors_aligned) or self.is_surrounded_by_forests_cells(neighbors_aligned))
             and not (self.is_surrounded_by_city_cells(neighbors_below) or self.is_surrounded_by_forests_cells(neighbors_below) or self.is_surrounded_by_sea_cells(neighbors_below))
         ):  # Convert to a city
@@ -494,6 +490,7 @@ class Particle:
         ):
             self.go_up(neighbors)
 
+
     def _update_rain(self, neighbors):
         """
         Updates the behavior of rain cells.
@@ -520,11 +517,12 @@ class Particle:
             # Convert to air (dry up) if surrounded by land cells
         elif self.is_surrounded_by_land_cells(neighbors_below) or self.is_surrounded_by_land_cells(neighbors_align) or self.is_surrounded_by_land_cells(neighbors_above):
             self.convert_to_air(neighbors)
-
-    def _update_vacuum(self, neighbors):
+    
+    def _update_vacuum(self,neighbors):
         self.convert_to_air(neighbors)
         self.direction = self.calculate_dynamic_wind_direction(neighbors)
 
+    
     ####################################################################################################################
     ###################################### CELL CONVERSION METHODS #####################################################
     ####################################################################################################################
@@ -634,6 +632,8 @@ class Particle:
         self.direction = self.calculate_dynamic_wind_direction(neighbors)
         self.go_up(neighbors)  # Air moves upward
 
+
+
     def convert_to_rain(self, neighbors):
         """
         Converts the current cell to a rain cell.
@@ -665,9 +665,10 @@ class Particle:
         self.cell_type = 8  # Set cell type to vacuum
         self.water_mass = 0.0  # No water in vacuum
         self.pollution_level = 0.0  # No pollution in vacuum
-        # Near absolute zero
-        self.temperature = self.config["baseline_temperature"][8]
+        self.temperature = self.config["baseline_temperature"][8]  # Near absolute zero
         self.stabilize(neighbors)  # Halt motion
+
+
 
     ####################################################################################################################
     ############################################### CELL EQUILIBRATE ###################################################
@@ -681,24 +682,19 @@ class Particle:
         """
         pollution_decay_rate = self.config["natural_pollution_decay_rate"] * 0.5
         temperature_decay_rate = self.config["natural_temperature_decay_rate"] * 0.5
-        pollution_diffusion_rate = self.config.get(
-            "pollution_diffusion_rate", 0.1)
-        temperature_diffusion_rate = self.config.get(
-            "temperature_diffusion_rate", 0.1)
-        transfer_weights = self.config.get(
-            "cell_type_pollution_transfer_weights", {})
+        pollution_diffusion_rate = self.config.get("pollution_diffusion_rate", 0.1)
+        temperature_diffusion_rate = self.config.get("temperature_diffusion_rate", 0.1)
+        transfer_weights = self.config.get("cell_type_pollution_transfer_weights", {})
 
         # Step 1: Apply non-linear decay for pollution
         if self.pollution_level > 1:  # Decay only for significant pollution levels
-            self.pollution_level -= math.sqrt(self.pollution_level) * \
-                pollution_decay_rate
+            self.pollution_level -= math.sqrt(self.pollution_level) * pollution_decay_rate
 
         # Step 2: Temperature decay with a threshold
         baseline_temp = self.config["baseline_temperature"][self.cell_type]
         temperature_diff = self.temperature - baseline_temp
         if abs(temperature_diff) > 5:  # Decay only for significant temperature deviations
-            self.temperature -= (temperature_diff / abs(temperature_diff)) * \
-                abs(temperature_diff)**0.5 * temperature_decay_rate
+            self.temperature -= (temperature_diff / abs(temperature_diff)) * abs(temperature_diff)**0.5 * temperature_decay_rate
 
         # Step 3: Amplify neighbor influences
         weighted_pollution_influence = 0
@@ -714,8 +710,7 @@ class Particle:
             total_pollution_weight += pollution_weight
 
             pollution_difference = neighbor.pollution_level - self.pollution_level
-            weighted_pollution_influence += pollution_difference * \
-                pollution_diffusion_rate * pollution_weight
+            weighted_pollution_influence += pollution_difference * pollution_diffusion_rate * pollution_weight
 
             temperature_difference = neighbor.temperature - self.temperature
             total_temperature_weight += 1
@@ -723,16 +718,13 @@ class Particle:
 
         # Amplify neighbor influence without randomness
         if total_pollution_weight > 0:
-            self.pollution_level += (weighted_pollution_influence /
-                                     total_pollution_weight)
+            self.pollution_level += (weighted_pollution_influence / total_pollution_weight)
 
         if total_temperature_weight > 0:
-            self.temperature += (weighted_temperature_influence /
-                                 total_temperature_weight)
+            self.temperature += (weighted_temperature_influence / total_temperature_weight)
 
         # Step 4: Enforce realistic bounds (optional)
-        # Pollution cannot be negative
-        self.pollution_level = max(0, self.pollution_level)
+        self.pollution_level = max(0, self.pollution_level)  # Pollution cannot be negative
         self.temperature = max(
             baseline_temp - 100,  # Arbitrary lower bound
             min(self.temperature, baseline_temp + 100)  # Arbitrary upper bound
@@ -1078,7 +1070,7 @@ class Particle:
             bool: True if the current cell's type is Vacuum (cell_type 8).
         """
         return self.cell_type == 8
-
+    
     def should_convert_to_vacuum(self, neighbors):
         """
         Determines if the air cell should convert to a vacuum cell based on environmental conditions.
@@ -1097,8 +1089,7 @@ class Particle:
             bool: True if the air cell should convert to vacuum, False otherwise.
         """
         # Thresholds for conversion
-        # Near vacuum baseline
-        temperature_threshold = self.config["baseline_temperature"][8] + 10
+        temperature_threshold = self.config["baseline_temperature"][8] + 10  # Near vacuum baseline
         water_mass_threshold = 0.01  # Critical low water mass
         pollution_level_threshold = 0.1  # Minimal pollution level for vacuum
         isolation_threshold = 0.0  # Pollution transfer weight for vacuum
@@ -1109,8 +1100,7 @@ class Particle:
         is_near_pristine = self.pollution_level < pollution_level_threshold
         is_stationary = self.direction == (0, 0, 0)
         is_isolated = all(
-            self.config["cell_type_pollution_transfer_weights"].get(
-                neighbor.cell_type, 0.0) == isolation_threshold
+            self.config["cell_type_pollution_transfer_weights"].get(neighbor.cell_type, 0.0) == isolation_threshold
             for neighbor in neighbors
         )
 
