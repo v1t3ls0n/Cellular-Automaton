@@ -519,7 +519,9 @@ class Particle:
             self.convert_to_air(neighbors)
     
     def _update_vacuum(self,neighbors):
-        self.convert_to_air(self,neighbors)
+        self.convert_to_air(neighbors)
+        self.direction = self.calculate_dynamic_wind_direction(neighbors)
+
     
     ####################################################################################################################
     ###################################### CELL CONVERSION METHODS #####################################################
@@ -628,6 +630,8 @@ class Particle:
         self.water_mass = max(0.0, self.water_mass - 0.5)
         self.temperature += 2  # Air warms during evaporation
         self.go_up(neighbors)  # Air moves upward
+        self.direction = self.calculate_dynamic_wind_direction(neighbors)
+
 
     def convert_to_rain(self, neighbors):
         """
@@ -820,7 +824,6 @@ class Particle:
             # Simulates air pressure difference
             altitude_influence = max(
                 self.position[2] - neighbor.position[2], 0) / 100.0
-
             # Total influence combines these factors
             influence = water_mass_influence + temperature_influence + altitude_influence
 

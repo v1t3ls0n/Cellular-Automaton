@@ -413,8 +413,7 @@ class World:
             for j in range(y):
                 for k in range(z):
                     cell = self.grid[i, j, k]
-                    if cell is not None and cell.cell_type != 8:  # Skip vacuum
-                        if cell.cell_type == 7:  # Rain
+                    if cell.cell_type == 7:  # Rain
                             below = self.grid[i, j, k -
                                               1] if k - 1 >= 0 else None
                             # Ground types
@@ -426,12 +425,12 @@ class World:
                                 cell.water_mass = 0
                             else:  # Rain continues falling
                                 cell.position = (i, j, k - 1)
-                        neighbors = [
+                    neighbors = [
                             self.grid[nx, ny, nz]
                             for nx, ny, nz in get_neighbor_positions(i, j, k)
                             if self.grid[nx, ny, nz] is not None
-                        ]
-                        updates[(i, j, k)] = cell.compute_next_state(neighbors)
+                    ]
+                    updates[(i, j, k)] = cell.compute_next_state(neighbors)
 
         # Phase 4: Resolve collisions
         position_map = {}
