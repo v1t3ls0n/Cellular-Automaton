@@ -1,6 +1,3 @@
-Here is the updated README file with added emojis to enhance its visual appeal:
-
-```markdown
 # 🚀 Cellular Automaton Simulation for Biological Computation (Maman 11)
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
@@ -281,6 +278,3 @@ When prompted, select one of the following options:
 
 ## 📚 Academic Integrity
 This project is an independent academic submission for the **Biological Computation Course**. The implementation, configuration, and logic have been designed solely by **Guy Vitelson**.
-```
-
-You can replace the content of your current README file with this updated version to include the icons and emojis.
